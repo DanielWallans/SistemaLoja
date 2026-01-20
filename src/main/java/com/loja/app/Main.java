@@ -1,16 +1,18 @@
 package com.loja.app;
 
-import com.loja.model.Produto;
-import com.loja.model.Venda;
-import com.loja.model.SaldoInsuficienteException;
-import com.loja.repositiry.ConnectionFactory;
-import com.loja.repository.ProdutoDAO;
-import com.loja.repositiry.VendaDAO;
-import com.loja.service.CaixaService;
 import java.util.List;
 import java.util.Scanner;
 
+import com.loja.model.Produto;
+import com.loja.model.SaldoInsuficienteException;
+import com.loja.model.Venda;
+import com.loja.repository.ConnectionFactory;
+import com.loja.repository.ProdutoDAO;
+import com.loja.repository.VendaDAO;
+import com.loja.service.CaixaService;
+
 public class Main {
+
     public static void main(String[] args) {
         Scanner teclado = new Scanner(System.in);
         CaixaService caixa = new CaixaService();
@@ -18,7 +20,6 @@ public class Main {
         ConnectionFactory.criarTabela();
         ProdutoDAO produtoDAO = new ProdutoDAO();
         VendaDAO vendaDAO = new VendaDAO();
-
 
         inicializarProdutos(produtoDAO);
         List<Produto> listaProdutos = produtoDAO.buscarTodos();
@@ -73,9 +74,12 @@ public class Main {
                     break;
 
                 case 4:
-                    System.out.println("\n--- HISTÓRICO DE VENDAS (CONSULTA DIRETA AO BANCO) ---");
-
-                    System.out.println("Relatório gerado com sucesso para o fechamento.");
+                    System.out.println("\n--- RELATÓRIO DE FECHAMENTO ---");
+                    vendaDAO.listarVendas(); // Lista cada venda individualmente
+                    double totalGeral = vendaDAO.calcularFaturamentoTotal(); // Soma tudo
+                    System.out.println("-------------------------------");
+                    System.out.println("FATURAMENTO TOTAL ACUMULADO: R$ " + totalGeral);
+                    System.out.println("-------------------------------");
                     break;
 
                 case 5:
