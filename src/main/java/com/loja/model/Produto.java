@@ -13,7 +13,7 @@ public class Produto {
         this.estoque = estoque;
     }
 
-    // Se o estoque acabar, o sistema não quebra
+
     public boolean temEstoque(int quantidade) {
         return this.estoque >= quantidade;
     }
@@ -24,10 +24,22 @@ public class Produto {
         }
     }
 
-    // Getters rápidos
-    public String getNome() { return nome; }
-    public double getPreco() { return preco; }
-    public int getEstoque() { return estoque; }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public double getPreco() {
+        return preco;
+    }
+
+    public int getEstoque() {
+        return estoque;
+    }
 }
 
 
