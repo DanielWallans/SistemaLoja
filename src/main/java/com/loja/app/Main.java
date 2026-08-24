@@ -1,100 +1,51 @@
 package com.loja.app;
 
-import java.util.List;
-import java.util.Scanner;
-
+import com.formdev.flatlaf.FlatDarkLaf;
 import com.loja.model.Produto;
-import com.loja.model.SaldoInsuficienteException;
-import com.loja.model.Venda;
-import com.loja.repository.ConnectionFactory;
-import com.loja.repository.ProdutoDAO;
-import com.loja.repository.VendaDAO;
+import com.loja.repository.*;
 import com.loja.service.CaixaService;
+import com.loja.view.MainFrame;
+
+import javax.swing.*;
 
 public class Main {
 
     public static void main(String[] args) {
-        CaixaService caixa = new CaixaService();
+        // 1. Configurar Tema Moderno FlatLaf
+        try {
+            UIManager.setLookAndFeel(new FlatDarkLaf());
+        } catch (Exception ex) {
+            System.err.println("[AVISO] Não foi possível carregar o tema FlatLaf: " + ex.getMessage());
+        }
 
-        ConnectionFactory.criarTabela();
+        // 2. Conectar e inicializar banco de dados MySQL
+        boolean dbOk = ConnectionFactory.criarTabela();
+        if (!dbOk) {
+            System.err.println("\n********************************************************************************");
+            System.err.println(" [ATENÇÃO / ERRO CRÍTICO] NÃO FOI POSSÍVEL CONECTAR AO BANCO MYSQL NO XAMPP!");
+            System.err.println("********************************************************************************");
+            System.err.println(" Motivo: O MySQL não está em execução ou não responde na porta 3306.");
+            System.err.println(" Como resolver:");
+            System.err.println(" 1. Abra o 'XAMPP Control Panel'.");
+            System.err.println(" 2. Localize a linha do 'MySQL' e clique no botão 'Start'.");
+            System.err.println(" 3. Verifique se o módulo MySQL fica com fundo VERDE e porta 3306.");
+            System.err.println(" 4. Reinicie este sistema para que todas as operações sejam salvas!");
+            System.err.println("********************************************************************************\n");
+        }
+
+        CaixaDAO caixaDAO = new CaixaDAO();
+        CaixaService caixaService = new CaixaService();
         ProdutoDAO produtoDAO = new ProdutoDAO();
-        VendaDAO vendaDAO = new VendaDAO();
+        ClienteDAO clienteDAO = new ClienteDAO();
+        EquipamentoDAO equipamentoDAO = new EquipamentoDAO();
+        OrdemServicoDAO osDAO = new OrdemServicoDAO();
 
-        inicializarProdutos(produtoDAO);
-        List<Produto> listaProdutos = produtoDAO.buscarTodos();
+        caixaService.abrirCaixa(100.00);
 
-        System.out.println("======= SISTEMA DE LOJA v1.3 (Relatórios Ativos) =======");
-        caixa.abrirCaixa(100.00);
-
-        try (Scanner teclado = new Scanner(System.in)) {
-            int opcao = 0;
-            while (opcao != 5) {
-                System.out.println("\n--- MENU DE OPERAÇÕES ---");
-                System.out.println("1. Realizar Venda");
-                System.out.println("2. Realizar Sangria");
-                System.out.println("3. Consultar Saldo");
-                System.out.println("4. Ver Histórico de Vendas");
-                System.out.println("5. Fechar Caixa e Sair");
-                System.out.print("Escolha: ");
-
-                opcao = teclado.nextInt();
-
-                switch (opcao) {
-                    case 1 -> {
-                        System.out.println("\n--- PRODUTOS DISPONÍVEIS ---");
-                        for (int i = 0; i < listaProdutos.size(); i++) {
-                            System.out.println(i + ". " + listaProdutos.get(i).getNome() + " | R$ " + listaProdutos.get(i).getPreco());
-                        }
-                        System.out.print("Escolha o número do produto: ");
-                        int index = teclado.nextInt();
-                        Produto selecionado = listaProdutos.get(index);
-
-                        System.out.print("Qtd de " + selecionado.getNome() + ": ");
-                        int qtd = teclado.nextInt();
-
-                        try {
-                            caixa.realizarVenda(selecionado, qtd);
-                            produtoDAO.salvar(selecionado);
-
-                            Venda v = new Venda(selecionado.getId(), qtd, (selecionado.getPreco() * qtd));
-                            vendaDAO.registrarVenda(v);
-                            System.out.println("[OK] Venda registrada!");
-                        } catch (SaldoInsuficienteException e) {
-                            System.out.println("[ERRO] " + e.getMessage());
-                        }
-                    }
-
-                    case 2 -> {
-                        System.out.print("Valor da Sangria: ");
-                        caixa.realizarSangria(teclado.nextDouble());
-                    }
-
-                    case 3 -> caixa.consultarSaldoAtual();
-
-                    case 4 -> {
-                        System.out.println("\n--- RELATÓRIO DE FECHAMENTO ---");
-                        vendaDAO.listarVendas(); // Lista cada venda individualmente
-                        double totalGeral = vendaDAO.calcularFaturamentoTotal(); // Soma tudo
-                        System.out.println("-------------------------------");
-                        System.out.println("FATURAMENTO TOTAL ACUMULADO: R$ " + totalGeral);
-                        System.out.println("-------------------------------");
-                    }
-
-                    case 5 -> {
-                        System.out.println("\n[SISTEMA] Fechando caixa e salvando dados...");
-                        caixa.fecharCaixa();
-                    }
-                }
-            }
-        }
-    }
-
-    private static void inicializarProdutos(ProdutoDAO dao) {
-        if (dao.buscarTodos().isEmpty()) {
-            dao.salvar(new Produto(1, "ThinkPad T440", 1500.00, 10));
-            dao.salvar(new Produto(2, "Teclado Mecanico RGB", 250.00, 20));
-            dao.salvar(new Produto(3, "Mouse Sem Fio", 120.00, 15));
-            System.out.println("[DB] Estoque inicial de 3 produtos criado!");
-        }
+        // 3. Iniciar a Interface Gráfica Desktop (Swing)
+        SwingUtilities.invokeLater(() -> {
+            MainFrame frame = new MainFrame(clienteDAO, equipamentoDAO, osDAO, produtoDAO, caixaDAO, caixaService, dbOk);
+            frame.setVisible(true);
+        });
     }
 }

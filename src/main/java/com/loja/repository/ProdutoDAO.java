@@ -12,8 +12,9 @@ import com.loja.model.Produto;
 
 public class ProdutoDAO {
 
-    public void salvar(Produto produto) {
-        String sql = "MERGE INTO produto KEY(id) VALUES (?, ?, ?, ?)";
+    public boolean salvar(Produto produto) {
+        String sql = "INSERT INTO produto (id, nome, preco, estoque) VALUES (?, ?, ?, ?) " +
+                     "ON DUPLICATE KEY UPDATE nome = ?, preco = ?, estoque = ?";
 
         try (Connection conn = ConnectionFactory.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -22,12 +23,18 @@ public class ProdutoDAO {
             stmt.setString(2, produto.getNome());
             stmt.setDouble(3, produto.getPreco());
             stmt.setInt(4, produto.getEstoque());
+            
+            stmt.setString(5, produto.getNome());
+            stmt.setDouble(6, produto.getPreco());
+            stmt.setInt(7, produto.getEstoque());
 
             stmt.executeUpdate();
             System.out.println("[DB] Produto salvo/atualizado: " + produto.getNome());
+            return true;
 
         } catch (SQLException e) {
             System.err.println("[ERRO DB] " + e.getMessage());
+            return false;
         }
     }
 
@@ -44,12 +51,26 @@ public class ProdutoDAO {
                         rs.getInt("id"),
                         rs.getString("nome"),
                         rs.getDouble("preco"),
-                        rs.getInt("quantidade")
+                        rs.getInt("estoque")
                 ));
             }
         } catch (SQLException e) {
             System.err.println("[ERRO DB] " + e.getMessage());
         }
         return produtos;
+    }
+
+    public int obterProximoId() {
+        String sql = "SELECT COALESCE(MAX(id), 0) + 1 AS proximo_id FROM produto";
+        try (Connection conn = ConnectionFactory.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt("proximo_id");
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERRO DB] Falha ao obter próximo ID: " + e.getMessage());
+        }
+        return 1;
     }
 }
