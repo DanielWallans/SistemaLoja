@@ -777,6 +777,12 @@ public class DetalhesOSDialog extends JDialog {
     }
 
     private void enviarWhatsApp(Cliente cliente, Equipamento equip) {
+        if (cliente == null && osOriginal != null) {
+            cliente = clienteDAO.buscarPorId(osOriginal.getClienteId());
+        }
+        if (equip == null && osOriginal != null) {
+            equip = equipDAO.buscarPorId(osOriginal.getEquipamentoId());
+        }
         List<ServicoItem> servicos = osDAO.obterServicosOS(osOriginal.getId());
         if (servicos.isEmpty() && osOriginal.getValorServico() > 0) {
             servicos.add(new ServicoItem("Mão de Obra Geral / Diagnóstico", osOriginal.getValorServico()));
@@ -785,9 +791,13 @@ public class DetalhesOSDialog extends JDialog {
 
         boolean sucesso = WhatsAppService.enviarOrcamentoWhatsApp(osOriginal, cliente, equip, servicos, pecas);
         if (sucesso) {
-            JOptionPane.showMessageDialog(this, "WhatsApp aberto no navegador com o orçamento pré-formatado!", "WhatsApp", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                    "WhatsApp aberto no navegador com o orçamento pré-formatado!\n\n(O texto completo do orçamento também foi copiado para a Área de Transferência como garantia)", 
+                    "WhatsApp", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "Não foi possível abrir o WhatsApp automaticamente. Verifique o número de telefone do cliente.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                    "Não foi possível abrir o navegador automaticamente.\nO texto do orçamento foi COPIADO para a Área de Transferência (Ctrl+V)!", 
+                    "Orçamento Copiado", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

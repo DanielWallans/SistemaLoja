@@ -817,11 +817,21 @@ public class MontarOrcamentoDialog extends JDialog {
 
     private void enviarWhatsApp(Cliente cliente, Equipamento equip) {
         if (!salvarOrcamento()) return;
+        if (cliente == null && os != null) {
+            cliente = clienteDAO.buscarPorId(os.getClienteId());
+        }
+        if (equip == null && os != null) {
+            equip = equipDAO.buscarPorId(os.getEquipamentoId());
+        }
         boolean sucesso = WhatsAppService.enviarOrcamentoWhatsApp(os, cliente, equip, listaServicos, listaPecas);
         if (sucesso) {
-            JOptionPane.showMessageDialog(this, "WhatsApp aberto no navegador com a mensagem do orçamento pronta para envio!", "WhatsApp", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                    "WhatsApp aberto no navegador com o orçamento pré-formatado!\n\n(O texto completo do orçamento também foi copiado para a Área de Transferência como garantia)", 
+                    "WhatsApp", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "Não foi possível abrir o WhatsApp automaticamente. Verifique o número de telefone do cliente.", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, 
+                    "Não foi possível abrir o navegador automaticamente.\nO texto do orçamento foi COPIADO para a Área de Transferência (Ctrl+V)!", 
+                    "Orçamento Copiado", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

@@ -46,11 +46,7 @@ public class FechamentoCegoDialog extends JDialog {
     private JTextArea txtJustificativaDiferenca;
     private JTextField txtOperadorFechamento;
 
-    // Passo 3: Sangria / Malote
-    private JTextField txtFundoTrocoProximoDia;
-    private JLabel lblValorSangriaMalote;
-
-    // Passo 4: Resumo e Ações
+    // Passo 3: Resumo e Ações
     private JTextArea txtPreviaResumo;
 
     // Botões de Navegação
@@ -105,8 +101,7 @@ public class FechamentoCegoDialog extends JDialog {
 
         pnlCardsPassos.add(criarPainelPasso1Contagem(), "PASSO_1");
         pnlCardsPassos.add(criarPainelPasso2Apuracao(), "PASSO_2");
-        pnlCardsPassos.add(criarPainelPasso3Malote(), "PASSO_3");
-        pnlCardsPassos.add(criarPainelPasso4Conclusao(), "PASSO_4");
+        pnlCardsPassos.add(criarPainelPasso3Conclusao(), "PASSO_3");
 
         add(pnlCardsPassos, BorderLayout.CENTER);
 
@@ -155,7 +150,7 @@ public class FechamentoCegoDialog extends JDialog {
         JPanel pnl = new JPanel(new BorderLayout(10, 10));
         pnl.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
 
-        JLabel lblAviso = new JLabel("<html><b>Etapa 1/4: Contagem Física da Gaveta (Conferência Cega)</b><br>" +
+        JLabel lblAviso = new JLabel("<html><b>Etapa 1/3: Contagem Física da Gaveta (Conferência Cega)</b><br>" +
                 "<font color='#7f8c8d'>Conte o dinheiro físico em notas e moedas na gaveta e informe as quantidades abaixo. " +
                 "O saldo do sistema não é exibido nesta etapa para garantir auditoria cega e imparcial.</font></html>");
         pnl.add(lblAviso, BorderLayout.NORTH);
@@ -278,7 +273,7 @@ public class FechamentoCegoDialog extends JDialog {
         JPanel pnl = new JPanel(new BorderLayout(12, 12));
         pnl.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
 
-        JLabel lblTit2 = new JLabel("<html><b>Etapa 2/4: Apuração & Conferência do Saldo</b><br>" +
+        JLabel lblTit2 = new JLabel("<html><b>Etapa 2/3: Apuração & Conferência do Saldo</b><br>" +
                 "<font color='#7f8c8d'>Comparação entre o saldo registrado no sistema e a contagem física informada.</font></html>");
         pnl.add(lblTit2, BorderLayout.NORTH);
 
@@ -346,82 +341,15 @@ public class FechamentoCegoDialog extends JDialog {
     }
 
     // ==========================================
-    // ETAPA 3: SANGRIA / MALOTE DE FECHAMENTO
+    // ETAPA 3: RESUMO FINAL & AÇÕES
     // ==========================================
-    private JPanel criarPainelPasso3Malote() {
-        JPanel pnl = new JPanel(new BorderLayout(12, 12));
-        pnl.setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
-
-        JLabel lblTit3 = new JLabel("<html><b>Etapa 3/4: Sangria Automática para o Cofre & Fundo de Troco</b><br>" +
-                "<font color='#7f8c8d'>Defina quanto dinheiro permanecerá na gaveta para o próximo turno. " +
-                "O valor excedente será retirado automaticamente como malote de fechamento.</font></html>");
-        pnl.add(lblTit3, BorderLayout.NORTH);
-
-        JPanel pnlForm = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.4;
-        JLabel lblTrocoTit = new JLabel("Troco a deixar na gaveta (R$):");
-        lblTrocoTit.setFont(lblTrocoTit.getFont().deriveFont(Font.BOLD, 13f));
-        pnlForm.add(lblTrocoTit, gbc);
-
-        gbc.gridx = 1; gbc.weightx = 0.6;
-        String padraoTroco = caixaDAO.obterConfig("fundo_troco_padrao", "100.00");
-        txtFundoTrocoProximoDia = new JTextField(padraoTroco);
-        txtFundoTrocoProximoDia.setFont(txtFundoTrocoProximoDia.getFont().deriveFont(Font.BOLD, 15f));
-        txtFundoTrocoProximoDia.addActionListener(e -> recalcularSangriaMalote());
-        pnlForm.add(txtFundoTrocoProximoDia, gbc);
-
-        // Card Sangria de Malote
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 2;
-        JPanel pnlMaloteCard = new JPanel(new BorderLayout(8, 8));
-        pnlMaloteCard.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(230, 126, 34), 2),
-                BorderFactory.createEmptyBorder(15, 18, 15, 18)
-        ));
-        pnlMaloteCard.setBackground(new Color(230, 126, 34, 20));
-
-        JLabel lblTitMalote = new JLabel("💼 SANGRIA AUTOMÁTICA GERADA PARA O COFRE / DEPÓSITO:");
-        lblTitMalote.setFont(lblTitMalote.getFont().deriveFont(Font.BOLD, 12f));
-
-        lblValorSangriaMalote = new JLabel("R$ 0,00");
-        lblValorSangriaMalote.setFont(lblValorSangriaMalote.getFont().deriveFont(Font.BOLD, 26f));
-        lblValorSangriaMalote.setForeground(new Color(211, 84, 0));
-
-        pnlMaloteCard.add(lblTitMalote, BorderLayout.NORTH);
-        pnlMaloteCard.add(lblValorSangriaMalote, BorderLayout.CENTER);
-        pnlForm.add(pnlMaloteCard, gbc);
-
-        pnl.add(pnlForm, BorderLayout.CENTER);
-        return pnl;
-    }
-
-    private void recalcularSangriaMalote() {
-        double totalFisico = contagem.getTotalCalculado();
-        double trocoDeixar = 0.0;
-        try {
-            trocoDeixar = Double.parseDouble(txtFundoTrocoProximoDia.getText().trim().replace(",", "."));
-            if (trocoDeixar < 0) trocoDeixar = 0.0;
-        } catch (Exception e) {
-            trocoDeixar = 0.0;
-        }
-
-        double sangriaCofre = Math.max(0.0, totalFisico - trocoDeixar);
-        lblValorSangriaMalote.setText(String.format("R$ %.2f", sangriaCofre));
-    }
-
-    // ==========================================
-    // ETAPA 4: RESUMO FINAL & AÇÕES
-    // ==========================================
-    private JPanel criarPainelPasso4Conclusao() {
+    private JPanel criarPainelPasso3Conclusao() {
         JPanel pnl = new JPanel(new BorderLayout(10, 10));
         pnl.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
 
-        JLabel lblTit4 = new JLabel("<html><b>Etapa 4/4: Resumo Final & Encerramento do Turno</b><br>" +
+        JLabel lblTit3 = new JLabel("<html><b>Etapa 3/3: Resumo Final & Encerramento do Turno</b><br>" +
                 "<font color='#7f8c8d'>Revise o extrato consolidado. Você pode imprimir o cupom térmico e enviar o resumo no WhatsApp do dono.</font></html>");
-        pnl.add(lblTit4, BorderLayout.NORTH);
+        pnl.add(lblTit3, BorderLayout.NORTH);
 
         txtPreviaResumo = new JTextArea();
         txtPreviaResumo.setFont(new Font("Monospaced", Font.PLAIN, 12));
@@ -466,7 +394,7 @@ public class FechamentoCegoDialog extends JDialog {
             passoAtual = 2;
             cardLayout.show(pnlCardsPassos, "PASSO_2");
             btnVoltar.setEnabled(true);
-            btnAvancar.setText("Avançar para Sangria / Malote ➡️");
+            btnAvancar.setText("Avançar para Conclusão ➡️");
 
         } else if (passoAtual == 2) {
             double saldoEsperado = caixaDAO.obterSaldo();
@@ -483,24 +411,16 @@ public class FechamentoCegoDialog extends JDialog {
                 return;
             }
 
-            recalcularSangriaMalote();
+            atualizarPreviaResumo();
 
             passoAtual = 3;
             cardLayout.show(pnlCardsPassos, "PASSO_3");
-            btnAvancar.setText("Avançar para Conclusão ➡️");
-
-        } else if (passoAtual == 3) {
-            recalcularSangriaMalote();
-            atualizarPreviaResumo();
-
-            passoAtual = 4;
-            cardLayout.show(pnlCardsPassos, "PASSO_4");
             btnAvancar.setText("🔒 Concluir e Encerrar Caixa");
             btnAvancar.setBackground(new Color(39, 174, 96));
             btnImprimirCupom.setVisible(true);
             btnEnviarWhatsApp.setVisible(true);
 
-        } else if (passoAtual == 4) {
+        } else if (passoAtual == 3) {
             concluirFechamento();
         }
     }
@@ -514,10 +434,6 @@ public class FechamentoCegoDialog extends JDialog {
         } else if (passoAtual == 3) {
             passoAtual = 2;
             cardLayout.show(pnlCardsPassos, "PASSO_2");
-            btnAvancar.setText("Avançar para Sangria / Malote ➡️");
-        } else if (passoAtual == 4) {
-            passoAtual = 3;
-            cardLayout.show(pnlCardsPassos, "PASSO_3");
             btnAvancar.setText("Avançar para Conclusão ➡️");
             btnAvancar.setBackground(new Color(41, 128, 185));
             btnImprimirCupom.setVisible(false);
@@ -531,21 +447,13 @@ public class FechamentoCegoDialog extends JDialog {
         double totalContado = contagem.getTotalCalculado();
         double diferenca = totalContado - saldoEsperado;
 
-        double trocoDeixar = 0.0;
-        try {
-            trocoDeixar = Double.parseDouble(txtFundoTrocoProximoDia.getText().trim().replace(",", "."));
-            if (trocoDeixar < 0) trocoDeixar = 0.0;
-        } catch (Exception ignored) {}
-
-        double sangriaMalote = Math.max(0.0, totalContado - trocoDeixar);
-
         s.setOperadorFechamento(txtOperadorFechamento.getText().trim());
         s.setSaldoFinalSistema(saldoEsperado);
         s.setSaldoFinalInformado(totalContado);
         s.setDiferenca(diferenca);
         s.setJustificativaDiferenca(txtJustificativaDiferenca.getText().trim());
-        s.setFundoTrocoDeixado(trocoDeixar);
-        s.setSangriaMalote(sangriaMalote);
+        s.setFundoTrocoDeixado(totalContado);
+        s.setSangriaMalote(0.0);
         s.setTotalDinheiro(resumoSistema.getTotalDinheiro());
         s.setTotalPix(resumoSistema.getTotalPix());
         s.setTotalDebitoBruto(resumoSistema.getTotalDebitoBruto());
@@ -613,9 +521,8 @@ public class FechamentoCegoDialog extends JDialog {
             JOptionPane.showMessageDialog(this,
                     "✅ CAIXA FECHADO COM SUCESSO!\n\n" +
                     "• Turno: #" + s.getId() + "\n" +
-                    "• Saldo Físico: R$ " + String.format("%.2f", s.getSaldoFinalInformado()) + "\n" +
-                    "• Sangria para Cofre: R$ " + String.format("%.2f", s.getSangriaMalote()) + "\n" +
-                    "• Troco deixado para o próximo turno: R$ " + String.format("%.2f", s.getFundoTrocoDeixado()),
+                    "• Saldo em Gaveta: R$ " + String.format("%.2f", s.getSaldoFinalInformado()) + "\n" +
+                    "• Status da Apuração: " + s.getStatusDiferencaFormatado(),
                     "Fechamento Concluído", JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } else {

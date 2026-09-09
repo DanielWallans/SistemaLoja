@@ -56,8 +56,12 @@ public class CupomTermicoService {
 
         sb.append(div).append("\n");
         sb.append("DESTINAÇÃO DO DINHEIRO FÍSICO\n");
-        sb.append(formatarLinha("Sangria / Malote Cofre:", String.format("R$ %.2f", sessao.getSangriaMalote()), colunas)).append("\n");
-        sb.append(formatarLinha("Troco Deixado na Gaveta:", String.format("R$ %.2f", sessao.getFundoTrocoDeixado()), colunas)).append("\n");
+        if (sessao.getSangriaMalote() > 0) {
+            sb.append(formatarLinha("Sangria / Malote Cofre:", String.format("R$ %.2f", sessao.getSangriaMalote()), colunas)).append("\n");
+            sb.append(formatarLinha("Troco Deixado na Gaveta:", String.format("R$ %.2f", sessao.getFundoTrocoDeixado()), colunas)).append("\n");
+        } else {
+            sb.append(formatarLinha("Saldo em Gaveta:", String.format("R$ %.2f", sessao.getFundoTrocoDeixado()), colunas)).append("\n");
+        }
 
         if (sessao.getContagemDetalhadaTexto() != null && !sessao.getContagemDetalhadaTexto().trim().isEmpty()) {
             sb.append(div).append("\n");
