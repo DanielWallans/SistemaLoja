@@ -6,6 +6,8 @@ import com.loja.repository.EquipamentoDAO;
 import com.loja.repository.OrdemServicoDAO;
 import com.loja.repository.ProdutoDAO;
 import com.loja.service.CaixaService;
+import com.loja.service.ComprovanteEntradaPDFService;
+import com.loja.service.ComprovanteEntregaPDFService;
 import com.loja.service.OrcamentoPDFService;
 import com.loja.service.WhatsAppService;
 
@@ -13,6 +15,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.io.File;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -27,16 +30,25 @@ public class DetalhesOSDialog extends JDialog {
     private final CaixaService caixaService;
     private boolean alterado = false;
 
+    private Cliente cliente;
+    private Equipamento equip;
+    private JButton btnPDF;
+    private JButton btnComprovante;
+    private JButton btnFinalizarOS;
+    private JLabel lblDataSaida;
+    private boolean atualizandoCampos = false;
+
     private JComboBox<String> cbStatus;
     private JTextArea txtDiagnostico;
     private JTextField txtMaoDeObra;
     private DefaultListModel<String> pecasListModel;
     private DefaultListModel<String> servicosListModel;
     private JLabel lblTotal;
+    private JPanel pnlTimelineContainer;
 
     public DetalhesOSDialog(Frame owner, OrdemServico os, OrdemServicoDAO osDAO, ClienteDAO clienteDAO, 
                             EquipamentoDAO equipDAO, ProdutoDAO produtoDAO, CaixaService caixaService) {
-        super(owner, "Ordem de Serviço #" + os.getId() + " - Detalhes e Andamento", true);
+        super(owner, "Ordem de Serviço #" + os.getId() + " - Detalhes e Linha do Tempo", true);
         this.osOriginal = os;
         this.osDAO = osDAO;
         this.clienteDAO = clienteDAO;
@@ -45,15 +57,15 @@ public class DetalhesOSDialog extends JDialog {
         this.caixaService = caixaService;
 
         initComponents();
-        setSize(860, 760);
+        setSize(880, 840);
         setLocationRelativeTo(owner);
     }
 
     private void initComponents() {
         setLayout(new BorderLayout(10, 10));
 
-        Cliente cliente = clienteDAO.buscarPorId(osOriginal.getClienteId());
-        Equipamento equip = equipDAO.buscarPorId(osOriginal.getEquipamentoId());
+        this.cliente = clienteDAO.buscarPorId(osOriginal.getClienteId());
+        this.equip = equipDAO.buscarPorId(osOriginal.getEquipamentoId());
 
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
@@ -64,7 +76,8 @@ public class DetalhesOSDialog extends JDialog {
         pnlHeader.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Informações Gerais ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
         
         pnlHeader.add(new JLabel("OS Nº: #" + osOriginal.getId() + "  |  Data Entrada: " + osOriginal.getDataEntrada().format(formatter)));
-        pnlHeader.add(new JLabel("Data Saída: " + (osOriginal.getDataSaida() != null ? osOriginal.getDataSaida().format(formatter) : "Em aberto")));
+        lblDataSaida = new JLabel("Data Saída: " + (osOriginal.getDataSaida() != null ? osOriginal.getDataSaida().format(formatter) : "Em aberto"));
+        pnlHeader.add(lblDataSaida);
         pnlHeader.add(new JLabel("Cliente: " + (cliente != null ? cliente.getNome() + " (Tel: " + cliente.getTelefone() + ")" : "Não encontrado")));
         pnlHeader.add(new JLabel("Endereço: " + (cliente != null && cliente.getEndereco() != null ? cliente.getEndereco() : "N/A")));
         mainPanel.add(pnlHeader);
@@ -150,6 +163,13 @@ public class DetalhesOSDialog extends JDialog {
                 "Orçamento Recusado / Cancelada"
         });
         cbStatus.setSelectedItem(osOriginal.getStatus());
+        cbStatus.addActionListener(e -> {
+            if (atualizandoCampos) return;
+            String sel = (String) cbStatus.getSelectedItem();
+            if (sel != null && sel.contains("Entregue") && (osOriginal.getStatus() == null || !osOriginal.getStatus().contains("Entregue"))) {
+                acaoFinalizarOSComPDV();
+            }
+        });
 
         txtMaoDeObra = new JTextField(String.format("%.2f", osOriginal.getValorServico()).replace(",", "."), 10);
         txtDiagnostico = new JTextArea(osOriginal.getDiagnosticoTecnico() != null ? osOriginal.getDiagnosticoTecnico() : "", 2, 30);
@@ -169,6 +189,29 @@ public class DetalhesOSDialog extends JDialog {
         pnlAndamento.add(new JScrollPane(txtDiagnostico), gbc);
 
         mainPanel.add(pnlAndamento);
+        mainPanel.add(Box.createVerticalStrut(8));
+
+        // 7. Linha do Tempo / Histórico de Mudanças de Status
+        JPanel pnlHistoricoBox = new JPanel(new BorderLayout(5, 5));
+        pnlHistoricoBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " ⏱️ Linha do Tempo / Histórico de Status da OS ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+
+        pnlTimelineContainer = new JPanel();
+        pnlTimelineContainer.setLayout(new BoxLayout(pnlTimelineContainer, BoxLayout.Y_AXIS));
+        pnlTimelineContainer.setBackground(UIManager.getColor("Panel.background"));
+
+        JScrollPane scrollTimeline = new JScrollPane(pnlTimelineContainer);
+        scrollTimeline.setPreferredSize(new Dimension(800, 140));
+        scrollTimeline.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 228)));
+        pnlHistoricoBox.add(scrollTimeline, BorderLayout.CENTER);
+
+        JPanel pnlTimelineHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        JButton btnAddNotaHistorico = new JButton("📝 + Anotar no Histórico");
+        btnAddNotaHistorico.setFont(btnAddNotaHistorico.getFont().deriveFont(Font.PLAIN, 11f));
+        btnAddNotaHistorico.addActionListener(e -> adicionarNotaAoHistorico());
+        pnlTimelineHeader.add(btnAddNotaHistorico);
+        pnlHistoricoBox.add(pnlTimelineHeader, BorderLayout.SOUTH);
+
+        mainPanel.add(pnlHistoricoBox);
 
         JScrollPane scrollPrincipal = new JScrollPane(mainPanel);
         scrollPrincipal.setBorder(null);
@@ -185,19 +228,26 @@ public class DetalhesOSDialog extends JDialog {
 
         JPanel btnActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         JButton btnWhatsApp = new JButton("📲 WhatsApp");
-        JButton btnPDF = new JButton("📄 Gerar PDF");
-        JButton btnComprovante = new JButton("🖨️ Comprovante");
+        this.btnPDF = new JButton("📄 Gerar PDF");
+        this.btnComprovante = new JButton("🖨️ Comprovante");
+        this.btnFinalizarOS = new JButton("💳 Finalizar OS e Pagar no PDV");
+        this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD));
+        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
+        this.btnFinalizarOS.setForeground(Color.WHITE);
+        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
         JButton btnSalvarAlteracoes = new JButton("💾 Salvar");
         btnSalvarAlteracoes.setFont(btnSalvarAlteracoes.getFont().deriveFont(Font.BOLD));
 
         btnWhatsApp.addActionListener(e -> enviarWhatsApp(cliente, equip));
-        btnPDF.addActionListener(e -> gerarPDF(cliente, equip));
-        btnComprovante.addActionListener(e -> exibirComprovante(cliente, equip));
+        this.btnPDF.addActionListener(e -> acaoGerarPDF());
+        this.btnComprovante.addActionListener(e -> acaoComprovante());
+        this.btnFinalizarOS.addActionListener(e -> acaoFinalizarOSComPDV());
         btnSalvarAlteracoes.addActionListener(e -> salvarAndamento());
 
         btnActions.add(btnWhatsApp);
-        btnActions.add(btnPDF);
-        btnActions.add(btnComprovante);
+        btnActions.add(this.btnPDF);
+        btnActions.add(this.btnComprovante);
+        btnActions.add(this.btnFinalizarOS);
         btnActions.add(btnSalvarAlteracoes);
         bottomPanel.add(btnActions, BorderLayout.EAST);
 
@@ -228,9 +278,144 @@ public class DetalhesOSDialog extends JDialog {
             osOriginal.setStatus(atualizada.getStatus());
             osOriginal.setValorServico(atualizada.getValorServico());
             osOriginal.setValorTotal(atualizada.getValorTotal());
+            osOriginal.setDataSaida(atualizada.getDataSaida());
             lblTotal.setText("VALOR TOTAL DA OS: R$ " + String.format("%.2f", atualizada.getValorTotal()));
-            cbStatus.setSelectedItem(atualizada.getStatus());
+            atualizandoCampos = true;
+            try {
+                cbStatus.setSelectedItem(atualizada.getStatus());
+            } finally {
+                atualizandoCampos = false;
+            }
             txtMaoDeObra.setText(String.format("%.2f", atualizada.getValorServico()).replace(",", "."));
+            if (lblDataSaida != null) {
+                lblDataSaida.setText("Data Saída: " + (atualizada.getDataSaida() != null ? atualizada.getDataSaida().format(formatter) : "Em aberto"));
+            }
+        }
+
+        atualizarRotulosBotoesPDF();
+        recarregarTimeline();
+    }
+
+    private void recarregarTimeline() {
+        if (pnlTimelineContainer == null) return;
+        pnlTimelineContainer.removeAll();
+
+        List<HistoricoOS> historico = osDAO.obterHistoricoOS(osOriginal.getId());
+        if (historico.isEmpty()) {
+            JLabel lblVazio = new JLabel("Nenhum registro histórico disponível para esta OS.", SwingConstants.CENTER);
+            lblVazio.setFont(lblVazio.getFont().deriveFont(Font.ITALIC, 11f));
+            lblVazio.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            pnlTimelineContainer.add(lblVazio);
+        } else {
+            for (int i = 0; i < historico.size(); i++) {
+                HistoricoOS h = historico.get(i);
+                boolean isUltimo = (i == historico.size() - 1);
+                pnlTimelineContainer.add(criarItemTimeline(h, isUltimo));
+            }
+        }
+
+        pnlTimelineContainer.revalidate();
+        pnlTimelineContainer.repaint();
+    }
+
+    private JPanel criarItemTimeline(HistoricoOS h, boolean isUltimo) {
+        JPanel item = new JPanel(new BorderLayout(8, 2));
+        item.setBorder(BorderFactory.createEmptyBorder(4, 8, 4, 8));
+        item.setOpaque(false);
+
+        Color badgeColor;
+        String status = h.getStatus() != null ? h.getStatus() : "";
+        String icone;
+
+        if (status.contains("Aguardando Orçamento")) {
+            badgeColor = new Color(230, 126, 34);
+            icone = "📋";
+        } else if (status.contains("Aprovação")) {
+            badgeColor = new Color(211, 84, 0);
+            icone = "⏳";
+        } else if (status.contains("Manutenção") || status.contains("Andamento")) {
+            badgeColor = new Color(41, 128, 185);
+            icone = "🔧";
+        } else if (status.contains("Peça")) {
+            badgeColor = new Color(142, 68, 173);
+            icone = "📦";
+        } else if (status.contains("Pronto")) {
+            badgeColor = new Color(155, 89, 182);
+            icone = "✨";
+        } else if (status.contains("Entregue") || status.contains("Finalizado")) {
+            badgeColor = new Color(39, 174, 96);
+            icone = "✅";
+        } else if (status.contains("Cancelada") || status.contains("Recusado")) {
+            badgeColor = new Color(192, 57, 43);
+            icone = "❌";
+        } else {
+            badgeColor = new Color(127, 140, 141);
+            icone = "📌";
+        }
+
+        // Esquerda: Data/Hora formatada
+        JLabel lblData = new JLabel("📅 " + h.getDataHoraFormatada());
+        lblData.setFont(new Font("SansSerif", Font.BOLD, 11));
+        lblData.setPreferredSize(new Dimension(170, 20));
+        item.add(lblData, BorderLayout.WEST);
+
+        // Centro: Status Badge + Observação
+        JPanel pnlCentro = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        pnlCentro.setOpaque(false);
+
+        JLabel lblBadge = new JLabel(icone + " " + h.getStatus());
+        lblBadge.setFont(new Font("SansSerif", isUltimo ? Font.BOLD : Font.PLAIN, 11));
+        lblBadge.setForeground(badgeColor);
+        pnlCentro.add(lblBadge);
+
+        if (h.getObservacao() != null && !h.getObservacao().trim().isEmpty()) {
+            JLabel lblObs = new JLabel("•  " + h.getObservacao());
+            lblObs.setFont(new Font("SansSerif", Font.ITALIC, 11));
+            lblObs.setForeground(new Color(100, 105, 110));
+            pnlCentro.add(lblObs);
+        }
+
+        if (isUltimo) {
+            JLabel lblAtual = new JLabel(" (STATUS ATUAL)");
+            lblAtual.setFont(new Font("SansSerif", Font.BOLD, 10));
+            lblAtual.setForeground(badgeColor);
+            pnlCentro.add(lblAtual);
+        }
+
+        item.add(pnlCentro, BorderLayout.CENTER);
+        return item;
+    }
+
+    private void adicionarNotaAoHistorico() {
+        JTextField txtNota = new JTextField(25);
+        JComboBox<String> cbStatusNota = new JComboBox<>(new String[]{
+                osOriginal.getStatus() != null ? osOriginal.getStatus() : "Aguardando Orçamento",
+                "Aguardando Orçamento",
+                "Aguardando Aprovação do Cliente",
+                "Aprovado - Em Manutenção",
+                "Aguardando Peça",
+                "Pronto (Aguardando Retirada)",
+                "Entregue (Finalizado)",
+                "Orçamento Recusado / Cancelada"
+        });
+
+        JPanel pnl = new JPanel(new GridLayout(2, 2, 8, 8));
+        pnl.add(new JLabel("Status do Evento:"));
+        pnl.add(cbStatusNota);
+        pnl.add(new JLabel("Observação / Anotação *:"));
+        pnl.add(txtNota);
+
+        int opt = JOptionPane.showConfirmDialog(this, pnl, "Registrar Evento / Observação na Linha do Tempo", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (opt == JOptionPane.OK_OPTION) {
+            String nota = txtNota.getText().trim();
+            if (nota.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Digite a observação a ser gravada no histórico!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            String st = (String) cbStatusNota.getSelectedItem();
+            osDAO.adicionarEventoHistoricoManual(osOriginal.getId(), st, nota);
+            this.alterado = true;
+            recarregarTimeline();
         }
     }
 
@@ -259,23 +444,303 @@ public class DetalhesOSDialog extends JDialog {
 
         boolean mudouParaEntregue = novoStatus != null && novoStatus.contains("Entregue") && (osOriginal.getStatus() == null || !osOriginal.getStatus().contains("Entregue"));
 
-        osDAO.atualizarStatusEServico(osOriginal.getId(), novoStatus, maoDeObra, diagnostico);
-
         if (mudouParaEntregue) {
-            OrdemServico osAtual = osDAO.buscarPorId(osOriginal.getId());
-            double totalArrecadado = osAtual != null ? osAtual.getValorTotal() : (osOriginal.getValorTotal() - osOriginal.getValorServico() + maoDeObra);
-            try {
-                Produto servicoFicticio = new Produto(9999, "Manutenção OS #" + osOriginal.getId(), totalArrecadado, 99999);
-                caixaService.realizarVenda(servicoFicticio, 1);
-                JOptionPane.showMessageDialog(this, "OS Finalizada! O valor de R$ " + String.format("%.2f", totalArrecadado) + " entrou no Caixa automaticamente.", "Entrada no Caixa", JOptionPane.INFORMATION_MESSAGE);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Erro ao creditar valor no caixa: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
-            }
+            acaoFinalizarOSComPDV();
+            return;
         }
 
+        osDAO.atualizarStatusEServico(osOriginal.getId(), novoStatus, maoDeObra, diagnostico);
         this.alterado = true;
         JOptionPane.showMessageDialog(this, "Andamento da OS #" + osOriginal.getId() + " atualizado com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
         recarregarItens();
+    }
+
+    private void acaoFinalizarOSComPDV() {
+        if (osOriginal.getStatus() != null && (osOriginal.getStatus().contains("Entregue") || osOriginal.getStatus().contains("Finalizado"))) {
+            JOptionPane.showMessageDialog(this, "Esta Ordem de Serviço já está finalizada!", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        double maoDeObra;
+        try {
+            maoDeObra = Double.parseDouble(txtMaoDeObra.getText().trim().replace(",", "."));
+            if (maoDeObra < 0) throw new NumberFormatException();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Informe um valor numérico válido para a mão de obra!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            txtMaoDeObra.requestFocus();
+            restaurarStatusAnterior();
+            return;
+        }
+
+        String diagnostico = txtDiagnostico.getText().trim();
+
+        // Salva os valores pendentes antes de calcular o total a pagar
+        osDAO.atualizarStatusEServico(osOriginal.getId(), osOriginal.getStatus(), maoDeObra, diagnostico);
+        OrdemServico osAtual = osDAO.buscarPorId(osOriginal.getId());
+        double totalPagar = osAtual != null ? osAtual.getValorTotal() : (osOriginal.getValorTotal() - osOriginal.getValorServico() + maoDeObra);
+
+        if (totalPagar <= 0) {
+            String input = JOptionPane.showInputDialog(this,
+                    "A OS #" + osOriginal.getId() + " está sem valor cadastrado (R$ 0,00).\n\n" +
+                    "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
+                    "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
+                    "100.00");
+            if (input == null) {
+                restaurarStatusAnterior();
+                return;
+            }
+            try {
+                totalPagar = Double.parseDouble(input.trim().replace(",", "."));
+                if (totalPagar < 0) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                restaurarStatusAnterior();
+                return;
+            }
+
+            if (totalPagar <= 0) {
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Confirmar a finalização da OS #" + osOriginal.getId() + " SEM COBRANÇA (Cortesia / Garantia R$ 0,00)?",
+                        "Finalizar sem Custo", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION) {
+                    osDAO.atualizarStatusEServico(osOriginal.getId(), "Entregue (Finalizado)", maoDeObra, diagnostico);
+                    osOriginal.setStatus("Entregue (Finalizado)");
+                    osOriginal.setDataSaida(LocalDateTime.now());
+                    this.alterado = true;
+                    recarregarItens();
+                    int optPDF = JOptionPane.showConfirmDialog(this,
+                            "Deseja gerar o Comprovante Oficial de Entrega em PDF agora?",
+                            "Comprovante de Entrega", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (optPDF == JOptionPane.YES_OPTION) {
+                        gerarComprovanteEntregaPDF(cliente, equip);
+                    }
+                } else {
+                    restaurarStatusAnterior();
+                }
+                return;
+            } else {
+                maoDeObra = totalPagar;
+                txtMaoDeObra.setText(String.format("%.2f", maoDeObra).replace(",", "."));
+                osDAO.atualizarStatusEServico(osOriginal.getId(), osOriginal.getStatus(), maoDeObra, diagnostico);
+            }
+        }
+
+        com.loja.repository.CaixaDAO caixaDAO = new com.loja.repository.CaixaDAO();
+        if (caixaDAO.obterSessaoAberta() == null) {
+            int opt = JOptionPane.showConfirmDialog(this,
+                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + osOriginal.getId() + ", é necessário abrir o turno.\n" +
+                    "Deseja realizar a Abertura de Caixa agora?",
+                    "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (opt == JOptionPane.YES_OPTION) {
+                com.loja.service.CaixaService srv = new com.loja.service.CaixaService();
+                com.loja.view.dialogs.AberturaCaixaDialog abDialog = new com.loja.view.dialogs.AberturaCaixaDialog(this, srv, caixaDAO);
+                abDialog.setVisible(true);
+            }
+            if (caixaDAO.obterSessaoAberta() == null) {
+                JOptionPane.showMessageDialog(this, "A finalização da OS foi cancelada pois o caixa não foi aberto.", "Operação Cancelada", JOptionPane.WARNING_MESSAGE);
+                restaurarStatusAnterior();
+                return;
+            }
+        }
+
+        PagamentoPDVDialog pagDialog = new PagamentoPDVDialog(this, totalPagar, caixaDAO);
+        pagDialog.setTitle("Recebimento e Pagamento PDV - OS #" + osOriginal.getId());
+        pagDialog.setVisible(true);
+
+        if (pagDialog.isConfirmado()) {
+            caixaDAO.registrarRecebimentoOS(osOriginal.getId(), pagDialog.getPagamentos());
+            osDAO.atualizarStatusEServico(osOriginal.getId(), "Entregue (Finalizado)", maoDeObra, diagnostico);
+            osOriginal.setStatus("Entregue (Finalizado)");
+            osOriginal.setDataSaida(LocalDateTime.now());
+            this.alterado = true;
+
+            JOptionPane.showMessageDialog(this,
+                    "OS #" + osOriginal.getId() + " finalizada com sucesso!\nPagamento de R$ " + String.format("%.2f", totalPagar) + " registrado no Caixa.",
+                    "OS Finalizada", JOptionPane.INFORMATION_MESSAGE);
+
+            recarregarItens();
+
+            int optPDF = JOptionPane.showConfirmDialog(this,
+                    "Deseja gerar o Comprovante Oficial de Entrega em PDF agora?",
+                    "Comprovante de Entrega", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (optPDF == JOptionPane.YES_OPTION) {
+                gerarComprovanteEntregaPDF(cliente, equip);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Pagamento cancelado. A OS #" + osOriginal.getId() + " permanece em aberto com status anterior.", "Cancelado", JOptionPane.INFORMATION_MESSAGE);
+            restaurarStatusAnterior();
+        }
+    }
+
+    private void restaurarStatusAnterior() {
+        atualizandoCampos = true;
+        try {
+            cbStatus.setSelectedItem(osOriginal.getStatus());
+        } finally {
+            atualizandoCampos = false;
+        }
+    }
+
+    private void atualizarRotulosBotoesPDF() {
+        boolean isFinalizada = osOriginal.getStatus() != null &&
+                (osOriginal.getStatus().contains("Entregue") || osOriginal.getStatus().contains("Finalizado"));
+        if (btnPDF != null) {
+            btnPDF.setText(isFinalizada ? "📄 Comprovante Entrega (PDF)" : "📄 Gerar PDF");
+            btnPDF.setToolTipText(isFinalizada ? "Gerar Comprovante de Entrega ou Orçamento em PDF" : "Gerar Orçamento em PDF");
+        }
+        if (btnComprovante != null) {
+            btnComprovante.setText(isFinalizada ? "🖨️ Termo Entrega" : "🖨️ Comprovante");
+        }
+        if (btnFinalizarOS != null) {
+            if (isFinalizada) {
+                btnFinalizarOS.setEnabled(false);
+                btnFinalizarOS.setText("✅ OS Já Finalizada");
+            } else {
+                btnFinalizarOS.setEnabled(true);
+                btnFinalizarOS.setText("💳 Finalizar OS e Pagar no PDV");
+            }
+        }
+    }
+
+    private void acaoGerarPDF() {
+        boolean isFinalizada = osOriginal.getStatus() != null &&
+                (osOriginal.getStatus().contains("Entregue") || osOriginal.getStatus().contains("Finalizado"));
+        if (isFinalizada) {
+            Object[] opcoes = {"📦 Comprovante de Entrega (PDF)", "📥 Comprovante de Entrada Original (PDF)", "📋 Orçamento Original (PDF)", "Cancelar"};
+            int escolha = JOptionPane.showOptionDialog(
+                    this,
+                    "Esta Ordem de Serviço está FINALIZADA.\nQual documento em PDF deseja emitir?",
+                    "Emissão de Documento em PDF - OS #" + osOriginal.getId(),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+            );
+            if (escolha == 0) {
+                gerarComprovanteEntregaPDF(cliente, equip);
+            } else if (escolha == 1) {
+                gerarComprovanteEntradaPDF(cliente, equip);
+            } else if (escolha == 2) {
+                gerarPDF(cliente, equip);
+            }
+        } else {
+            Object[] opcoes = {"📥 Comprovante de Entrada (Deixou o Equipamento)", "📋 Proposta de Orçamento (PDF)", "Cancelar"};
+            int escolha = JOptionPane.showOptionDialog(
+                    this,
+                    "Qual documento em PDF deseja emitir para esta OS?",
+                    "Emissão de Documento em PDF - OS #" + osOriginal.getId(),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+            );
+            if (escolha == 0) {
+                gerarComprovanteEntradaPDF(cliente, equip);
+            } else if (escolha == 1) {
+                gerarPDF(cliente, equip);
+            }
+        }
+    }
+
+    private void acaoComprovante() {
+        boolean isFinalizada = osOriginal.getStatus() != null &&
+                (osOriginal.getStatus().contains("Entregue") || osOriginal.getStatus().contains("Finalizado"));
+        if (isFinalizada) {
+            Object[] opcoes = {"📄 Gerar Comprovante de Entrega em PDF", "📋 Visualizar Resumo na Tela", "Cancelar"};
+            int esc = JOptionPane.showOptionDialog(
+                    this,
+                    "Deseja gerar o Comprovante Oficial de Entrega em PDF ou visualizar em texto?",
+                    "Comprovante de Entrega - OS #" + osOriginal.getId(),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+            );
+            if (esc == 0) {
+                gerarComprovanteEntregaPDF(cliente, equip);
+            } else if (esc == 1) {
+                exibirComprovante(cliente, equip);
+            }
+        } else {
+            Object[] opcoes = {"📄 Gerar Comprovante de Entrada em PDF (Assinatura)", "📋 Visualizar Comprovante na Tela", "Cancelar"};
+            int esc = JOptionPane.showOptionDialog(
+                    this,
+                    "Esta OS está com status: " + osOriginal.getStatus() + ".\nEscolha a opção desejada:",
+                    "Comprovante da OS #" + osOriginal.getId(),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+            );
+            if (esc == 0) {
+                gerarComprovanteEntradaPDF(cliente, equip);
+            } else if (esc == 1) {
+                exibirComprovante(cliente, equip);
+            }
+        }
+    }
+
+    private void gerarComprovanteEntradaPDF(Cliente cliente, Equipamento equip) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Comprovante de Entrada em PDF");
+        fileChooser.setSelectedFile(new File("Comprovante_Entrada_OS_" + osOriginal.getId() + ".pdf"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File arquivoDestino = fileChooser.getSelectedFile();
+            if (!arquivoDestino.getName().toLowerCase().endsWith(".pdf")) {
+                arquivoDestino = new File(arquivoDestino.getAbsolutePath() + ".pdf");
+            }
+
+            try {
+                ComprovanteEntradaPDFService.gerarComprovanteEntradaPDF(arquivoDestino, osOriginal, cliente, equip);
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Comprovante de Entrada gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?",
+                        "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(arquivoDestino);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrada em PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void gerarComprovanteEntregaPDF(Cliente cliente, Equipamento equip) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Comprovante de Entrega em PDF");
+        fileChooser.setSelectedFile(new File("Comprovante_Entrega_OS_" + osOriginal.getId() + ".pdf"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File arquivoDestino = fileChooser.getSelectedFile();
+            if (!arquivoDestino.getName().toLowerCase().endsWith(".pdf")) {
+                arquivoDestino = new File(arquivoDestino.getAbsolutePath() + ".pdf");
+            }
+
+            try {
+                List<ServicoItem> servicos = osDAO.obterServicosOS(osOriginal.getId());
+                if (servicos.isEmpty() && osOriginal.getValorServico() > 0) {
+                    servicos.add(new ServicoItem("Mão de Obra Geral / Serviços Realizados", osOriginal.getValorServico()));
+                }
+                List<PecaItem> pecas = osDAO.obterPecasItensOS(osOriginal.getId());
+                List<HistoricoOS> historico = osDAO.obterHistoricoOS(osOriginal.getId());
+
+                ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, osOriginal, cliente, equip, servicos, pecas, historico);
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?",
+                        "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(arquivoDestino);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrega em PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void gerarPDF(Cliente cliente, Equipamento equip) {
@@ -296,8 +761,9 @@ public class DetalhesOSDialog extends JDialog {
                     servicos.add(new ServicoItem("Mão de Obra Geral / Diagnóstico", osOriginal.getValorServico()));
                 }
                 List<PecaItem> pecas = osDAO.obterPecasItensOS(osOriginal.getId());
+                List<HistoricoOS> historico = osDAO.obterHistoricoOS(osOriginal.getId());
 
-                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, osOriginal, cliente, equip, servicos, pecas);
+                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, osOriginal, cliente, equip, servicos, pecas, historico);
                 int opt = JOptionPane.showConfirmDialog(this, 
                         "Orçamento gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?", 
                         "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);

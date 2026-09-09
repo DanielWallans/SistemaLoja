@@ -6,6 +6,7 @@ import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
 import com.loja.repository.OrdemServicoDAO;
 import com.loja.repository.ProdutoDAO;
+import com.loja.service.ComprovanteEntregaPDFService;
 import com.loja.service.OrcamentoPDFService;
 import com.loja.service.WhatsAppService;
 
@@ -25,6 +26,8 @@ public class MontarOrcamentoDialog extends JDialog {
     private final ProdutoDAO produtoDAO;
     private final CatalogoDAO catalogoDAO;
     private boolean salvo = false;
+    private boolean atualizandoStatus = false;
+    private JButton btnFinalizarOS;
 
     private JComboBox<String> cbStatus;
     private JTextArea txtDiagnostico;
@@ -95,6 +98,13 @@ public class MontarOrcamentoDialog extends JDialog {
                 "Orçamento Recusado / Cancelada"
         });
         cbStatus.setSelectedItem(os.getStatus());
+        cbStatus.addActionListener(e -> {
+            if (atualizandoStatus) return;
+            String sel = (String) cbStatus.getSelectedItem();
+            if (sel != null && sel.contains("Entregue") && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
+                finalizarOSComPDV(cliente, equip);
+            }
+        });
         pnlStatusRow.add(cbStatus);
         pnlDiagStatus.add(pnlStatusRow, BorderLayout.NORTH);
 
@@ -206,21 +216,38 @@ public class MontarOrcamentoDialog extends JDialog {
         JButton btnCancelar = new JButton("Fechar");
         JButton btnWhatsApp = new JButton("📲 Enviar por WhatsApp");
         JButton btnGerarPDF = new JButton("📄 Gerar Orçamento em PDF");
-        JButton btnSalvar = new JButton("💾 Salvar Orçamento no Banco");
+        this.btnFinalizarOS = new JButton("💳 Finalizar OS e Pagar no PDV");
+        this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD, 13f));
+        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
+        this.btnFinalizarOS.setForeground(Color.WHITE);
+        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        boolean isFinalizada = os.getStatus() != null && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"));
+        if (isFinalizada) {
+            btnFinalizarOS.setEnabled(false);
+            btnFinalizarOS.setText("✅ OS Já Finalizada");
+        }
+        JButton btnSalvar = new JButton("💾 Salvar Orçamento");
         btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 13f));
 
         btnCancelar.addActionListener(e -> dispose());
         btnWhatsApp.addActionListener(e -> enviarWhatsApp(cliente, equip));
         btnGerarPDF.addActionListener(e -> gerarPDF(cliente, equip));
+        this.btnFinalizarOS.addActionListener(e -> finalizarOSComPDV(cliente, equip));
         btnSalvar.addActionListener(e -> {
-            if (salvarOrcamento()) {
-                JOptionPane.showMessageDialog(this, "Orçamento e status salvos com sucesso no banco MySQL!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            String sel = (String) cbStatus.getSelectedItem();
+            if (sel != null && sel.contains("Entregue") && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
+                finalizarOSComPDV(cliente, equip);
+            } else {
+                if (salvarOrcamento()) {
+                    JOptionPane.showMessageDialog(this, "Orçamento e status salvos com sucesso no banco MySQL!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                }
             }
         });
 
         pnlActions.add(btnCancelar);
         pnlActions.add(btnWhatsApp);
         pnlActions.add(btnGerarPDF);
+        pnlActions.add(this.btnFinalizarOS);
         pnlActions.add(btnSalvar);
 
         add(pnlActions, BorderLayout.SOUTH);
@@ -571,8 +598,169 @@ public class MontarOrcamentoDialog extends JDialog {
         return ok;
     }
 
+    private void finalizarOSComPDV(Cliente cliente, Equipamento equip) {
+        if (os.getStatus() != null && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"))) {
+            JOptionPane.showMessageDialog(this, "Esta Ordem de Serviço já se encontra finalizada!", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        double subtotalServicos = listaServicos.stream().mapToDouble(ServicoItem::getValor).sum();
+        double subtotalPecas = listaPecas.stream().mapToDouble(PecaItem::getSubtotal).sum();
+        double totalGeral = subtotalServicos + subtotalPecas;
+
+        String diagnostico = txtDiagnostico.getText().trim();
+
+        // Salva os itens e diagnóstico atuais no banco mantendo o status anterior
+        osDAO.salvarOrcamentoCompleto(os.getId(), os.getStatus(), diagnostico, listaServicos, listaPecas, subtotalServicos, totalGeral);
+
+        if (totalGeral <= 0) {
+            String input = JOptionPane.showInputDialog(this,
+                    "O orçamento está sem valor cadastrado (R$ 0,00).\n\n" +
+                    "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
+                    "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
+                    "100.00");
+            if (input == null) {
+                restaurarStatusAnterior();
+                return;
+            }
+            try {
+                totalGeral = Double.parseDouble(input.trim().replace(",", "."));
+                if (totalGeral < 0) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                restaurarStatusAnterior();
+                return;
+            }
+
+            if (totalGeral <= 0) {
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Confirmar a finalização da OS #" + os.getId() + " SEM COBRANÇA (Cortesia / Garantia R$ 0,00)?",
+                        "Finalizar sem Custo", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION) {
+                    osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos, listaPecas, subtotalServicos, 0.0);
+                    os.setStatus("Entregue (Finalizado)");
+                    os.setDataSaida(java.time.LocalDateTime.now());
+                    this.salvo = true;
+                    if (btnFinalizarOS != null) {
+                        btnFinalizarOS.setEnabled(false);
+                        btnFinalizarOS.setText("✅ OS Já Finalizada");
+                    }
+                    atualizandoStatus = true;
+                    try {
+                        cbStatus.setSelectedItem("Entregue (Finalizado)");
+                    } finally {
+                        atualizandoStatus = false;
+                    }
+                    int optPDF = JOptionPane.showConfirmDialog(this,
+                            "Deseja gerar o Comprovante Oficial de Entrega em PDF agora?",
+                            "Comprovante de Entrega", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+                    if (optPDF == JOptionPane.YES_OPTION) {
+                        gerarComprovanteEntregaPDF(cliente, equip);
+                    }
+                } else {
+                    restaurarStatusAnterior();
+                }
+                return;
+            } else {
+                listaServicos.add(new ServicoItem("Serviços Técnicos e Reparo", totalGeral));
+                subtotalServicos = totalGeral;
+                recarregarTabelasEValores();
+            }
+        }
+
+        com.loja.repository.CaixaDAO caixaDAO = new com.loja.repository.CaixaDAO();
+        if (caixaDAO.obterSessaoAberta() == null) {
+            int opt = JOptionPane.showConfirmDialog(this,
+                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + os.getId() + ", é necessário abrir o turno.\n" +
+                    "Deseja realizar a Abertura de Caixa agora?",
+                    "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (opt == JOptionPane.YES_OPTION) {
+                com.loja.service.CaixaService srv = new com.loja.service.CaixaService();
+                com.loja.view.dialogs.AberturaCaixaDialog abDialog = new com.loja.view.dialogs.AberturaCaixaDialog(this, srv, caixaDAO);
+                abDialog.setVisible(true);
+            }
+            if (caixaDAO.obterSessaoAberta() == null) {
+                JOptionPane.showMessageDialog(this, "A finalização da OS foi cancelada pois o caixa não foi aberto.", "Operação Cancelada", JOptionPane.WARNING_MESSAGE);
+                restaurarStatusAnterior();
+                return;
+            }
+        }
+
+        PagamentoPDVDialog pagDialog = new PagamentoPDVDialog(this, totalGeral, caixaDAO);
+        pagDialog.setTitle("Recebimento e Pagamento PDV - OS #" + os.getId());
+        pagDialog.setVisible(true);
+
+        if (pagDialog.isConfirmado()) {
+            caixaDAO.registrarRecebimentoOS(os.getId(), pagDialog.getPagamentos());
+            osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos, listaPecas, subtotalServicos, totalGeral);
+            os.setStatus("Entregue (Finalizado)");
+            os.setValorServico(subtotalServicos);
+            os.setValorTotal(totalGeral);
+            os.setDiagnosticoTecnico(diagnostico);
+            os.setDataSaida(java.time.LocalDateTime.now());
+            this.salvo = true;
+
+            if (btnFinalizarOS != null) {
+                btnFinalizarOS.setEnabled(false);
+                btnFinalizarOS.setText("✅ OS Já Finalizada");
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    "OS #" + os.getId() + " finalizada com sucesso!\nPagamento de R$ " + String.format("%.2f", totalGeral) + " registrado no Caixa.",
+                    "OS Finalizada", JOptionPane.INFORMATION_MESSAGE);
+
+            atualizandoStatus = true;
+            try {
+                cbStatus.setSelectedItem("Entregue (Finalizado)");
+            } finally {
+                atualizandoStatus = false;
+            }
+
+            int optPDF = JOptionPane.showConfirmDialog(this,
+                    "Deseja gerar o Comprovante Oficial de Entrega em PDF agora?",
+                    "Comprovante de Entrega", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (optPDF == JOptionPane.YES_OPTION) {
+                gerarComprovanteEntregaPDF(cliente, equip);
+            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Pagamento cancelado. A OS #" + os.getId() + " permanece com o status anterior.", "Cancelado", JOptionPane.INFORMATION_MESSAGE);
+            restaurarStatusAnterior();
+        }
+    }
+
+    private void restaurarStatusAnterior() {
+        atualizandoStatus = true;
+        try {
+            cbStatus.setSelectedItem(os.getStatus());
+        } finally {
+            atualizandoStatus = false;
+        }
+    }
+
     private void gerarPDF(Cliente cliente, Equipamento equip) {
         if (!salvarOrcamento()) return;
+
+        String statusAtual = (String) cbStatus.getSelectedItem();
+        boolean isFinalizada = statusAtual != null && (statusAtual.contains("Entregue") || statusAtual.contains("Finalizado"));
+        if (isFinalizada) {
+            Object[] opcoes = {"📦 Comprovante de Entrega (PDF)", "📋 Orçamento Original (PDF)", "Cancelar"};
+            int escolha = JOptionPane.showOptionDialog(
+                    this,
+                    "Esta Ordem de Serviço está FINALIZADA.\nQual documento em PDF deseja emitir?",
+                    "Opções de Emissão em PDF - OS #" + os.getId(),
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    opcoes,
+                    opcoes[0]
+            );
+            if (escolha == 0) {
+                gerarComprovanteEntregaPDF(cliente, equip);
+                return;
+            } else if (escolha != 1) {
+                return;
+            }
+        }
 
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Salvar Orçamento em PDF");
@@ -586,7 +774,8 @@ public class MontarOrcamentoDialog extends JDialog {
             }
 
             try {
-                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas);
+                List<HistoricoOS> historico = osDAO.obterHistoricoOS(os.getId());
+                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas, historico);
                 int opt = JOptionPane.showConfirmDialog(this, 
                         "Orçamento gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?", 
                         "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
@@ -595,6 +784,33 @@ public class MontarOrcamentoDialog extends JDialog {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Erro ao gerar PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void gerarComprovanteEntregaPDF(Cliente cliente, Equipamento equip) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Comprovante de Entrega em PDF");
+        fileChooser.setSelectedFile(new File("Comprovante_Entrega_OS_" + os.getId() + ".pdf"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File arquivoDestino = fileChooser.getSelectedFile();
+            if (!arquivoDestino.getName().toLowerCase().endsWith(".pdf")) {
+                arquivoDestino = new File(arquivoDestino.getAbsolutePath() + ".pdf");
+            }
+
+            try {
+                List<HistoricoOS> historico = osDAO.obterHistoricoOS(os.getId());
+                ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas, historico);
+                int opt = JOptionPane.showConfirmDialog(this, 
+                        "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?", 
+                        "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(arquivoDestino);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrega em PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

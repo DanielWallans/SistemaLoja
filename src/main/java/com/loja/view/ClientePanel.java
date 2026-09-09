@@ -5,6 +5,9 @@ import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
 import com.loja.view.dialogs.ClienteDialog;
 import com.loja.view.dialogs.EquipamentoDialog;
+import com.loja.view.theme.ThemeTokens;
+import com.loja.view.theme.UIComponents;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -28,31 +31,65 @@ public class ClientePanel extends JPanel {
         this.clienteDAO = clienteDAO;
         this.equipDAO = equipDAO;
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout(0, UITheme.SPACE_16));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20, UITheme.SPACE_24));
 
         initComponents();
         recarregarTabela();
     }
 
     private void initComponents() {
-        // 1. Barra Superior (Título e Ações)
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
-        
-        JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        JLabel lblTitulo = new JLabel("Gestão de Clientes");
-        lblTitulo.setFont(lblTitulo.getFont().deriveFont(Font.BOLD, 18f));
-        pnlTitulo.add(lblTitulo);
+        ThemeTokens t = UITheme.tokens();
 
-        JPanel pnlBuscaEAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        txtBusca = new JTextField(18);
-        txtBusca.putClientProperty("JTextField.placeholderText", "Buscar por nome ou CPF...");
+        // 1. Barra Superior (Título e Ações)
+        JPanel topPanel = new JPanel(new BorderLayout(UITheme.SPACE_16, 0));
+        topPanel.setOpaque(false);
+        
+        JPanel pnlTitulo = new JPanel(new BorderLayout(0, UITheme.SPACE_4));
+        pnlTitulo.setOpaque(false);
+        JLabel lblTitulo = new JLabel("Gestão de Clientes");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitulo.setForeground(t.getTextPrimary());
+        JLabel lblSub = new JLabel("Base cadastral de clientes, contatos e aparelhos vinculados.");
+        lblSub.setFont(UITheme.FONT_SUBTITLE);
+        lblSub.setForeground(t.getTextSecondary());
+        pnlTitulo.add(lblTitulo, BorderLayout.NORTH);
+        pnlTitulo.add(lblSub, BorderLayout.SOUTH);
+
+        JPanel pnlBuscaEAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlBuscaEAcoes.setOpaque(false);
+
+        txtBusca = new JTextField(20);
+        txtBusca.setFont(UITheme.FONT_BODY);
+        txtBusca.putClientProperty("JTextField.placeholderText", "Buscar por nome ou CPF [F3]...");
+        
         JButton btnBuscar = new JButton("Buscar");
+        btnBuscar.setFont(UITheme.FONT_BODY);
+        btnBuscar.putClientProperty("JButton.buttonType", "roundRect");
+        btnBuscar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         JButton btnNovo = new JButton("+ Novo Cliente");
-        btnNovo.setFont(btnNovo.getFont().deriveFont(Font.BOLD));
+        btnNovo.setFont(UITheme.FONT_BODY_BOLD);
+        btnNovo.setBackground(t.getPrimaryAccent());
+        btnNovo.setForeground(Color.WHITE);
+        btnNovo.setFocusPainted(false);
+        btnNovo.putClientProperty("JButton.buttonType", "roundRect");
+        btnNovo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         JButton btnEditar = new JButton("Editar");
-        JButton btnNovoEquip = new JButton("+ Adicionar Equipamento");
-        JButton btnAtualizar = new JButton("Atualizar");
+        btnEditar.setFont(UITheme.FONT_BODY);
+        btnEditar.putClientProperty("JButton.buttonType", "roundRect");
+        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton btnNovoEquip = new JButton("+ Vincular Aparelho");
+        btnNovoEquip.setFont(UITheme.FONT_BODY);
+        btnNovoEquip.putClientProperty("JButton.buttonType", "roundRect");
+        btnNovoEquip.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton btnAtualizar = new JButton("Atualizar [F5]");
+        btnAtualizar.setFont(UITheme.FONT_BODY);
+        btnAtualizar.putClientProperty("JButton.buttonType", "roundRect");
+        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         btnBuscar.addActionListener(e -> filtrarClientes());
         txtBusca.addActionListener(e -> filtrarClientes());
@@ -64,7 +101,6 @@ public class ClientePanel extends JPanel {
             recarregarTabela();
         });
 
-        pnlBuscaEAcoes.add(new JLabel("Pesquisar:"));
         pnlBuscaEAcoes.add(txtBusca);
         pnlBuscaEAcoes.add(btnBuscar);
         pnlBuscaEAcoes.add(btnNovo);
@@ -86,14 +122,15 @@ public class ClientePanel extends JPanel {
         };
 
         tabela = new JTable(tableModel);
-        tabela.setRowHeight(28);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabela.getColumnModel().getColumn(0).setPreferredWidth(50);
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(180);
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(120);
-        tabela.getColumnModel().getColumn(3).setPreferredWidth(110);
-        tabela.getColumnModel().getColumn(4).setPreferredWidth(140);
-        tabela.getColumnModel().getColumn(5).setPreferredWidth(200);
+        tabela.getColumnModel().getColumn(0).setPreferredWidth(60);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(190);
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(130);
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(120);
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(150);
+        tabela.getColumnModel().getColumn(5).setPreferredWidth(210);
+
+        UIComponents.formatarTabelaModerna(tabela, -1);
 
         tabela.addMouseListener(new MouseAdapter() {
             @Override
@@ -105,17 +142,21 @@ public class ClientePanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(tabela);
+        scrollPane.setBorder(BorderFactory.createLineBorder(t.getBorderSubtle(), 1));
         add(scrollPane, BorderLayout.CENTER);
 
         // 3. Rodapé com contagem
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bottomPanel.setOpaque(false);
         lblContador = new JLabel("Total de clientes: 0");
-        lblContador.setFont(lblContador.getFont().deriveFont(Font.ITALIC));
+        lblContador.setFont(UITheme.FONT_SMALL);
+        lblContador.setForeground(t.getTextSecondary());
         bottomPanel.add(lblContador);
         add(bottomPanel, BorderLayout.SOUTH);
     }
 
     public void recarregarTabela() {
+        UIComponents.formatarTabelaModerna(tabela, -1);
         tableModel.setRowCount(0);
         List<Cliente> clientes = clienteDAO.buscarTodos();
         for (Cliente c : clientes) {
@@ -186,5 +227,12 @@ public class ClientePanel extends JPanel {
         int clienteId = (int) tableModel.getValueAt(row, 0);
         EquipamentoDialog dialog = new EquipamentoDialog(owner, equipDAO, clienteDAO, null, clienteId);
         dialog.setVisible(true);
+    }
+
+    public void focarBusca() {
+        if (txtBusca != null) {
+            txtBusca.requestFocusInWindow();
+            txtBusca.selectAll();
+        }
     }
 }

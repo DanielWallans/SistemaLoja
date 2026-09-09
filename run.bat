@@ -1,8 +1,33 @@
 @echo off
 chcp 65001 > nul
-set "JAVA_HOME=C:\Users\User\.antigravity-ide\extensions\redhat.java-1.55.0-win32-x64\jre\21.0.11-win32-x86_64"
-set "JAVAC_EXE=%JAVA_HOME%\bin\javac.exe"
-set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
+:: Tenta detectar o Java automaticamente nas extensoes ou variaveis de ambiente
+set "JAVA_HOME="
+for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extensions\redhat.java*" 2^>nul') do (
+    for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre" 2^>nul') do (
+        if exist "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J\bin\javac.exe" (
+            set "JAVA_HOME=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
+            goto :java_detected
+        )
+    )
+)
+
+for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.vscode\extensions\redhat.java*" 2^>nul') do (
+    for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.vscode\extensions\%%I\jre" 2^>nul') do (
+        if exist "%USERPROFILE%\.vscode\extensions\%%I\jre\%%J\bin\javac.exe" (
+            set "JAVA_HOME=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
+            goto :java_detected
+        )
+    )
+)
+
+:java_detected
+if defined JAVA_HOME (
+    set "JAVAC_EXE=%JAVA_HOME%\bin\javac.exe"
+    set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
+) else (
+    set "JAVAC_EXE=javac"
+    set "JAVA_EXE=java"
+)
 
 set "MYSQL_JAR=mysql-connector-j-8.3.0.jar"
 set "FLATLAF_JAR=flatlaf-3.5.4.jar"

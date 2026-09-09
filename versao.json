@@ -1,0 +1,6 @@
+{
+  "versao": "1.0.0",
+  "data": "09/09/2026",
+  "novidades": "- Versão 1.0.0 estável.\n- Suporte a instalador executável .EXE com Java 21 embutido.\n- Painel visual de configuração de banco de dados e servidor de rede.",
+  "download_url": "https://github.com/DanielWallans/SistemaLoja/raw/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
+}

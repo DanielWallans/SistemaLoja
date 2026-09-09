@@ -121,4 +121,31 @@ public class EquipamentoDAO {
         }
         return null;
     }
+
+    public List<Equipamento> buscarTodos() {
+        List<Equipamento> lista = new ArrayList<>();
+        String sql = "SELECT * FROM equipamento ORDER BY id DESC";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                lista.add(new Equipamento(
+                        rs.getInt("id"),
+                        rs.getInt("cliente_id"),
+                        rs.getString("tipo"),
+                        rs.getString("marca"),
+                        rs.getString("modelo"),
+                        rs.getString("numero_serie"),
+                        rs.getString("cor"),
+                        rs.getString("avarias"),
+                        rs.getString("patrimonio"),
+                        rs.getString("senha_acesso"),
+                        rs.getString("acessorios")
+                ));
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERRO DB] Falha ao buscar todos os equipamentos: " + e.getMessage());
+        }
+        return lista;
+    }
 }

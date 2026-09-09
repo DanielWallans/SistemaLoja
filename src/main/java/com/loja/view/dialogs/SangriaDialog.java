@@ -11,6 +11,7 @@ public class SangriaDialog extends JDialog {
     private boolean realizada = false;
 
     private JTextField txtValor;
+    private JTextField txtJustificativa;
 
     public SangriaDialog(Frame owner, CaixaService caixaService, double saldoAtual) {
         super(owner, "Registrar Retirada do Caixa (Sangria)", true);
@@ -18,7 +19,7 @@ public class SangriaDialog extends JDialog {
         this.saldoAtual = saldoAtual;
 
         initComponents();
-        setSize(420, 220);
+        setSize(460, 260);
         setLocationRelativeTo(owner);
     }
 
@@ -32,6 +33,7 @@ public class SangriaDialog extends JDialog {
         gbc.insets = new Insets(6, 6, 6, 6);
 
         txtValor = new JTextField(12);
+        txtJustificativa = new JTextField(15);
 
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.4;
         formPanel.add(new JLabel("Saldo Disponível:"), gbc);
@@ -42,9 +44,14 @@ public class SangriaDialog extends JDialog {
         formPanel.add(lblSaldo, gbc);
 
         gbc.gridx = 0; gbc.gridy = 1;
-        formPanel.add(new JLabel("Valor da Retirada (R$):"), gbc);
+        formPanel.add(new JLabel("Valor da Retirada (R$) *:"), gbc);
         gbc.gridx = 1;
         formPanel.add(txtValor, gbc);
+
+        gbc.gridx = 0; gbc.gridy = 2;
+        formPanel.add(new JLabel("Motivo / Justificativa *:"), gbc);
+        gbc.gridx = 1;
+        formPanel.add(txtJustificativa, gbc);
 
         add(formPanel, BorderLayout.CENTER);
 
@@ -72,15 +79,26 @@ public class SangriaDialog extends JDialog {
             return;
         }
 
+        String just = txtJustificativa.getText().trim();
+        if (just.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Informe a justificativa/motivo da sangria!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            txtJustificativa.requestFocus();
+            return;
+        }
+
         if (valor > saldoAtual) {
             JOptionPane.showMessageDialog(this, "Saldo insuficiente para retirar R$ " + String.format("%.2f", valor) + "!\nSaldo atual: R$ " + String.format("%.2f", saldoAtual), "Saldo Insuficiente", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        caixaService.realizarSangria(valor);
-        this.realizada = true;
-        JOptionPane.showMessageDialog(this, "Retirada de R$ " + String.format("%.2f", valor) + " realizada com sucesso!", "Sangria Concluída", JOptionPane.INFORMATION_MESSAGE);
-        dispose();
+        boolean ok = caixaService.realizarSangria(valor, just);
+        if (ok) {
+            this.realizada = true;
+            JOptionPane.showMessageDialog(this, "Retirada de R$ " + String.format("%.2f", valor) + " realizada com sucesso!", "Sangria Concluída", JOptionPane.INFORMATION_MESSAGE);
+            dispose();
+        } else {
+            JOptionPane.showMessageDialog(this, "Erro ao gravar sangria no banco de dados.", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     public boolean isRealizada() {

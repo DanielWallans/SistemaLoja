@@ -3,9 +3,10 @@ package com.loja.view;
 import com.loja.model.Produto;
 import com.loja.repository.ProdutoDAO;
 import com.loja.view.dialogs.ProdutoDialog;
+import com.loja.view.theme.UIComponents;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -25,8 +26,8 @@ public class EstoquePanel extends JPanel {
         this.owner = owner;
         this.produtoDAO = produtoDAO;
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20));
 
         initComponents();
         recarregarTabela();
@@ -34,20 +35,22 @@ public class EstoquePanel extends JPanel {
 
     private void initComponents() {
         // 1. Top Panel
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        JPanel topPanel = new JPanel(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_8));
+        topPanel.setOpaque(false);
 
         JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        pnlTitulo.setOpaque(false);
         JLabel lblTitulo = new JLabel("Estoque de Peças e Componentes");
-        lblTitulo.setFont(lblTitulo.getFont().deriveFont(Font.BOLD, 18f));
+        lblTitulo.setFont(UITheme.FONT_TITLE);
         pnlTitulo.add(lblTitulo);
 
-        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        txtBusca = new JTextField(16);
+        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlAcoes.setOpaque(false);
+        txtBusca = new JTextField(18);
         txtBusca.putClientProperty("JTextField.placeholderText", "Filtrar peças...");
-        JButton btnNovo = new JButton("+ Cadastrar / Repor Peça");
-        btnNovo.setFont(btnNovo.getFont().deriveFont(Font.BOLD));
-        JButton btnEditar = new JButton("Editar");
-        JButton btnAtualizar = new JButton("Atualizar");
+        JButton btnNovo = UIComponents.criarBotaoPrimario("+ Cadastrar Peça");
+        JButton btnEditar = UIComponents.criarBotaoSecundario("Editar");
+        JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar");
 
         txtBusca.addActionListener(e -> filtrarPecas());
         btnNovo.addActionListener(e -> abrirNovoProduto());
@@ -57,7 +60,6 @@ public class EstoquePanel extends JPanel {
             recarregarTabela();
         });
 
-        pnlAcoes.add(new JLabel("Buscar:"));
         pnlAcoes.add(txtBusca);
         pnlAcoes.add(btnNovo);
         pnlAcoes.add(btnEditar);
@@ -77,7 +79,6 @@ public class EstoquePanel extends JPanel {
         };
 
         tabela = new JTable(tableModel);
-        tabela.setRowHeight(28);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         tabela.getColumnModel().getColumn(0).setPreferredWidth(60);
         tabela.getColumnModel().getColumn(1).setPreferredWidth(280);
@@ -85,25 +86,7 @@ public class EstoquePanel extends JPanel {
         tabela.getColumnModel().getColumn(3).setPreferredWidth(120);
         tabela.getColumnModel().getColumn(4).setPreferredWidth(130);
 
-        tabela.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (value != null && !isSelected) {
-                    String st = value.toString();
-                    setFont(getFont().deriveFont(Font.BOLD));
-                    setHorizontalAlignment(CENTER);
-                    if (st.contains("BAIXO")) {
-                        setForeground(new Color(231, 76, 60));
-                    } else if (st.contains("ZERADO")) {
-                        setForeground(new Color(192, 57, 43));
-                    } else {
-                        setForeground(new Color(39, 174, 96));
-                    }
-                }
-                return c;
-            }
-        });
+        UIComponents.formatarTabelaModerna(tabela, 4);
 
         tabela.addMouseListener(new MouseAdapter() {
             @Override
@@ -118,9 +101,11 @@ public class EstoquePanel extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         // 3. Rodapé
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bottomPanel.setOpaque(false);
         lblContador = new JLabel("Total de itens em estoque: 0");
-        lblContador.setFont(lblContador.getFont().deriveFont(Font.ITALIC));
+        lblContador.setFont(UITheme.FONT_CAPTION);
+        lblContador.setForeground(UITheme.tokens().getTextSecondary());
         bottomPanel.add(lblContador);
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -133,9 +118,9 @@ public class EstoquePanel extends JPanel {
             if (p.getEstoque() <= 0) {
                 statusEstoque = "ZERADO";
             } else if (p.getEstoque() <= 3) {
-                statusEstoque = "ESTOQUE BAIXO (" + p.getEstoque() + ")";
+                statusEstoque = "ESTOQUE BAIXO";
             } else {
-                statusEstoque = "DISPONÍVEL (" + p.getEstoque() + ")";
+                statusEstoque = "DISPONÍVEL";
             }
 
             tableModel.addRow(new Object[]{

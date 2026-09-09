@@ -1,8 +1,10 @@
 package com.loja.service;
 
+import com.loja.model.CaixaSessao;
 import com.loja.model.Produto;
 import com.loja.model.SaldoInsuficienteException;
 import com.loja.repository.CaixaDAO;
+
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,10 +15,36 @@ public class CaixaService {
     private DecimalFormat df = new DecimalFormat("R$ #,##0.00");
     private CaixaDAO caixaDAO = new CaixaDAO();
 
+    public boolean isCaixaAberto() {
+        return caixaDAO.obterSessaoAberta() != null;
+    }
+
+    public CaixaSessao getSessaoAberta() {
+        return caixaDAO.obterSessaoAberta();
+    }
+
+    public CaixaSessao abrirTurno(String operador, double fundoTrocoInicial) {
+        CaixaSessao sessao = caixaDAO.abrirNovaSessao(operador, fundoTrocoInicial);
+        if (sessao != null) {
+            this.saldoEmCaixa = fundoTrocoInicial;
+            System.out.println("[INFO] Turno #" + sessao.getId() + " aberto por " + operador + ". Saldo inicial: " + df.format(fundoTrocoInicial));
+        }
+        return sessao;
+    }
+
+    public boolean encerrarTurno(CaixaSessao sessao) {
+        boolean ok = caixaDAO.encerrarSessao(sessao);
+        if (ok) {
+            this.saldoEmCaixa = sessao.getFundoTrocoDeixado();
+            System.out.println("[INFO] Turno #" + sessao.getId() + " encerrado com sucesso.");
+        }
+        return ok;
+    }
+
     public void abrirCaixa(double valorInicial) {
         // Carrega o saldo persistido no banco de dados
         this.saldoEmCaixa = caixaDAO.obterSaldo();
-        System.out.println("[INFO] Caixa aberto. Saldo em caixa: " + df.format(saldoEmCaixa));
+        System.out.println("[INFO] Caixa carregado. Saldo em gaveta: " + df.format(saldoEmCaixa));
     }
 
     public void realizarVenda(Produto produto, int quantidade) throws SaldoInsuficienteException {
@@ -38,15 +66,32 @@ public class CaixaService {
     }
 
     public void realizarSangria(double valor) {
+        realizarSangria(valor, "Sangria de Caixa");
+    }
+
+    public boolean realizarSangria(double valor, String justificativa) {
+        this.saldoEmCaixa = caixaDAO.obterSaldo();
         if (valor <= saldoEmCaixa) {
-            saldoEmCaixa -= valor;
-            // Persiste o saldo atualizado e registra a sangria no banco
-            caixaDAO.atualizarSaldo(saldoEmCaixa);
-            caixaDAO.registrarSangria(valor);
-            System.out.println("[SANGRIA] Retirada de " + df.format(valor) + " realizada.");
+            boolean ok = caixaDAO.registrarSangria(valor, justificativa);
+            if (ok) {
+                this.saldoEmCaixa = caixaDAO.obterSaldo();
+                System.out.println("[SANGRIA] Retirada de " + df.format(valor) + " realizada. Motivo: " + justificativa);
+                return true;
+            }
         } else {
             System.out.println("[ALERTA] Saldo insuficiente para sangria.");
         }
+        return false;
+    }
+
+    public boolean realizarSuprimento(double valor, String justificativa) {
+        boolean ok = caixaDAO.registrarSuprimento(valor, justificativa);
+        if (ok) {
+            this.saldoEmCaixa = caixaDAO.obterSaldo();
+            System.out.println("[SUPRIMENTO] Entrada de " + df.format(valor) + " realizada. Motivo: " + justificativa);
+            return true;
+        }
+        return false;
     }
 
     public void fecharCaixa() {
@@ -75,7 +120,8 @@ public class CaixaService {
         System.out.println("==========================================");
     }
 
-    public void consultarSaldoAtual() {
-        System.out.println("[CONSULTA] Saldo atual em caixa: " + df.format(saldoEmCaixa));
+    public double consultarSaldoAtual() {
+        this.saldoEmCaixa = caixaDAO.obterSaldo();
+        return this.saldoEmCaixa;
     }
 }

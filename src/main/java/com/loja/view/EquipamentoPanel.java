@@ -5,6 +5,9 @@ import com.loja.model.Equipamento;
 import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
 import com.loja.view.dialogs.EquipamentoDialog;
+import com.loja.view.theme.ThemeTokens;
+import com.loja.view.theme.UIComponents;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -28,8 +31,8 @@ public class EquipamentoPanel extends JPanel {
         this.equipDAO = equipDAO;
         this.clienteDAO = clienteDAO;
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout(0, UITheme.SPACE_16));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20, UITheme.SPACE_24));
 
         initComponents();
         recarregarFiltroClientes();
@@ -37,22 +40,47 @@ public class EquipamentoPanel extends JPanel {
     }
 
     private void initComponents() {
+        ThemeTokens t = UITheme.tokens();
+
         // 1. Top Panel
-        JPanel topPanel = new JPanel(new BorderLayout(10, 10));
+        JPanel topPanel = new JPanel(new BorderLayout(UITheme.SPACE_16, 0));
+        topPanel.setOpaque(false);
 
-        JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        JLabel lblTitulo = new JLabel("Gestão de Equipamentos");
-        lblTitulo.setFont(lblTitulo.getFont().deriveFont(Font.BOLD, 18f));
-        pnlTitulo.add(lblTitulo);
+        JPanel pnlTitulo = new JPanel(new BorderLayout(0, UITheme.SPACE_4));
+        pnlTitulo.setOpaque(false);
+        JLabel lblTitulo = new JLabel("Equipamentos & Aparelhos");
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTitulo.setForeground(t.getTextPrimary());
+        JLabel lblSub = new JLabel("Controle de dispositivos vinculados a clientes para manutenção.");
+        lblSub.setFont(UITheme.FONT_SUBTITLE);
+        lblSub.setForeground(t.getTextSecondary());
+        pnlTitulo.add(lblTitulo, BorderLayout.NORTH);
+        pnlTitulo.add(lblSub, BorderLayout.SOUTH);
 
-        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlAcoes.setOpaque(false);
+
         cbFiltroCliente = new JComboBox<>();
+        cbFiltroCliente.setFont(UITheme.FONT_BODY);
         cbFiltroCliente.addActionListener(e -> filtrarPorCliente());
 
         JButton btnNovo = new JButton("+ Novo Equipamento");
-        btnNovo.setFont(btnNovo.getFont().deriveFont(Font.BOLD));
+        btnNovo.setFont(UITheme.FONT_BODY_BOLD);
+        btnNovo.setBackground(t.getPrimaryAccent());
+        btnNovo.setForeground(Color.WHITE);
+        btnNovo.setFocusPainted(false);
+        btnNovo.putClientProperty("JButton.buttonType", "roundRect");
+        btnNovo.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         JButton btnEditar = new JButton("Editar");
-        JButton btnAtualizar = new JButton("Atualizar");
+        btnEditar.setFont(UITheme.FONT_BODY);
+        btnEditar.putClientProperty("JButton.buttonType", "roundRect");
+        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JButton btnAtualizar = new JButton("Atualizar [F5]");
+        btnAtualizar.setFont(UITheme.FONT_BODY);
+        btnAtualizar.putClientProperty("JButton.buttonType", "roundRect");
+        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         btnNovo.addActionListener(e -> abrirNovoEquipamento());
         btnEditar.addActionListener(e -> editarEquipamentoSelecionado());
@@ -61,7 +89,11 @@ public class EquipamentoPanel extends JPanel {
             recarregarTabela();
         });
 
-        pnlAcoes.add(new JLabel("Filtrar por Cliente:"));
+        JLabel lblFiltro = new JLabel("Cliente:");
+        lblFiltro.setFont(UITheme.FONT_CAPTION);
+        lblFiltro.setForeground(t.getTextSecondary());
+
+        pnlAcoes.add(lblFiltro);
         pnlAcoes.add(cbFiltroCliente);
         pnlAcoes.add(btnNovo);
         pnlAcoes.add(btnEditar);
@@ -81,17 +113,18 @@ public class EquipamentoPanel extends JPanel {
         };
 
         tabela = new JTable(tableModel);
-        tabela.setRowHeight(28);
         tabela.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabela.getColumnModel().getColumn(0).setPreferredWidth(45);
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(140);
-        tabela.getColumnModel().getColumn(2).setPreferredWidth(90);
-        tabela.getColumnModel().getColumn(3).setPreferredWidth(140);
-        tabela.getColumnModel().getColumn(4).setPreferredWidth(90);
-        tabela.getColumnModel().getColumn(5).setPreferredWidth(70);
-        tabela.getColumnModel().getColumn(6).setPreferredWidth(130);
-        tabela.getColumnModel().getColumn(7).setPreferredWidth(80);
-        tabela.getColumnModel().getColumn(8).setPreferredWidth(140);
+        tabela.getColumnModel().getColumn(0).setPreferredWidth(50);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(150);
+        tabela.getColumnModel().getColumn(2).setPreferredWidth(100);
+        tabela.getColumnModel().getColumn(3).setPreferredWidth(150);
+        tabela.getColumnModel().getColumn(4).setPreferredWidth(100);
+        tabela.getColumnModel().getColumn(5).setPreferredWidth(80);
+        tabela.getColumnModel().getColumn(6).setPreferredWidth(140);
+        tabela.getColumnModel().getColumn(7).setPreferredWidth(90);
+        tabela.getColumnModel().getColumn(8).setPreferredWidth(150);
+
+        UIComponents.formatarTabelaModerna(tabela, -1);
 
         tabela.addMouseListener(new MouseAdapter() {
             @Override
@@ -103,12 +136,15 @@ public class EquipamentoPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(tabela);
+        scrollPane.setBorder(BorderFactory.createLineBorder(t.getBorderSubtle(), 1));
         add(scrollPane, BorderLayout.CENTER);
 
         // 3. Rodapé
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5));
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        bottomPanel.setOpaque(false);
         lblContador = new JLabel("Total de equipamentos: 0");
-        lblContador.setFont(lblContador.getFont().deriveFont(Font.ITALIC));
+        lblContador.setFont(UITheme.FONT_SMALL);
+        lblContador.setForeground(t.getTextSecondary());
         bottomPanel.add(lblContador);
         add(bottomPanel, BorderLayout.SOUTH);
     }
@@ -123,6 +159,7 @@ public class EquipamentoPanel extends JPanel {
     }
 
     public void recarregarTabela() {
+        UIComponents.formatarTabelaModerna(tabela, -1);
         tableModel.setRowCount(0);
         EquipamentoDialog.ClienteComboItem item = (EquipamentoDialog.ClienteComboItem) cbFiltroCliente.getSelectedItem();
         List<Cliente> todosClientes = clienteDAO.buscarTodos();

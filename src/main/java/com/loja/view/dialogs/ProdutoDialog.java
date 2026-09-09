@@ -13,12 +13,13 @@ public class ProdutoDialog extends JDialog {
     private Produto produtoCriado = null;
 
     private JTextField txtId;
+    private JTextField txtCodigoBarras;
     private JTextField txtNome;
     private JTextField txtPreco;
     private JSpinner spEstoque;
 
     public ProdutoDialog(Frame owner, ProdutoDAO produtoDAO, Produto produtoEdicao) {
-        super(owner, produtoEdicao == null ? "Cadastrar Peça / Produto" : "Editar Peça", true);
+        super(owner, produtoEdicao == null ? "Cadastrar Peça / Produto / Acessório" : "Editar Peça / Produto", true);
         this.produtoDAO = produtoDAO;
         this.produtoEdicao = produtoEdicao;
 
@@ -28,7 +29,7 @@ public class ProdutoDialog extends JDialog {
         } else {
             txtId.setText(String.valueOf(produtoDAO.obterProximoId()));
         }
-        setSize(450, 300);
+        setSize(480, 340);
         setLocationRelativeTo(owner);
     }
 
@@ -42,14 +43,16 @@ public class ProdutoDialog extends JDialog {
         gbc.insets = new Insets(6, 6, 6, 6);
 
         txtId = new JTextField(10);
+        txtCodigoBarras = new JTextField(15);
         txtNome = new JTextField(20);
         txtPreco = new JTextField(10);
         spEstoque = new JSpinner(new SpinnerNumberModel(1, 0, 9999, 1));
 
         adicionarCampo(formPanel, gbc, 0, "Código / ID:", txtId);
-        adicionarCampo(formPanel, gbc, 1, "Nome do Componente *:", txtNome);
-        adicionarCampo(formPanel, gbc, 2, "Preço Unitário (R$) *:", txtPreco);
-        adicionarCampo(formPanel, gbc, 3, "Quantidade em Estoque:", spEstoque);
+        adicionarCampo(formPanel, gbc, 1, "Código de Barras (EAN):", txtCodigoBarras);
+        adicionarCampo(formPanel, gbc, 2, "Nome / Descrição *:", txtNome);
+        adicionarCampo(formPanel, gbc, 3, "Preço Unitário (R$) *:", txtPreco);
+        adicionarCampo(formPanel, gbc, 4, "Quantidade em Estoque:", spEstoque);
 
         add(formPanel, BorderLayout.CENTER);
 
@@ -82,6 +85,7 @@ public class ProdutoDialog extends JDialog {
     private void preencherCampos(Produto p) {
         txtId.setText(String.valueOf(p.getId()));
         txtId.setEnabled(false);
+        txtCodigoBarras.setText(p.getCodigoBarras() != null ? p.getCodigoBarras() : "");
         txtNome.setText(p.getNome());
         txtPreco.setText(String.format("%.2f", p.getPreco()).replace(",", "."));
         spEstoque.setValue(p.getEstoque());
@@ -98,6 +102,7 @@ public class ProdutoDialog extends JDialog {
             return;
         }
 
+        String codBarras = txtCodigoBarras.getText().trim();
         String nome = txtNome.getText().trim();
         if (nome.isEmpty()) {
             JOptionPane.showMessageDialog(this, "O nome do produto/peça é obrigatório!", "Aviso", JOptionPane.WARNING_MESSAGE);
@@ -117,14 +122,14 @@ public class ProdutoDialog extends JDialog {
 
         int estoque = (Integer) spEstoque.getValue();
 
-        Produto p = new Produto(id, nome, preco, estoque);
+        Produto p = new Produto(id, codBarras, nome, preco, estoque);
         if (produtoDAO.salvar(p)) {
             this.salvo = true;
             this.produtoCriado = p;
-            JOptionPane.showMessageDialog(this, "Peça salva com sucesso no estoque!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Produto/Peça salvo com sucesso no estoque!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             dispose();
         } else {
-            JOptionPane.showMessageDialog(this, "Falha ao gravar peça no banco MySQL!", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Falha ao gravar produto no banco MySQL!", "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 

@@ -1,10 +1,11 @@
 package com.loja.app;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import com.loja.model.Produto;
 import com.loja.repository.*;
 import com.loja.service.CaixaService;
 import com.loja.view.MainFrame;
+import com.loja.view.dialogs.ConfigBancoDialog;
+import com.loja.view.dialogs.LoginDialog;
 
 import javax.swing.*;
 
@@ -13,24 +14,42 @@ public class Main {
     public static void main(String[] args) {
         // 1. Configurar Tema Moderno FlatLaf
         try {
+            UIManager.put("Button.arc", 10);
+            UIManager.put("Component.arc", 10);
+            UIManager.put("TextComponent.arc", 8);
+            UIManager.put("ScrollBar.thumbArc", 999);
+            UIManager.put("ScrollBar.thumbInsets", new java.awt.Insets(2, 2, 2, 2));
+            UIManager.put("Table.rowHeight", 34);
+            UIManager.put("Table.showHorizontalLines", true);
+            UIManager.put("Table.showVerticalLines", false);
+            UIManager.put("Table.intercellSpacing", new java.awt.Dimension(0, 1));
+            UIManager.put("Component.focusWidth", 1);
+            UIManager.put("Component.innerFocusWidth", 0);
+            UIManager.put("TabbedPane.showTabSeparators", true);
+            UIManager.put("TabbedPane.tabHeight", 34);
+
             UIManager.setLookAndFeel(new FlatDarkLaf());
         } catch (Exception ex) {
             System.err.println("[AVISO] Não foi possível carregar o tema FlatLaf: " + ex.getMessage());
         }
 
         // 2. Conectar e inicializar banco de dados MySQL
-        boolean dbOk = ConnectionFactory.criarTabela();
+        boolean dbOk = ConnectionFactory.testarConexao();
         if (!dbOk) {
-            System.err.println("\n********************************************************************************");
-            System.err.println(" [ATENÇÃO / ERRO CRÍTICO] NÃO FOI POSSÍVEL CONECTAR AO BANCO MYSQL NO XAMPP!");
-            System.err.println("********************************************************************************");
-            System.err.println(" Motivo: O MySQL não está em execução ou não responde na porta 3306.");
-            System.err.println(" Como resolver:");
-            System.err.println(" 1. Abra o 'XAMPP Control Panel'.");
-            System.err.println(" 2. Localize a linha do 'MySQL' e clique no botão 'Start'.");
-            System.err.println(" 3. Verifique se o módulo MySQL fica com fundo VERDE e porta 3306.");
-            System.err.println(" 4. Reinicie este sistema para que todas as operações sejam salvas!");
-            System.err.println("********************************************************************************\n");
+            // Se a conexão falhar ou se for o primeiro acesso em um novo PC/servidor, exibe o painel de configuração
+            try {
+                ConfigBancoDialog dlg = new ConfigBancoDialog(null);
+                dlg.setVisible(true);
+                dbOk = dlg.isConfiguradoComSucesso();
+            } catch (Exception ex) {
+                System.err.println("[ERRO] Ao abrir painel de configuração: " + ex.getMessage());
+            }
+        }
+
+        if (dbOk) {
+            ConnectionFactory.criarTabela();
+        } else {
+            System.err.println("[AVISO] Sistema iniciado sem conexão ativa com o banco MySQL.");
         }
 
         CaixaDAO caixaDAO = new CaixaDAO();
@@ -39,13 +58,23 @@ public class Main {
         ClienteDAO clienteDAO = new ClienteDAO();
         EquipamentoDAO equipamentoDAO = new EquipamentoDAO();
         OrdemServicoDAO osDAO = new OrdemServicoDAO();
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
 
         caixaService.abrirCaixa(100.00);
 
-        // 3. Iniciar a Interface Gráfica Desktop (Swing)
+        final boolean isDbConectado = dbOk;
+
+        // 3. Exibir Tela de Autenticação / Login
         SwingUtilities.invokeLater(() -> {
-            MainFrame frame = new MainFrame(clienteDAO, equipamentoDAO, osDAO, produtoDAO, caixaDAO, caixaService, dbOk);
-            frame.setVisible(true);
+            LoginDialog login = new LoginDialog(null, usuarioDAO);
+            login.setVisible(true);
+
+            if (login.isAutenticado()) {
+                MainFrame frame = new MainFrame(clienteDAO, equipamentoDAO, osDAO, produtoDAO, caixaDAO, caixaService, usuarioDAO, isDbConectado);
+                frame.setVisible(true);
+            } else {
+                System.exit(0);
+            }
         });
     }
 }

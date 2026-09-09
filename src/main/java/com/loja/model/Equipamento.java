@@ -72,4 +72,13 @@ public class Equipamento {
 
     public String getAcessorios() { return acessorios; }
     public void setAcessorios(String acessorios) { this.acessorios = acessorios; }
+
+    public String getDescricaoCompleta() {
+        return (tipo != null ? tipo : "Equipamento") + " " + (marca != null ? marca : "") + " " + (modelo != null ? modelo : "");
+    }
+
+    @Override
+    public String toString() {
+        return "#" + id + " - " + getDescricaoCompleta();
+    }
 }

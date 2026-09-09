@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.loja.model.HistoricoOS;
 import com.loja.model.OrdemServico;
 import com.loja.model.PecaItem;
 import com.loja.model.ServicoItem;
@@ -34,6 +35,8 @@ public class OrdemServicoDAO {
                         os.setId(generatedKeys.getInt(1));
                     }
                 }
+                // Registra evento de abertura no histórico da OS
+                registrarHistorico(conn, os.getId(), os.getStatus(), "Abertura da Ordem de Serviço", os.getDataEntrada());
                 System.out.println("[DB] Ordem de Serviço #" + os.getId() + " aberta com sucesso.");
                 return true;
             }
@@ -92,6 +95,7 @@ public class OrdemServicoDAO {
     public boolean salvarOrcamentoCompleto(int osId, String status, String diagnosticoTecnico, 
                                            List<ServicoItem> servicos, List<PecaItem> pecas, 
                                            double valorServicoTotal, double valorTotalGeral) {
+        String sqlGetStatusAntigo = "SELECT status FROM ordem_servico WHERE id = ?";
         String sqlUpdateOS = "UPDATE ordem_servico SET status = ?, valor_servico = ?, valor_total = ?, diagnostico_tecnico = ?, data_saida = ? WHERE id = ?";
         String sqlLimparServicos = "DELETE FROM os_servicos WHERE os_id = ?";
         String sqlInsertServico = "INSERT INTO os_servicos (os_id, descricao, valor) VALUES (?, ?, ?)";
@@ -101,7 +105,18 @@ public class OrdemServicoDAO {
         try (Connection conn = ConnectionFactory.getConnection()) {
             conn.setAutoCommit(false);
             try {
-                // 1. Atualizar dados principais da OS
+                // 1. Verificar status anterior
+                String statusAntigo = null;
+                try (PreparedStatement stmtGet = conn.prepareStatement(sqlGetStatusAntigo)) {
+                    stmtGet.setInt(1, osId);
+                    try (ResultSet rs = stmtGet.executeQuery()) {
+                        if (rs.next()) {
+                            statusAntigo = rs.getString("status");
+                        }
+                    }
+                }
+
+                // 2. Atualizar dados principais da OS
                 try (PreparedStatement stmtOS = conn.prepareStatement(sqlUpdateOS)) {
                     stmtOS.setString(1, status);
                     stmtOS.setDouble(2, valorServicoTotal);
@@ -116,7 +131,7 @@ public class OrdemServicoDAO {
                     stmtOS.executeUpdate();
                 }
 
-                // 2. Atualizar Serviços
+                // 3. Atualizar Serviços
                 try (PreparedStatement stmtDelServ = conn.prepareStatement(sqlLimparServicos)) {
                     stmtDelServ.setInt(1, osId);
                     stmtDelServ.executeUpdate();
@@ -133,7 +148,7 @@ public class OrdemServicoDAO {
                     }
                 }
 
-                // 3. Atualizar Peças
+                // 4. Atualizar Peças
                 try (PreparedStatement stmtDelPeca = conn.prepareStatement(sqlLimparPecas)) {
                     stmtDelPeca.setInt(1, osId);
                     stmtDelPeca.executeUpdate();
@@ -150,6 +165,12 @@ public class OrdemServicoDAO {
                         }
                         stmtAddPeca.executeBatch();
                     }
+                }
+
+                // 5. Registrar no histórico se status foi alterado
+                if (status != null && !status.equalsIgnoreCase(statusAntigo)) {
+                    String obs = statusAntigo != null ? "Status alterado de [" + statusAntigo + "] para [" + status + "]" : "Definição de status";
+                    registrarHistorico(conn, osId, status, obs, LocalDateTime.now());
                 }
 
                 conn.commit();
@@ -211,36 +232,52 @@ public class OrdemServicoDAO {
     }
 
     public void atualizarStatusEServico(int osId, String status, double valorServico, String diagnosticoTecnico) {
-        String sqlObterOS = "SELECT valor_servico FROM ordem_servico WHERE id = ?";
+        String sqlObterOS = "SELECT status, valor_servico FROM ordem_servico WHERE id = ?";
         String sqlUpdate = "UPDATE ordem_servico SET status = ?, valor_servico = ?, valor_total = valor_total - ? + ?, diagnostico_tecnico = ?, data_saida = ? WHERE id = ?";
 
         try (Connection conn = ConnectionFactory.getConnection()) {
-            double valorServicoAntigo = 0.0;
-            try (PreparedStatement stmtGet = conn.prepareStatement(sqlObterOS)) {
-                stmtGet.setInt(1, osId);
-                try (ResultSet rs = stmtGet.executeQuery()) {
-                    if (rs.next()) {
-                        valorServicoAntigo = rs.getDouble("valor_servico");
+            conn.setAutoCommit(false);
+            try {
+                String statusAntigo = null;
+                double valorServicoAntigo = 0.0;
+                try (PreparedStatement stmtGet = conn.prepareStatement(sqlObterOS)) {
+                    stmtGet.setInt(1, osId);
+                    try (ResultSet rs = stmtGet.executeQuery()) {
+                        if (rs.next()) {
+                            statusAntigo = rs.getString("status");
+                            valorServicoAntigo = rs.getDouble("valor_servico");
+                        }
                     }
                 }
-            }
 
-            try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
-                stmtUpdate.setString(1, status);
-                stmtUpdate.setDouble(2, valorServico);
-                stmtUpdate.setDouble(3, valorServicoAntigo);
-                stmtUpdate.setDouble(4, valorServico);
-                stmtUpdate.setString(5, diagnosticoTecnico);
-                
-                if (status != null && (status.contains("Entregue") || status.contains("Pronto"))) {
-                    stmtUpdate.setTimestamp(6, java.sql.Timestamp.valueOf(LocalDateTime.now()));
-                } else {
-                    stmtUpdate.setTimestamp(6, null);
+                try (PreparedStatement stmtUpdate = conn.prepareStatement(sqlUpdate)) {
+                    stmtUpdate.setString(1, status);
+                    stmtUpdate.setDouble(2, valorServico);
+                    stmtUpdate.setDouble(3, valorServicoAntigo);
+                    stmtUpdate.setDouble(4, valorServico);
+                    stmtUpdate.setString(5, diagnosticoTecnico);
+                    
+                    if (status != null && (status.contains("Entregue") || status.contains("Pronto"))) {
+                        stmtUpdate.setTimestamp(6, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+                    } else {
+                        stmtUpdate.setTimestamp(6, null);
+                    }
+                    
+                    stmtUpdate.setInt(7, osId);
+                    stmtUpdate.executeUpdate();
                 }
-                
-                stmtUpdate.setInt(7, osId);
-                stmtUpdate.executeUpdate();
+
+                // Se o status foi modificado, registra no histórico
+                if (status != null && !status.equalsIgnoreCase(statusAntigo)) {
+                    String obs = statusAntigo != null ? "Status alterado de [" + statusAntigo + "] para [" + status + "]" : "Alteração de status";
+                    registrarHistorico(conn, osId, status, obs, LocalDateTime.now());
+                }
+
+                conn.commit();
                 System.out.println("[DB] OS #" + osId + " atualizada para o status: " + status);
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
             }
         } catch (SQLException e) {
             System.err.println("[ERRO DB] Falha ao atualizar OS #" + osId + ": " + e.getMessage());
@@ -327,5 +364,87 @@ public class OrdemServicoDAO {
             System.err.println("[ERRO DB] Falha ao obter pecas da OS: " + e.getMessage());
         }
         return pecas;
+    }
+
+    // ==========================================
+    // HISTÓRICO / LINHA DO TEMPO DA OS
+    // ==========================================
+
+    public boolean registrarHistorico(int osId, String status, String observacao) {
+        return registrarHistorico(osId, status, observacao, LocalDateTime.now());
+    }
+
+    public boolean registrarHistorico(int osId, String status, String observacao, LocalDateTime dataHora) {
+        try (Connection conn = ConnectionFactory.getConnection()) {
+            return registrarHistorico(conn, osId, status, observacao, dataHora);
+        } catch (SQLException e) {
+            System.err.println("[ERRO DB] Falha ao registrar histórico para OS #" + osId + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean registrarHistorico(Connection conn, int osId, String status, String observacao, LocalDateTime dataHora) {
+        String sql = "INSERT INTO os_historico (os_id, status, data_hora, observacao) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, osId);
+            stmt.setString(2, status != null ? status : "Status Indefinido");
+            stmt.setTimestamp(3, java.sql.Timestamp.valueOf(dataHora != null ? dataHora : LocalDateTime.now()));
+            stmt.setString(4, observacao != null ? observacao : "");
+            int rows = stmt.executeUpdate();
+            if (rows > 0) {
+                System.out.println("[DB] Evento de Histórico registrado na OS #" + osId + " -> [" + status + "]");
+                return true;
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERRO DB] Erro ao gravar evento de histórico na OS #" + osId + ": " + e.getMessage());
+        }
+        return false;
+    }
+
+    public List<HistoricoOS> obterHistoricoOS(int osId) {
+        List<HistoricoOS> historico = new ArrayList<>();
+        String sql = "SELECT id, os_id, status, data_hora, observacao FROM os_historico WHERE os_id = ? ORDER BY data_hora ASC, id ASC";
+        try (Connection conn = ConnectionFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, osId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    java.sql.Timestamp ts = rs.getTimestamp("data_hora");
+                    historico.add(new HistoricoOS(
+                            rs.getInt("id"),
+                            rs.getInt("os_id"),
+                            rs.getString("status"),
+                            ts != null ? ts.toLocalDateTime() : LocalDateTime.now(),
+                            rs.getString("observacao")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[ERRO DB] Falha ao obter histórico da OS #" + osId + ": " + e.getMessage());
+        }
+
+        // Se a OS não possui registros históricos (OS antiga), gera entrada inicial retroativa
+        if (historico.isEmpty()) {
+            OrdemServico os = buscarPorId(osId);
+            if (os != null) {
+                LocalDateTime dataCriacao = os.getDataEntrada() != null ? os.getDataEntrada() : LocalDateTime.now();
+                HistoricoOS inicial = new HistoricoOS(osId, "Aguardando Orçamento", dataCriacao, "Abertura da Ordem de Serviço");
+                registrarHistorico(osId, inicial.getStatus(), inicial.getObservacao(), inicial.getDataHora());
+                historico.add(inicial);
+
+                if (os.getStatus() != null && !os.getStatus().equalsIgnoreCase("Aguardando Orçamento")) {
+                    LocalDateTime dataAtual = os.getDataSaida() != null ? os.getDataSaida() : dataCriacao.plusHours(1);
+                    HistoricoOS atual = new HistoricoOS(osId, os.getStatus(), dataAtual, "Atualização de status registrada no sistema");
+                    registrarHistorico(osId, atual.getStatus(), atual.getObservacao(), atual.getDataHora());
+                    historico.add(atual);
+                }
+            }
+        }
+
+        return historico;
+    }
+
+    public boolean adicionarEventoHistoricoManual(int osId, String status, String observacao) {
+        return registrarHistorico(osId, status, observacao, LocalDateTime.now());
     }
 }

@@ -7,9 +7,12 @@ import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
 import com.loja.repository.OrdemServicoDAO;
 
+import com.loja.service.ComprovanteEntradaPDFService;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.io.File;
 import java.util.List;
 
 public class NovaOSDialog extends JDialog {
@@ -419,9 +422,46 @@ public class NovaOSDialog extends JDialog {
             JOptionPane.showMessageDialog(this, 
                     "Ordem de Serviço #" + os.getId() + " aberta com sucesso!\nCliente: " + clienteItem.nome, 
                     "OS Gerada com Sucesso", JOptionPane.INFORMATION_MESSAGE);
+
+            int opt = JOptionPane.showConfirmDialog(this,
+                    "Deseja gerar o Comprovante de Entrada do Equipamento em PDF agora?\n(Termo de Deixada para o cliente assinar na loja)",
+                    "Comprovante de Entrada", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (opt == JOptionPane.YES_OPTION) {
+                gerarComprovanteEntradaPDF(os, clienteItem.id, equipItem.id);
+            }
+
             dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Falha ao gravar a OS no banco MySQL!", "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void gerarComprovanteEntradaPDF(OrdemServico os, int clienteId, int equipId) {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Salvar Comprovante de Entrada em PDF");
+        fileChooser.setSelectedFile(new File("Comprovante_Entrada_OS_" + os.getId() + ".pdf"));
+
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File arquivoDestino = fileChooser.getSelectedFile();
+            if (!arquivoDestino.getName().toLowerCase().endsWith(".pdf")) {
+                arquivoDestino = new File(arquivoDestino.getAbsolutePath() + ".pdf");
+            }
+
+            try {
+                Cliente cliente = clienteDAO.buscarPorId(clienteId);
+                Equipamento equip = equipDAO.buscarPorId(equipId);
+
+                ComprovanteEntradaPDFService.gerarComprovanteEntradaPDF(arquivoDestino, os, cliente, equip);
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Comprovante de Entrada gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?",
+                        "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(arquivoDestino);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrada em PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 

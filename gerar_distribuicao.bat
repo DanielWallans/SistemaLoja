@@ -6,7 +6,32 @@ echo   GERANDO PACOTE PARA OUTRO COMPUTADOR
 echo ====================================================
 echo.
 
-set "JAVA_HOME=C:\Users\User\.antigravity-ide\extensions\redhat.java-1.55.0-win32-x64\jre\21.0.11-win32-x86_64"
+:: Tenta detectar o Java automaticamente nas extensoes ou variaveis de ambiente
+set "JAVA_HOME="
+for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extensions\redhat.java*" 2^>nul') do (
+    for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre" 2^>nul') do (
+        if exist "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J\bin\jar.exe" (
+            set "JAVA_HOME=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
+            goto :java_detected
+        )
+    )
+)
+
+for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.vscode\extensions\redhat.java*" 2^>nul') do (
+    for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.vscode\extensions\%%I\jre" 2^>nul') do (
+        if exist "%USERPROFILE%\.vscode\extensions\%%I\jre\%%J\bin\jar.exe" (
+            set "JAVA_HOME=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
+            goto :java_detected
+        )
+    )
+)
+
+:java_detected
+if defined JAVA_HOME (
+    set "JAR_EXE=%JAVA_HOME%\bin\jar.exe"
+) else (
+    set "JAR_EXE=jar"
+)
 
 if not exist "dist" mkdir "dist"
 if not exist "dist\lib" mkdir "dist\lib"
@@ -17,7 +42,7 @@ copy /Y "flatlaf-3.5.4.jar" "dist\lib\" > nul
 copy /Y "openpdf-1.3.40.jar" "dist\lib\" > nul
 
 echo [2/3] Gerando SistemaAssistente.jar...
-"%JAVA_HOME%\bin\jar.exe" --create --file dist\SistemaAssistente.jar --main-class com.loja.app.Main -C target\classes .
+"%JAR_EXE%" --create --file dist\SistemaAssistente.jar --main-class com.loja.app.Main -C target\classes .
 
 echo [3/3] Criando executavel Iniciar_Sistema.bat...
 echo @echo off > "dist\Iniciar_Sistema.bat"

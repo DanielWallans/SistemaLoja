@@ -3,8 +3,11 @@ dist/
 build/
 *.jar
 *.db
+*.exe
 node_modules/
 sources.txt
+gerador_executavel/aplicacao_pronta/jre/
+gerador_executavel/instalador/
 
 ### IntelliJ IDEA ###
 .idea/

@@ -1,117 +1,331 @@
 package com.loja.view;
 
+import com.loja.model.CaixaMovimento;
+import com.loja.model.CaixaSessao;
+import com.loja.model.ResumoFechamentoCaixa;
 import com.loja.repository.CaixaDAO;
 import com.loja.service.CaixaService;
-import com.loja.view.dialogs.SangriaDialog;
+import com.loja.service.CupomTermicoService;
+import com.loja.service.WhatsAppService;
+import com.loja.view.dialogs.*;
+
+import com.loja.view.theme.UIComponents;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class CaixaPanel extends JPanel {
+    private static final DateTimeFormatter FORMATTER_HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
+
     private final CaixaService caixaService;
     private final CaixaDAO caixaDAO;
     private final Frame owner;
 
-    private JLabel lblSaldoValor;
+    // Componentes do Banner Superior de Status
+    private JPanel pnlBannerStatus;
+    private JLabel lblStatusTurno;
+    private JButton btnAbrirCaixa;
+    private JButton btnFecharCaixa;
+    private JButton btnConfigLoja;
+
+    // Cards de Métricas
+    private JLabel lblSaldoGaveta;
+    private JLabel lblTotalPix;
+    private JLabel lblTotalDebito;
+    private JLabel lblTotalCredito;
+    private JLabel lblTotalSuprimentos;
+    private JLabel lblTotalSangrias;
+
+    // Tabelas e Modelos
+    private JTable tabelaMovimentacoes;
+    private DefaultTableModel tableModelMov;
+    private JLabel lblStatusContador;
+
     private JTable tabelaHistorico;
-    private DefaultTableModel tableModel;
+    private DefaultTableModel tableModelHistorico;
+    private List<CaixaSessao> listaHistoricoFechamentos;
 
     public CaixaPanel(Frame owner, CaixaService caixaService, CaixaDAO caixaDAO) {
         this.owner = owner;
         this.caixaService = caixaService;
         this.caixaDAO = caixaDAO;
 
-        setLayout(new BorderLayout(15, 15));
-        setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        setLayout(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20));
 
         initComponents();
         recarregarDados();
     }
 
     private void initComponents() {
-        // 1. Painel Superior: Card de Saldo e Botões
-        JPanel topPanel = new JPanel(new BorderLayout(15, 15));
+        JPanel pnlTopoGeral = new JPanel(new BorderLayout(UITheme.SPACE_12, UITheme.SPACE_12));
+        pnlTopoGeral.setOpaque(false);
 
-        // Card do Saldo
-        JPanel pnlSaldoCard = new JPanel(new BorderLayout(5, 5));
-        pnlSaldoCard.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(39, 174, 96), 2),
-                BorderFactory.createEmptyBorder(12, 20, 12, 20)
-        ));
-        pnlSaldoCard.setBackground(new Color(39, 174, 96, 20));
+        // 1. Banner de Status do Turno (Card arredondado e sóbrio)
+        pnlBannerStatus = new JPanel(new BorderLayout(UITheme.SPACE_12, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(UITheme.tokens().getBgCard());
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.setColor(UITheme.tokens().getBorderSubtle());
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        pnlBannerStatus.setOpaque(false);
+        pnlBannerStatus.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_8, UITheme.SPACE_16, UITheme.SPACE_8, UITheme.SPACE_16));
 
-        JLabel lblSaldoTitulo = new JLabel("SALDO DISPONÍVEL NO CAIXA");
-        lblSaldoTitulo.setFont(lblSaldoTitulo.getFont().deriveFont(Font.BOLD, 12f));
+        lblStatusTurno = new JLabel("● CAIXA ABERTO • Turno #1 (Operador: Daniel)");
+        lblStatusTurno.setFont(UITheme.FONT_TITLE);
 
-        lblSaldoValor = new JLabel("R$ 0,00");
-        lblSaldoValor.setFont(lblSaldoValor.getFont().deriveFont(Font.BOLD, 28f));
-        lblSaldoValor.setForeground(new Color(39, 174, 96));
+        JPanel pnlBotoesTurno = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlBotoesTurno.setOpaque(false);
 
-        pnlSaldoCard.add(lblSaldoTitulo, BorderLayout.NORTH);
-        pnlSaldoCard.add(lblSaldoValor, BorderLayout.CENTER);
+        btnAbrirCaixa = UIComponents.criarBotaoPrimario("🔓 Abrir Caixa / Iniciar Turno");
+        btnFecharCaixa = UIComponents.criarBotaoSecundario("🔒 Fechar Caixa / Conferência Cega");
+        btnConfigLoja = UIComponents.criarBotaoSecundario("⚙️ Preferências");
 
-        // Painel de Ações Rápidas
-        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 10));
-        JButton btnSangria = new JButton("Registrar Sangria (Retirada)");
-        btnSangria.setFont(btnSangria.getFont().deriveFont(Font.BOLD, 13f));
-        JButton btnFechamento = new JButton("Visualizar Relatório do Dia");
-        JButton btnAtualizar = new JButton("Atualizar Saldo");
+        btnAbrirCaixa.addActionListener(e -> abrirCaixaDialog());
+        btnFecharCaixa.addActionListener(e -> fecharCaixaDialog());
+        btnConfigLoja.addActionListener(e -> abrirConfigCaixa());
+
+        pnlBotoesTurno.add(btnAbrirCaixa);
+        pnlBotoesTurno.add(btnFecharCaixa);
+        pnlBotoesTurno.add(btnConfigLoja);
+
+        pnlBannerStatus.add(lblStatusTurno, BorderLayout.WEST);
+        pnlBannerStatus.add(pnlBotoesTurno, BorderLayout.EAST);
+        pnlTopoGeral.add(pnlBannerStatus, BorderLayout.NORTH);
+
+        // 2. Grid de 6 Cards de Indicadores
+        JPanel pnlCards = new JPanel(new GridLayout(1, 6, UITheme.SPACE_12, 0));
+        pnlCards.setOpaque(false);
+
+        lblSaldoGaveta = new JLabel("R$ 0,00");
+        lblTotalPix = new JLabel("R$ 0,00");
+        lblTotalDebito = new JLabel("R$ 0,00");
+        lblTotalCredito = new JLabel("R$ 0,00");
+        lblTotalSuprimentos = new JLabel("R$ 0,00");
+        lblTotalSangrias = new JLabel("R$ 0,00");
+
+        pnlCards.add(UIComponents.criarCardMetrica("Dinheiro Gaveta", lblSaldoGaveta, UITheme.tokens().getSuccess()));
+        pnlCards.add(UIComponents.criarCardMetrica("Total PIX (Hoje)", lblTotalPix, UITheme.tokens().getInfo()));
+        pnlCards.add(UIComponents.criarCardMetrica("Cartão Débito", lblTotalDebito, UITheme.tokens().getPrimaryAccent()));
+        pnlCards.add(UIComponents.criarCardMetrica("Cartão Crédito", lblTotalCredito, new Color(139, 92, 246)));
+        pnlCards.add(UIComponents.criarCardMetrica("Suprimentos", lblTotalSuprimentos, UITheme.tokens().getSuccess()));
+        pnlCards.add(UIComponents.criarCardMetrica("Sangrias", lblTotalSangrias, UITheme.tokens().getDanger()));
+
+        pnlTopoGeral.add(pnlCards, BorderLayout.CENTER);
+        add(pnlTopoGeral, BorderLayout.NORTH);
+
+        // 3. Área Central: Abas de Extrato e Histórico
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(UITheme.FONT_BODY);
+
+        tabbedPane.addTab("📋 Extrato & Movimentações do Turno Atual", criarPainelAbaExtrato());
+        tabbedPane.addTab("📈 Histórico de Fechamentos Anteriores", criarPainelAbaHistorico());
+
+        add(tabbedPane, BorderLayout.CENTER);
+    }
+
+    private JPanel criarPainelAbaExtrato() {
+        JPanel pnl = new JPanel(new BorderLayout(UITheme.SPACE_8, UITheme.SPACE_8));
+        pnl.setOpaque(false);
+
+        JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlAcoes.setOpaque(false);
+        JButton btnSangria = UIComponents.criarBotaoSecundario("+ Sangria (Retirada)");
+        JButton btnSuprimento = UIComponents.criarBotaoSecundario("+ Suprimento (Troco)");
+        JButton btnTaxas = UIComponents.criarBotaoSecundario("⚙️ Taxas Maquininha");
+        JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar");
 
         btnSangria.addActionListener(e -> abrirSangria());
-        btnFechamento.addActionListener(e -> exibirFechamento());
+        btnSuprimento.addActionListener(e -> abrirSuprimento());
+        btnTaxas.addActionListener(e -> abrirConfigTaxas());
         btnAtualizar.addActionListener(e -> recarregarDados());
 
         pnlAcoes.add(btnSangria);
-        pnlAcoes.add(btnFechamento);
+        pnlAcoes.add(btnSuprimento);
+        pnlAcoes.add(btnTaxas);
         pnlAcoes.add(btnAtualizar);
+        pnl.add(pnlAcoes, BorderLayout.NORTH);
 
-        topPanel.add(pnlSaldoCard, BorderLayout.WEST);
-        topPanel.add(pnlAcoes, BorderLayout.EAST);
-        add(topPanel, BorderLayout.NORTH);
-
-        // 2. Histórico de Retiradas e Movimentações
-        JPanel pnlHistorico = new JPanel(new BorderLayout(10, 10));
-        pnlHistorico.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), " Histórico de Retiradas (Sangrias Registradas no Banco) ",
-                TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 13)
-        ));
-
-        String[] colunas = {"Data e Hora da Retirada", "Valor Retirado (R$)", "Tipo de Operação"};
-        tableModel = new DefaultTableModel(colunas, 0) {
+        String[] colunas = {"Horário", "Tipo de Operação", "Modalidade", "Valor Bruto (R$)", "Taxa (R$)", "Valor Líquido (R$)", "Justificativa / Identificação"};
+        tableModelMov = new DefaultTableModel(colunas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int column) { return false; }
         };
 
-        tabelaHistorico = new JTable(tableModel);
-        tabelaHistorico.setRowHeight(28);
-        tabelaHistorico.getColumnModel().getColumn(0).setPreferredWidth(250);
-        tabelaHistorico.getColumnModel().getColumn(1).setPreferredWidth(150);
-        tabelaHistorico.getColumnModel().getColumn(2).setPreferredWidth(200);
+        tabelaMovimentacoes = new JTable(tableModelMov);
+        tabelaMovimentacoes.getColumnModel().getColumn(0).setPreferredWidth(80);
+        tabelaMovimentacoes.getColumnModel().getColumn(1).setPreferredWidth(160);
+        tabelaMovimentacoes.getColumnModel().getColumn(2).setPreferredWidth(120);
+        tabelaMovimentacoes.getColumnModel().getColumn(3).setPreferredWidth(110);
+        tabelaMovimentacoes.getColumnModel().getColumn(4).setPreferredWidth(90);
+        tabelaMovimentacoes.getColumnModel().getColumn(5).setPreferredWidth(120);
+        tabelaMovimentacoes.getColumnModel().getColumn(6).setPreferredWidth(280);
+
+        UIComponents.formatarTabelaModerna(tabelaMovimentacoes, 1);
+
+        JScrollPane scroll = new JScrollPane(tabelaMovimentacoes);
+        pnl.add(scroll, BorderLayout.CENTER);
+
+        lblStatusContador = new JLabel("Total de movimentações registradas neste turno: 0");
+        lblStatusContador.setFont(UITheme.FONT_CAPTION);
+        lblStatusContador.setForeground(UITheme.tokens().getTextSecondary());
+        pnl.add(lblStatusContador, BorderLayout.SOUTH);
+
+        return pnl;
+    }
+
+    private JPanel criarPainelAbaHistorico() {
+        JPanel pnl = new JPanel(new BorderLayout(UITheme.SPACE_8, UITheme.SPACE_8));
+        pnl.setOpaque(false);
+
+        JPanel pnlAcoesHist = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
+        pnlAcoesHist.setOpaque(false);
+        JButton btnVerDetalhes = UIComponents.criarBotaoSecundario("👁️ Ver Extrato Completo");
+        JButton btnReimprimirCupom = UIComponents.criarBotaoSecundario("🖨️ Imprimir Cupom 80mm");
+        JButton btnReenviarWhats = UIComponents.criarBotaoSecundario("📲 Enviar no WhatsApp");
+        JButton btnAtualizarHist = UIComponents.criarBotaoSecundario("Atualizar Histórico");
+
+        btnVerDetalhes.addActionListener(e -> exibirDetalhesFechamentoSelecionado());
+        btnReimprimirCupom.addActionListener(e -> reimprimirCupomSelecionado());
+        btnReenviarWhats.addActionListener(e -> reenviarWhatsAppSelecionado());
+        btnAtualizarHist.addActionListener(e -> recarregarHistorico());
+
+        pnlAcoesHist.add(btnVerDetalhes);
+        pnlAcoesHist.add(btnReimprimirCupom);
+        pnlAcoesHist.add(btnReenviarWhats);
+        pnlAcoesHist.add(btnAtualizarHist);
+        pnl.add(pnlAcoesHist, BorderLayout.NORTH);
+
+        String[] colsHist = {"Turno #", "Status", "Data Abertura", "Data Fechamento", "Operador", "Fundo Inicial", "Vendas Total", "Físico Informado", "Diferença", "Malote Cofre"};
+        tableModelHistorico = new DefaultTableModel(colsHist, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+
+        tabelaHistorico = new JTable(tableModelHistorico);
+        tabelaHistorico.getColumnModel().getColumn(0).setPreferredWidth(70);
+        tabelaHistorico.getColumnModel().getColumn(1).setPreferredWidth(90);
+        tabelaHistorico.getColumnModel().getColumn(2).setPreferredWidth(130);
+        tabelaHistorico.getColumnModel().getColumn(3).setPreferredWidth(130);
+        tabelaHistorico.getColumnModel().getColumn(4).setPreferredWidth(120);
+        tabelaHistorico.getColumnModel().getColumn(5).setPreferredWidth(110);
+        tabelaHistorico.getColumnModel().getColumn(6).setPreferredWidth(115);
+        tabelaHistorico.getColumnModel().getColumn(7).setPreferredWidth(125);
+        tabelaHistorico.getColumnModel().getColumn(8).setPreferredWidth(130);
+        tabelaHistorico.getColumnModel().getColumn(9).setPreferredWidth(110);
+
+        UIComponents.formatarTabelaModerna(tabelaHistorico, 1);
 
         JScrollPane scroll = new JScrollPane(tabelaHistorico);
-        pnlHistorico.add(scroll, BorderLayout.CENTER);
+        pnl.add(scroll, BorderLayout.CENTER);
 
-        add(pnlHistorico, BorderLayout.CENTER);
+        return pnl;
     }
 
     public void recarregarDados() {
-        double saldo = caixaDAO.obterSaldo();
-        lblSaldoValor.setText(String.format("R$ %.2f", saldo));
+        CaixaSessao sessaoAberta = caixaDAO.obterSessaoAberta();
+        if (sessaoAberta != null) {
+            lblStatusTurno.setText("● CAIXA ABERTO • Turno #" + sessaoAberta.getId() + " (Operador: " + sessaoAberta.getOperadorAbertura() + " desde " + sessaoAberta.getHoraAberturaFormatada() + ")");
+            lblStatusTurno.setForeground(UITheme.tokens().getSuccess());
+            btnAbrirCaixa.setVisible(false);
+            btnFecharCaixa.setVisible(true);
+        } else {
+            lblStatusTurno.setText("○ CAIXA FECHADO • Nenhum turno aberto no momento (Vendas Bloqueadas)");
+            lblStatusTurno.setForeground(UITheme.tokens().getDanger());
+            btnAbrirCaixa.setVisible(true);
+            btnFecharCaixa.setVisible(false);
+        }
 
-        tableModel.setRowCount(0);
-        List<String> sangrias = caixaDAO.obterHistoricoSangrias();
-        for (String s : sangrias) {
-            // Formato esperado: "Retirada: R$ XX.XX em YYYY-MM-DD HH:MM:SS"
-            tableModel.addRow(new Object[]{
-                    s.contains(" em ") ? s.substring(s.indexOf(" em ") + 4) : "-",
-                    s.contains(" em ") ? s.substring(s.indexOf("R$"), s.indexOf(" em ")) : s,
-                    "Retirada / Sangria de Caixa"
+        ResumoFechamentoCaixa resumo = caixaDAO.obterResumoFechamentoDia(LocalDate.now());
+
+        lblSaldoGaveta.setText(String.format("R$ %.2f", resumo.getSaldoAtualGaveta()));
+        lblTotalPix.setText(String.format("R$ %.2f", resumo.getTotalPix()));
+        lblTotalDebito.setText(String.format("R$ %.2f", resumo.getTotalDebitoBruto()));
+        lblTotalCredito.setText(String.format("R$ %.2f", resumo.getTotalCreditoBruto()));
+        lblTotalSuprimentos.setText(String.format("R$ %.2f", resumo.getTotalSuprimentos()));
+        lblTotalSangrias.setText(String.format("R$ %.2f", resumo.getTotalSangrias()));
+
+        tableModelMov.setRowCount(0);
+        List<CaixaMovimento> movs = resumo.getMovimentacoes();
+        for (CaixaMovimento m : movs) {
+            tableModelMov.addRow(new Object[]{
+                    m.getDataHora() != null ? m.getDataHora().format(FORMATTER_HORA) : "-",
+                    m.getTipo(),
+                    m.getModalidade(),
+                    String.format("R$ %.2f", m.getValor()),
+                    String.format("R$ %.2f", m.getTaxa()),
+                    String.format("R$ %.2f", m.getValorLiquido()),
+                    m.getJustificativa()
             });
+        }
+        lblStatusContador.setText("Total de movimentações registradas neste turno: " + movs.size());
+
+        recarregarHistorico();
+        revalidate();
+        repaint();
+    }
+
+    private void recarregarHistorico() {
+        listaHistoricoFechamentos = caixaDAO.listarHistoricoFechamentos();
+        tableModelHistorico.setRowCount(0);
+
+        for (CaixaSessao s : listaHistoricoFechamentos) {
+            tableModelHistorico.addRow(new Object[]{
+                    "#" + s.getId(),
+                    s.getStatus(),
+                    s.getDataAberturaFormatada(),
+                    s.getDataFechamentoFormatada(),
+                    s.getOperadorAbertura(),
+                    String.format("R$ %.2f", s.getSaldoInicial()),
+                    String.format("R$ %.2f", s.getTotalVendasBruto()),
+                    String.format("R$ %.2f", s.getSaldoFinalInformado()),
+                    s.getStatusDiferencaFormatado(),
+                    String.format("R$ %.2f", s.getSangriaMalote())
+            });
+        }
+    }
+
+    private void abrirCaixaDialog() {
+        AberturaCaixaDialog dialog = new AberturaCaixaDialog(owner, caixaService, caixaDAO);
+        dialog.setVisible(true);
+        if (dialog.isAbertaComSucesso()) {
+            recarregarDados();
+        }
+    }
+
+    private void fecharCaixaDialog() {
+        CaixaSessao sessaoAberta = caixaDAO.obterSessaoAberta();
+        if (sessaoAberta == null) {
+            JOptionPane.showMessageDialog(this, "O caixa já se encontra fechado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        FechamentoCegoDialog dialog = new FechamentoCegoDialog(owner, caixaService, caixaDAO, sessaoAberta);
+        dialog.setVisible(true);
+        if (dialog.isFechadoComSucesso()) {
+            recarregarDados();
+        }
+    }
+
+    private void abrirConfigCaixa() {
+        ConfigCaixaDialog dialog = new ConfigCaixaDialog(owner, caixaDAO);
+        dialog.setVisible(true);
+        if (dialog.isSalvo()) {
+            recarregarDados();
         }
     }
 
@@ -124,28 +338,72 @@ public class CaixaPanel extends JPanel {
         }
     }
 
-    private void exibirFechamento() {
-        double saldo = caixaDAO.obterSaldo();
-        List<String> sangrias = caixaDAO.obterHistoricoSangrias();
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("============================================================\n");
-        sb.append("              RELATÓRIO FINANCEIRO DO CAIXA                 \n");
-        sb.append("============================================================\n");
-        sb.append(" SALDO ATUAL EM CAIXA:  R$ ").append(String.format("%.2f", saldo)).append("\n");
-        sb.append(" TOTAL DE SANGRIAS:     ").append(sangrias.size()).append("\n");
-        sb.append("------------------------------------------------------------\n");
-        sb.append(" DETALHAMENTO DE RETIRADAS REGISTRADAS:\n");
-        if (sangrias.isEmpty()) {
-            sb.append("   [!] Nenhuma retirada registrada no banco.\n");
-        } else {
-            sangrias.forEach(sg -> sb.append("   > ").append(sg).append("\n"));
+    private void abrirSuprimento() {
+        SuprimentoDialog dialog = new SuprimentoDialog(owner, caixaService);
+        dialog.setVisible(true);
+        if (dialog.isRealizada()) {
+            recarregarDados();
         }
-        sb.append("============================================================\n");
+    }
 
-        JTextArea txt = new JTextArea(sb.toString(), 15, 45);
-        txt.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        txt.setEditable(false);
-        JOptionPane.showMessageDialog(this, new JScrollPane(txt), "Fechamento de Caixa", JOptionPane.PLAIN_MESSAGE);
+    private void abrirConfigTaxas() {
+        ConfigTaxasDialog dialog = new ConfigTaxasDialog(owner, caixaDAO);
+        dialog.setVisible(true);
+        if (dialog.isSalvo()) {
+            recarregarDados();
+        }
+    }
+
+    private CaixaSessao getSessaoSelecionadaNaTabelaHistorico() {
+        int row = tabelaHistorico.getSelectedRow();
+        if (row >= 0 && listaHistoricoFechamentos != null && row < listaHistoricoFechamentos.size()) {
+            return listaHistoricoFechamentos.get(row);
+        }
+        JOptionPane.showMessageDialog(this, "Selecione um fechamento na tabela de histórico!", "Aviso", JOptionPane.WARNING_MESSAGE);
+        return null;
+    }
+
+    private void exibirDetalhesFechamentoSelecionado() {
+        CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
+        if (s == null) return;
+
+        String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
+        String textoCupom = CupomTermicoService.gerarTextoCupomFechamento(s, nomeLoja, true);
+
+        JTextArea area = new JTextArea(textoCupom, 25, 55);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        area.setEditable(false);
+
+        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Extrato de Fechamento - Turno #" + s.getId(), JOptionPane.PLAIN_MESSAGE);
+    }
+
+    private void reimprimirCupomSelecionado() {
+        CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
+        if (s == null) return;
+
+        String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
+        String textoCupom = CupomTermicoService.gerarTextoCupomFechamento(s, nomeLoja, true);
+        CupomTermicoService.imprimirCupom(textoCupom, this);
+    }
+
+    private void reenviarWhatsAppSelecionado() {
+        CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
+        if (s == null) return;
+
+        String telDono = caixaDAO.obterConfig("whatsapp_proprietario", "");
+        String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
+
+        if (telDono.isEmpty()) {
+            telDono = JOptionPane.showInputDialog(this, 
+                    "Informe o número de WhatsApp do Proprietário (com DDD, ex: 11999998888):", 
+                    "Configurar WhatsApp do Dono", JOptionPane.QUESTION_MESSAGE);
+            if (telDono != null && !telDono.trim().isEmpty()) {
+                caixaDAO.salvarConfig("whatsapp_proprietario", telDono.trim());
+            } else {
+                return;
+            }
+        }
+
+        WhatsAppService.enviarResumoFechamentoWhatsApp(s, telDono, nomeLoja);
     }
 }
