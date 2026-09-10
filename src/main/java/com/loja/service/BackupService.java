@@ -45,7 +45,7 @@ public class BackupService {
                 diretorioDestino = new File(".");
             }
         }
-        String nome = "Backup_SistemaLoja_" + LocalDateTime.now().format(FORMATTER_ARQUIVO) + ".zip";
+        String nome = "Backup_SystemPro_" + LocalDateTime.now().format(FORMATTER_ARQUIVO) + ".zip";
         return new File(diretorioDestino, nome);
     }
 
@@ -58,7 +58,7 @@ public class BackupService {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try (PrintWriter writer = new PrintWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
                 writer.println("-- ==========================================================");
-                writer.println("-- BACKUP COMPLETO DO BANCO DE DADOS - SISTEMA ASSISTÊNCIA PRO");
+                writer.println("-- BACKUP COMPLETO DO BANCO DE DADOS - SYSTEM PRO");
                 writer.println("-- Data de Exportação: " + LocalDateTime.now().toString());
                 writer.println("-- ==========================================================");
                 writer.println("SET FOREIGN_KEY_CHECKS = 0;");

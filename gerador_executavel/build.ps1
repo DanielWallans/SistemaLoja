@@ -25,15 +25,17 @@ tar -xf "..\..\openpdf-1.3.40.jar"
 Remove-Item -Path "META-INF\*.SF", "META-INF\*.DSA", "META-INF\*.RSA" -Force -ErrorAction SilentlyContinue
 Set-Location -Path $PSScriptRoot
 
-Write-Host "[3/5] Gerando aplicacao_pronta\SistemaLoja.jar..." -ForegroundColor Cyan
+Write-Host "[3/5] Gerando aplicacao_pronta\SystemPro.jar..." -ForegroundColor Cyan
 if (-not (Test-Path "aplicacao_pronta")) {
     New-Item -ItemType Directory -Path "aplicacao_pronta" -Force | Out-Null
 }
-& $jar --create --file "aplicacao_pronta\SistemaLoja.jar" --main-class com.loja.app.Main -C staging .
+& $jar --create --file "aplicacao_pronta\SystemPro.jar" --main-class com.loja.app.Main -C staging .
+Copy-Item "aplicacao_pronta\SystemPro.jar" "aplicacao_pronta\SistemaLoja.jar" -Force
 cmd /c "rd /s /q staging"
 
-Write-Host "[4/5] Compilando executavel nativo SistemaLoja.exe..." -ForegroundColor Cyan
-& $csc /nologo /target:winexe /out:"aplicacao_pronta\SistemaLoja.exe" Launcher.cs
+Write-Host "[4/5] Compilando executavel nativo SystemPro.exe..." -ForegroundColor Cyan
+& $csc /nologo /target:winexe /out:"aplicacao_pronta\SystemPro.exe" Launcher.cs
+Copy-Item "aplicacao_pronta\SystemPro.exe" "aplicacao_pronta\SistemaLoja.exe" -Force
 
 Write-Host "[5/5] Compilando Setup.exe com Inno Setup..." -ForegroundColor Cyan
 & $iscc inno_setup.iss

@@ -157,8 +157,9 @@ del /q /f META-INF\*.DSA 2>nul
 del /q /f META-INF\*.RSA 2>nul
 cd ..
 
-echo [3/5] Gerando SistemaLoja.jar autocontido...
-"%JAR_EXE%" --create --file "aplicacao_pronta\SistemaLoja.jar" --main-class com.loja.app.Main -C staging .
+echo [3/5] Gerando SystemPro.jar autocontido...
+"%JAR_EXE%" --create --file "aplicacao_pronta\SystemPro.jar" --main-class com.loja.app.Main -C staging .
+copy /Y "aplicacao_pronta\SystemPro.jar" "aplicacao_pronta\SistemaLoja.jar" > nul
 if %ERRORLEVEL% neq 0 (
     echo [ERRO] Falha ao empacotar o JAR!
     pause
@@ -168,8 +169,9 @@ if %ERRORLEVEL% neq 0 (
 :: Limpar pasta temporaria staging
 rd /s /q staging
 
-echo [4/5] Compilando executavel nativo Windows (SistemaLoja.exe)...
-"%CSC_EXE%" /nologo /target:winexe /out:"aplicacao_pronta\SistemaLoja.exe" Launcher.cs
+echo [4/5] Compilando executavel nativo Windows (SystemPro.exe)...
+"%CSC_EXE%" /nologo /target:winexe /out:"aplicacao_pronta\SystemPro.exe" Launcher.cs
+copy /Y "aplicacao_pronta\SystemPro.exe" "aplicacao_pronta\SistemaLoja.exe" > nul
 if %ERRORLEVEL% neq 0 (
     echo [ERRO] Falha ao compilar o executavel .exe!
     pause
@@ -187,8 +189,8 @@ echo.
 echo ====================================================================
 echo  [SUCESSO] EXECUTAVEL E PACOTE GERADOS COM SUCESSO!
 echo  Pasta de saida: gerador_executavel\aplicacao_pronta\
-echo    - SistemaLoja.exe   (Executavel nativo do Windows - 2 cliques)
-echo    - SistemaLoja.jar   (Todas as bibliotecas embutidas)
+echo    - SystemPro.exe     (Executavel nativo do Windows - 2 cliques)
+echo    - SystemPro.jar     (Todas as bibliotecas embutidas)
 echo ====================================================================
 echo.
 
@@ -208,7 +210,7 @@ if defined ISCC_EXE (
     echo.
     echo ====================================================================
     echo  [INSTALADOR PRONTO] Instalador gerado com sucesso!
-    echo  Arquivo: gerador_executavel\instalador\Instalador_SistemaLoja_Setup_v1.0.exe
+    echo  Arquivo: gerador_executavel\instalador\Instalador_SystemPro_Setup_v1.0.exe
     echo ====================================================================
 ) else (
     echo [AVISO - PASSO OPCIONAL]

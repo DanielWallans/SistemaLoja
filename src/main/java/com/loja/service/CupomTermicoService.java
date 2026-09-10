@@ -15,7 +15,7 @@ public class CupomTermicoService {
 
         StringBuilder sb = new StringBuilder();
         sb.append(divDupla).append("\n");
-        sb.append(centralizar(nomeLoja != null && !nomeLoja.isEmpty() ? nomeLoja.toUpperCase() : "ASSISTÊNCIA PRO", colunas)).append("\n");
+        sb.append(centralizar(nomeLoja != null && !nomeLoja.isEmpty() ? nomeLoja.toUpperCase() : "SYSTEM PRO", colunas)).append("\n");
         sb.append(centralizar("FECHAMENTO DE CAIXA / TURNO", colunas)).append("\n");
         sb.append(divDupla).append("\n");
 

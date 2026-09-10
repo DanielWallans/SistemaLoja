@@ -64,9 +64,19 @@ public class ConnectionFactory {
             String appData = System.getenv("APPDATA");
             File baseDir;
             if (appData != null && !appData.trim().isEmpty()) {
-                baseDir = new File(appData, "SistemaLoja");
+                baseDir = new File(appData, "SystemPro");
+                // Compatibilidade: se ainda nao existe em SystemPro, verifica se existia em SistemaLoja
+                if (!baseDir.exists()) {
+                    File legacyDir = new File(appData, "SistemaLoja");
+                    if (legacyDir.exists()) {
+                        File legacyConfig = new File(legacyDir, "database.properties");
+                        if (legacyConfig.exists()) {
+                            return legacyConfig;
+                        }
+                    }
+                }
             } else {
-                baseDir = new File(System.getProperty("user.home", "."), ".sistemaloja");
+                baseDir = new File(System.getProperty("user.home", "."), ".systempro");
             }
             if (!baseDir.exists()) {
                 baseDir.mkdirs();

@@ -1,24 +1,24 @@
 ; =====================================================================
-; SCRIPT DO INNO SETUP - SISTEMA DE ASSISTÊNCIA TÉCNICA E LOJA
+; SCRIPT DO INNO SETUP - SYSTEM PRO
 ; =====================================================================
-; Este script gera o arquivo "Instalador_SistemaLoja_Setup_v1.0.exe"
+; Este script gera o arquivo "Instalador_SystemPro_Setup_v1.0.exe"
 ; que o seu cliente usará para instalar o sistema com 2 cliques.
 ; =====================================================================
 
-#define MyAppName "Sistema de Assistência Técnica e Loja"
+#define MyAppName "System Pro"
 #define MyAppVersion "1.0"
-#define MyAppPublisher "Assistência Técnica"
-#define MyAppExeName "SistemaLoja.exe"
+#define MyAppPublisher "System Pro"
+#define MyAppExeName "SystemPro.exe"
 
 [Setup]
 AppId={{D1A39F74-B368-4F7D-89C4-32B8DF129F01}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
-DefaultDirName={autopf}\SistemaLoja
+DefaultDirName={autopf}\SystemPro
 DisableProgramGroupPage=yes
 OutputDir=instalador
-OutputBaseFilename=Instalador_SistemaLoja_Setup_v1.0
+OutputBaseFilename=Instalador_SystemPro_Setup_v1.0
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -34,8 +34,8 @@ Name: "{app}"; Permissions: users-modify
 
 [Files]
 ; Copia o executável nativo e o JAR com todas as dependências embutidas
-Source: "aplicacao_pronta\SistemaLoja.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "aplicacao_pronta\SistemaLoja.jar"; DestDir: "{app}"; Flags: ignoreversion
+Source: "aplicacao_pronta\SystemPro.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "aplicacao_pronta\SystemPro.jar"; DestDir: "{app}"; Flags: ignoreversion
 ; Inclui a JRE 21 embutida para rodar 100% offline em qualquer computador sem precisar instalar Java!
 Source: "aplicacao_pronta\jre\*"; DestDir: "{app}\jre"; Flags: ignoreversion recursesubdirs createallsubdirs
 

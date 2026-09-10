@@ -4,7 +4,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace SistemaLojaLauncher
+namespace SystemProLauncher
 {
     static class Program
     {
@@ -14,14 +14,18 @@ namespace SistemaLojaLauncher
             try
             {
                 string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                string jarPath = Path.Combine(baseDir, "SistemaLoja.jar");
+                string jarPath = Path.Combine(baseDir, "SystemPro.jar");
+                if (!File.Exists(jarPath))
+                {
+                    jarPath = Path.Combine(baseDir, "SistemaLoja.jar");
+                }
 
                 if (!File.Exists(jarPath))
                 {
                     MessageBox.Show(
-                        "O arquivo 'SistemaLoja.jar' não foi encontrado na mesma pasta do executável.\n\n" +
-                        "Caminho esperado:\n" + jarPath,
-                        "Sistema Loja - Arquivo Ausente",
+                        "O arquivo 'SystemPro.jar' não foi encontrado na mesma pasta do executável.\n\n" +
+                        "Caminho esperado:\n" + Path.Combine(baseDir, "SystemPro.jar"),
+                        "System Pro - Arquivo Ausente",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error
                     );
@@ -33,10 +37,10 @@ namespace SistemaLojaLauncher
                 if (string.IsNullOrEmpty(javaw) || !File.Exists(javaw))
                 {
                     DialogResult resultado = MessageBox.Show(
-                        "O sistema necessita do Java 21 (ou superior) para funcionar.\n\n" +
+                        "O System Pro necessita do Java 21 (ou superior) para funcionar.\n\n" +
                         "Motivo: O Java instalado no computador é uma versão antiga (ex: Java 8) ou o Java 21 não foi encontrado.\n\n" +
                         "Deseja abrir a página para baixar e instalar o Java 21 (JRE) gratuitamente agora?",
-                        "Sistema Loja - Java 21 Necessário",
+                        "System Pro - Java 21 Necessário",
                         MessageBoxButtons.YesNo,
                         MessageBoxIcon.Warning
                     );

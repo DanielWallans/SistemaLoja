@@ -63,7 +63,7 @@ public class MainFrame extends JFrame {
     public MainFrame(ClienteDAO clienteDAO, EquipamentoDAO equipDAO, OrdemServicoDAO osDAO, 
                      ProdutoDAO produtoDAO, CaixaDAO caixaDAO, CaixaService caixaService, 
                      UsuarioDAO usuarioDAO, boolean dbConectado) {
-        super("Sistema de Assistência Técnica & Gestão v2.0");
+        super("System Pro - Gestão & Assistência Técnica v2.0");
         this.clienteDAO = clienteDAO;
         this.equipDAO = equipDAO;
         this.osDAO = osDAO;
@@ -101,7 +101,7 @@ public class MainFrame extends JFrame {
         JLabel lblIcone = new JLabel("🛠️");
         lblIcone.setFont(lblIcone.getFont().deriveFont(20f));
 
-        lblTituloLogo = new JLabel("ASSISTÊNCIA PRO");
+        lblTituloLogo = new JLabel("SYSTEM PRO");
         lblTituloLogo.setFont(UITheme.FONT_TITLE);
         lblTituloLogo.setForeground(t.getTextPrimary());
 

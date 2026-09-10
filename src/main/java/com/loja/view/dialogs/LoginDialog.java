@@ -17,7 +17,7 @@ public class LoginDialog extends JDialog {
     private boolean autenticado = false;
 
     public LoginDialog(Frame owner, UsuarioDAO usuarioDAO) {
-        super(owner, "Acesso ao Sistema • Autenticação de Usuário", true);
+        super(owner, "System Pro • Autenticação de Usuário", true);
         this.usuarioDAO = usuarioDAO;
 
         setSize(430, 480);
@@ -40,7 +40,7 @@ public class LoginDialog extends JDialog {
         JLabel lblIcone = new JLabel("🛠️");
         lblIcone.setFont(lblIcone.getFont().deriveFont(26f));
 
-        JLabel lblTit = new JLabel("ASSISTÊNCIA PRO");
+        JLabel lblTit = new JLabel("SYSTEM PRO");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 19f));
         lblTit.setForeground(Color.WHITE);
 
