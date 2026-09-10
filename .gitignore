@@ -2,8 +2,12 @@ target/
 dist/
 build/
 *.jar
+!gerador_executavel/aplicacao_pronta/SistemaLoja.jar
+!gerador_executavel/aplicacao_pronta/SystemPro.jar
 *.db
 *.exe
+!gerador_executavel/aplicacao_pronta/SistemaLoja.exe
+!gerador_executavel/aplicacao_pronta/SystemPro.exe
 node_modules/
 sources.txt
 gerador_executavel/aplicacao_pronta/jre/

@@ -14,12 +14,12 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.0.0";
+    public static final String VERSAO_ATUAL = "1.1.0";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/versao.json";
 
     public static String getUpdateUrl() {
         File configFile = ConnectionFactory.getArquivoConfig();
-        if (configFile.exists()) {
+        if (configFile != null && configFile.exists()) {
             try (FileInputStream fis = new FileInputStream(configFile)) {
                 Properties props = new Properties();
                 props.load(fis);
@@ -35,12 +35,28 @@ public class UpdateService {
     public static UpdateInfo verificarAtualizacao() {
         try {
             String urlStr = getUpdateUrl();
+            UpdateInfo info = checarUrl(urlStr);
+            if (info != null) return info;
+
+            // Fallback caso a branch 'main' nao responda, tenta 'master'
+            if (urlStr.contains("/main/")) {
+                String fallbackUrl = urlStr.replace("/main/", "/master/");
+                return checarUrl(fallbackUrl);
+            }
+        } catch (Exception e) {
+            System.err.println("[INFO] Checagem de atualização ignorada ou sem internet: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private static UpdateInfo checarUrl(String urlStr) {
+        try {
             URL url = URI.create(urlStr).toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(3500);
             conn.setReadTimeout(3500);
-            conn.setRequestProperty("User-Agent", "SistemaLojaUpdater/1.0");
+            conn.setRequestProperty("User-Agent", "SystemProUpdater/1.1");
 
             if (conn.getResponseCode() != 200) {
                 return null;
@@ -68,9 +84,7 @@ public class UpdateService {
                     return new UpdateInfo(versaoRemota, data, novidades, downloadUrl);
                 }
             }
-        } catch (Exception e) {
-            System.err.println("[INFO] Checagem de atualização ignorada ou sem internet: " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
         return null;
     }
 
@@ -107,10 +121,22 @@ public class UpdateService {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setConnectTimeout(6000);
-        conn.setReadTimeout(12000);
-        conn.setRequestProperty("User-Agent", "SistemaLojaUpdater/1.0");
+        conn.setReadTimeout(15000);
+        conn.setRequestProperty("User-Agent", "SystemProUpdater/1.1");
+        conn.setInstanceFollowRedirects(true);
 
         int responseCode = conn.getResponseCode();
+        if (responseCode == 301 || responseCode == 302 || responseCode == 307 || responseCode == 308) {
+            String location = conn.getHeaderField("Location");
+            if (location != null) {
+                conn.disconnect();
+                url = URI.create(location).toURL();
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestProperty("User-Agent", "SystemProUpdater/1.1");
+                responseCode = conn.getResponseCode();
+            }
+        }
+
         if (responseCode != 200) {
             throw new IOException("Falha no download (HTTP " + responseCode + ")");
         }
@@ -139,12 +165,15 @@ public class UpdateService {
                 "chcp 65001 > nul\r\n" +
                 "timeout /t 2 /nobreak > nul\r\n" +
                 "if exist \"SistemaLoja.jar.update\" (\r\n" +
+                "    copy /y \"SistemaLoja.jar.update\" \"SystemPro.jar\" > nul\r\n" +
                 "    move /y \"SistemaLoja.jar.update\" \"SistemaLoja.jar\" > nul\r\n" +
                 ")\r\n" +
-                "if exist \"SistemaLoja.exe\" (\r\n" +
+                "if exist \"SystemPro.exe\" (\r\n" +
+                "    start \"\" \"SystemPro.exe\"\r\n" +
+                ") else if exist \"SistemaLoja.exe\" (\r\n" +
                 "    start \"\" \"SistemaLoja.exe\"\r\n" +
                 ") else (\r\n" +
-                "    start \"\" javaw -jar \"SistemaLoja.jar\"\r\n" +
+                "    start \"\" javaw -jar \"SystemPro.jar\"\r\n" +
                 ")\r\n" +
                 "del \"%~f0\"\r\n";
 

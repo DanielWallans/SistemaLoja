@@ -1,6 +1,6 @@
 {
-  "versao": "1.0.0",
+  "versao": "1.1.0",
   "data": "09/09/2026",
-  "novidades": "- Versão 1.0.0 estável.\n- Suporte a instalador executável .EXE com Java 21 embutido.\n- Painel visual de configuração de banco de dados e servidor de rede.",
-  "download_url": "https://github.com/DanielWallans/SistemaLoja/raw/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
+  "novidades": "- Atualizado oficialmente para o SYSTEM PRO!\n- Novo visual moderno, logotipos e títulos reformulados.\n- Correção definitiva de escrita das configurações do banco de dados.\n- Suporte ao executável nativo SystemPro.exe.",
+  "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }
