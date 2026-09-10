@@ -29,6 +29,9 @@ Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortugue
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
+[Dirs]
+Name: "{app}"; Permissions: users-modify
+
 [Files]
 ; Copia o executável nativo e o JAR com todas as dependências embutidas
 Source: "aplicacao_pronta\SistemaLoja.exe"; DestDir: "{app}"; Flags: ignoreversion

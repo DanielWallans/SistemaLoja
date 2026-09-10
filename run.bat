@@ -1,11 +1,36 @@
 @echo off
 chcp 65001 > nul
-:: Tenta detectar o Java automaticamente nas extensoes ou variaveis de ambiente
-set "JAVA_HOME="
+:: Tenta detectar o Java automaticamente (JAVA_HOME, Program Files, extensoes IDE ou PATH)
+set "FOUND_JDK="
+
+:: 1. Se JAVA_HOME ja estiver definido e contiver javac.exe
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\bin\javac.exe" (
+        set "FOUND_JDK=%JAVA_HOME%"
+        goto :java_detected
+    )
+)
+
+:: 2. Procura em diretorios padrao de instalacao de JDK no Windows
+for /d %%D in (
+    "C:\Program Files\Eclipse Adoptium\jdk-21*"
+    "C:\Program Files\Java\jdk-21*"
+    "C:\Program Files\Java\jdk*"
+    "C:\Program Files\BellSoft\LibericaJDK-21*"
+    "C:\Program Files\Amazon Corretto\jdk21*"
+    "C:\Program Files\Microsoft\jdk-21*"
+) do (
+    if exist "%%~D\bin\javac.exe" (
+        set "FOUND_JDK=%%~D"
+        goto :java_detected
+    )
+)
+
+:: 3. Procura nas extensoes do Antigravity IDE / VS Code
 for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extensions\redhat.java*" 2^>nul') do (
     for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre" 2^>nul') do (
         if exist "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J\bin\javac.exe" (
-            set "JAVA_HOME=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
+            set "FOUND_JDK=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
             goto :java_detected
         )
     )
@@ -14,20 +39,51 @@ for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extens
 for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.vscode\extensions\redhat.java*" 2^>nul') do (
     for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.vscode\extensions\%%I\jre" 2^>nul') do (
         if exist "%USERPROFILE%\.vscode\extensions\%%I\jre\%%J\bin\javac.exe" (
-            set "JAVA_HOME=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
+            set "FOUND_JDK=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
             goto :java_detected
         )
     )
 )
 
 :java_detected
-if defined JAVA_HOME (
-    set "JAVAC_EXE=%JAVA_HOME%\bin\javac.exe"
-    set "JAVA_EXE=%JAVA_HOME%\bin\java.exe"
+if defined FOUND_JDK (
+    set "JAVAC_EXE=%FOUND_JDK%\bin\javac.exe"
+    set "JAVA_EXE=%FOUND_JDK%\bin\java.exe"
 ) else (
     set "JAVAC_EXE=javac"
     set "JAVA_EXE=java"
 )
+
+:: Verificar se o javac existe e funciona
+"%JAVAC_EXE%" -version >nul 2>&1
+if %ERRORLEVEL% neq 0 goto :jdk_missing
+goto :javac_ok
+
+:jdk_missing
+echo.
+echo ====================================================================
+echo  [ERRO CRITICO] JDK 21 NAO ENCONTRADO NESTE COMPUTADOR!
+echo ====================================================================
+echo  O compilador 'javac' nao foi localizado neste computador.
+echo.
+echo  MOTIVO:
+echo  Ter apenas o Java comum - JRE nao permite compilar o codigo.
+echo  E necessario ter o JDK 21 instalado para executar via run.bat.
+echo.
+echo  SOLUCAO:
+echo  1. Baixe o instalador do JDK 21 gratuitamente:
+echo     https://adoptium.net/temurin/releases/?version=21
+echo  2. Na instalacao, selecione para configurar 'JAVA_HOME' e 'PATH'.
+echo  3. Apos instalar, execute o run.bat novamente.
+echo.
+echo  OBSERVACAO: Se voce apenas quer RODAR o sistema neste PC sem compilar,
+echo  use a pasta 'gerador_executavel\aplicacao_pronta\SistemaLoja.exe'.
+echo ====================================================================
+echo.
+pause
+exit /b 1
+
+:javac_ok
 
 set "MYSQL_JAR=mysql-connector-j-8.3.0.jar"
 set "FLATLAF_JAR=flatlaf-3.5.4.jar"
@@ -54,13 +110,14 @@ if not exist "target\classes" mkdir "target\classes"
 
 dir /s /b src\*.java > sources.txt
 "%JAVAC_EXE%" --release 21 -d target\classes -cp "%MYSQL_JAR%;%FLATLAF_JAR%;%OPENPDF_JAR%" @sources.txt
-del sources.txt
+set "COMP_STATUS=%ERRORLEVEL%"
+if exist sources.txt del sources.txt
 
-if %ERRORLEVEL% neq 0 (
+if %COMP_STATUS% neq 0 (
     echo.
-    echo [ERRO] Falha ao compilar o projeto!
+    echo [ERRO] Falha ao compilar o projeto! (Codigo de erro: %COMP_STATUS%)
     pause
-    exit /b %ERRORLEVEL%
+    exit /b %COMP_STATUS%
 )
 
 echo [SISTEMA] Iniciando a aplicacao...

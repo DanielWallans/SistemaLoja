@@ -6,12 +6,34 @@ echo   GERANDO PACOTE PARA OUTRO COMPUTADOR
 echo ====================================================
 echo.
 
-:: Tenta detectar o Java automaticamente nas extensoes ou variaveis de ambiente
-set "JAVA_HOME="
+:: Tenta detectar o Java automaticamente (JAVA_HOME, Program Files, extensoes IDE ou PATH)
+set "FOUND_JDK="
+
+if defined JAVA_HOME (
+    if exist "%JAVA_HOME%\bin\jar.exe" (
+        set "FOUND_JDK=%JAVA_HOME%"
+        goto :java_detected
+    )
+)
+
+for /d %%D in (
+    "C:\Program Files\Eclipse Adoptium\jdk-21*"
+    "C:\Program Files\Java\jdk-21*"
+    "C:\Program Files\Java\jdk*"
+    "C:\Program Files\BellSoft\LibericaJDK-21*"
+    "C:\Program Files\Amazon Corretto\jdk21*"
+    "C:\Program Files\Microsoft\jdk-21*"
+) do (
+    if exist "%%~D\bin\jar.exe" (
+        set "FOUND_JDK=%%~D"
+        goto :java_detected
+    )
+)
+
 for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extensions\redhat.java*" 2^>nul') do (
     for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre" 2^>nul') do (
         if exist "%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J\bin\jar.exe" (
-            set "JAVA_HOME=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
+            set "FOUND_JDK=%USERPROFILE%\.antigravity-ide\extensions\%%I\jre\%%J"
             goto :java_detected
         )
     )
@@ -20,18 +42,34 @@ for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.antigravity-ide\extens
 for /f "delims=" %%I in ('dir /b /ad /o-n "%USERPROFILE%\.vscode\extensions\redhat.java*" 2^>nul') do (
     for /f "delims=" %%J in ('dir /b /ad "%USERPROFILE%\.vscode\extensions\%%I\jre" 2^>nul') do (
         if exist "%USERPROFILE%\.vscode\extensions\%%I\jre\%%J\bin\jar.exe" (
-            set "JAVA_HOME=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
+            set "FOUND_JDK=%USERPROFILE%\.vscode\extensions\%%I\jre\%%J"
             goto :java_detected
         )
     )
 )
 
 :java_detected
-if defined JAVA_HOME (
-    set "JAR_EXE=%JAVA_HOME%\bin\jar.exe"
+if defined FOUND_JDK (
+    set "JAR_EXE=%FOUND_JDK%\bin\jar.exe"
 ) else (
     set "JAR_EXE=jar"
 )
+
+"%JAR_EXE%" --version >nul 2>&1
+if %ERRORLEVEL% neq 0 goto :jar_missing
+goto :jar_ok
+
+:jar_missing
+echo.
+echo ====================================================================
+echo  [ERRO] O utilitario 'jar' do Java nao foi localizado!
+echo  Instale o JDK 21: https://adoptium.net/temurin/releases/?version=21
+echo ====================================================================
+echo.
+pause
+exit /b 1
+
+:jar_ok
 
 if not exist "dist" mkdir "dist"
 if not exist "dist\lib" mkdir "dist\lib"

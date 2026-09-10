@@ -30,17 +30,58 @@ public class ConnectionFactory {
     }
 
     public static File getArquivoConfig() {
+        // 1. Tenta verificar se já existe no AppData do usuário (local padrão seguro no Windows)
+        File appDataConfig = getArquivoConfigAppData();
+        if (appDataConfig != null && appDataConfig.exists()) {
+            return appDataConfig;
+        }
+
+        // 2. Tenta verificar se existe na pasta do JAR
         try {
             File jarDir = new File(ConnectionFactory.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
             if (jarDir != null && jarDir.isDirectory()) {
-                return new File(jarDir, "database.properties");
+                File localConfig = new File(jarDir, "database.properties");
+                if (localConfig.exists()) {
+                    return localConfig;
+                }
+                // Se a pasta do JAR tiver permissão de gravação, pode usar local
+                if (jarDir.canWrite()) {
+                    return localConfig;
+                }
             }
         } catch (Exception ignored) {}
+
+        // 3. Se a pasta do JAR não permitir escrita (ex: Program Files), usa o AppData do usuário
+        if (appDataConfig != null) {
+            return appDataConfig;
+        }
+
         return new File("database.properties");
     }
 
+    private static File getArquivoConfigAppData() {
+        try {
+            String appData = System.getenv("APPDATA");
+            File baseDir;
+            if (appData != null && !appData.trim().isEmpty()) {
+                baseDir = new File(appData, "SistemaLoja");
+            } else {
+                baseDir = new File(System.getProperty("user.home", "."), ".sistemaloja");
+            }
+            if (!baseDir.exists()) {
+                baseDir.mkdirs();
+            }
+            return new File(baseDir, "database.properties");
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public static boolean isArquivoConfigExiste() {
-        return getArquivoConfig().exists();
+        File f = getArquivoConfig();
+        if (f != null && f.exists()) return true;
+        File appData = getArquivoConfigAppData();
+        return appData != null && appData.exists();
     }
 
     public static synchronized void carregarConfiguracoes() {
@@ -77,8 +118,23 @@ public class ConnectionFactory {
         props.setProperty("db.password", pass);
 
         File configFile = getArquivoConfig();
-        try (FileOutputStream fos = new FileOutputStream(configFile)) {
-            props.store(fos, "Configuracoes de Conexao MySQL - Sistema Loja Assistencia");
+        try {
+            if (configFile.getParentFile() != null && !configFile.getParentFile().exists()) {
+                configFile.getParentFile().mkdirs();
+            }
+            try (FileOutputStream fos = new FileOutputStream(configFile)) {
+                props.store(fos, "Configuracoes de Conexao MySQL - Sistema Loja Assistencia");
+            }
+        } catch (IOException e) {
+            // Se falhou por permissão (Acesso negado em C:\Program Files), salva automaticamente no AppData do usuário
+            File fallbackFile = getArquivoConfigAppData();
+            if (fallbackFile != null && !fallbackFile.equals(configFile)) {
+                try (FileOutputStream fos = new FileOutputStream(fallbackFile)) {
+                    props.store(fos, "Configuracoes de Conexao MySQL - Sistema Loja Assistencia");
+                }
+            } else {
+                throw e;
+            }
         }
         carregado = true;
     }
