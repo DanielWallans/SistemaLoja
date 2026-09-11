@@ -312,15 +312,23 @@ public class MainFrame extends JFrame {
         navButtons.forEach((name, btn) -> {
             btn.putClientProperty("JButton.arc", 6);
             if (name.equals(abaAtiva)) {
-                btn.setBackground(new Color(34, 35, 38)); // #222326
-                btn.setForeground(new Color(241, 241, 241)); // #F1F1F1
+                if (t.isDark()) {
+                    btn.setBackground(new Color(34, 35, 38)); // #222326
+                    btn.setForeground(new Color(241, 241, 241)); // #F1F1F1
+                    btn.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(237, 237, 237)),
+                            BorderFactory.createEmptyBorder(6, 12, 6, 14)));
+                } else {
+                    btn.setBackground(new Color(226, 232, 240)); // #E2E8F0
+                    btn.setForeground(new Color(15, 23, 42)); // #0F172A
+                    btn.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(15, 23, 42)),
+                            BorderFactory.createEmptyBorder(6, 12, 6, 14)));
+                }
                 btn.setFont(UITheme.FONT_BODY_BOLD);
-                btn.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(237, 237, 237)),
-                        BorderFactory.createEmptyBorder(6, 12, 6, 14)));
             } else {
-                btn.setBackground(t.getBgSidebar()); // #141516
-                btn.setForeground(new Color(168, 168, 168)); // #A8A8A8
+                btn.setBackground(t.getBgSidebar());
+                btn.setForeground(t.isDark() ? new Color(168, 168, 168) : new Color(71, 85, 105));
                 btn.setFont(UITheme.FONT_BODY);
                 btn.setBorder(BorderFactory.createEmptyBorder(6, 15, 6, 14));
             }
@@ -360,7 +368,46 @@ public class MainFrame extends JFrame {
                     BorderFactory.createEmptyBorder(8, 20, 8, 20)));
         }
 
+        if (pnlAtalhos != null) {
+            pnlAtalhos.removeAll();
+            pnlAtalhos.add(UIComponents.criarBadgeAtalho("F2", "Nova OS", this::acionarAtalhoF2NovaOS));
+            pnlAtalhos.add(UIComponents.criarBadgeAtalho("F3", "Buscar Cliente", this::acionarAtalhoF3BuscarCliente));
+            pnlAtalhos.add(UIComponents.criarBadgeAtalho("F4", "Frente de Caixa", this::acionarAtalhoF4FrenteCaixa));
+            pnlAtalhos.add(UIComponents.criarBadgeAtalho("F5", "Atualizar Tabelas", this::acionarAtalhoF5AtualizarTabelas));
+            pnlAtalhos.revalidate();
+            pnlAtalhos.repaint();
+        }
+
+        if (lblStatusFeedback != null) {
+            lblStatusFeedback.setForeground(t.getTextSecondary());
+        }
+
         aplicarEstiloBotoesNav();
+    }
+
+    public void recriarPaineisPorTema() {
+        String abaAtual = abaAtiva;
+        cardsPanel.removeAll();
+
+        dashboardPanel = new DashboardPanel(this, clienteDAO, equipDAO, osDAO, produtoDAO, caixaDAO, caixaService);
+        pdvPanel = new PDVPanel(this, produtoDAO, caixaDAO);
+        clientePanel = new ClientePanel(this, clienteDAO, equipDAO);
+        equipPanel = new EquipamentoPanel(this, equipDAO, clienteDAO);
+        osPanel = new OrdemServicoPanel(this, osDAO, clienteDAO, equipDAO, produtoDAO, caixaService);
+        estoquePanel = new EstoquePanel(this, produtoDAO);
+        caixaPanel = new CaixaPanel(this, caixaService, caixaDAO);
+
+        cardsPanel.add(dashboardPanel, "DASHBOARD");
+        cardsPanel.add(pdvPanel, "PDV");
+        cardsPanel.add(clientePanel, "CLIENTES");
+        cardsPanel.add(equipPanel, "EQUIPAMENTOS");
+        cardsPanel.add(osPanel, "OS");
+        cardsPanel.add(estoquePanel, "ESTOQUE");
+        cardsPanel.add(caixaPanel, "CAIXA");
+
+        selecionarAba(abaAtual != null ? abaAtual : "DASHBOARD");
+        cardsPanel.revalidate();
+        cardsPanel.repaint();
     }
 
     public void recarregarTodasAsAbas() {
@@ -440,8 +487,8 @@ public class MainFrame extends JFrame {
             UIManager.put("TitledBorder.titleColor", t.getTextPrimary());
 
             atualizarEstilosTema();
+            recriarPaineisPorTema();
             SwingUtilities.updateComponentTreeUI(this);
-            recarregarTodasAsAbas();
         } catch (Exception ex) {
             ex.printStackTrace();
         }

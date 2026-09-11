@@ -116,11 +116,12 @@ public class DashboardPanel extends JPanel {
         JPanel pnlAcoesContainer = new JPanel(new BorderLayout(16, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
+                ThemeTokens currentT = UITheme.tokens();
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(t.getBgCard());
+                g2.setColor(currentT.getBgCard());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(t.getBorderSubtle());
+                g2.setColor(currentT.getBorderSubtle());
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
@@ -180,11 +181,12 @@ public class DashboardPanel extends JPanel {
         JPanel pnlFluxoOSContainer = new JPanel(new BorderLayout(0, 10)) {
             @Override
             protected void paintComponent(Graphics g) {
+                ThemeTokens currentT = UITheme.tokens();
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(t.getBgCard());
+                g2.setColor(currentT.getBgCard());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(t.getBorderSubtle());
+                g2.setColor(currentT.getBorderSubtle());
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);

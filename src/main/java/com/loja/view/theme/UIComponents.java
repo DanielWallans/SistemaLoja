@@ -19,11 +19,12 @@ public final class UIComponents {
         JPanel card = new JPanel(new BorderLayout(0, UITheme.SPACE_8)) {
             @Override
             protected void paintComponent(Graphics g) {
+                ThemeTokens currentT = UITheme.tokens();
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(t.getBgCard()); // #1A1B1D
+                g2.setColor(currentT.getBgCard());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
-                g2.setColor(t.getBorderSubtle()); // #2A2C2F
+                g2.setColor(currentT.getBorderSubtle());
                 g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
@@ -75,8 +76,13 @@ public final class UIComponents {
         ThemeTokens t = UITheme.tokens();
         JButton btn = new JButton(texto);
         btn.setFont(UITheme.FONT_BODY_BOLD);
-        btn.setBackground(t.getPrimaryAccent()); // #EDEDED
-        btn.setForeground(new Color(15, 15, 16)); // #0F0F10 para contraste nítido
+        if (t.isDark()) {
+            btn.setBackground(new Color(237, 237, 237)); // #EDEDED
+            btn.setForeground(new Color(15, 15, 16));     // #0F0F10 para contraste nítido
+        } else {
+            btn.setBackground(new Color(15, 23, 42));     // Grafite escuro elegante
+            btn.setForeground(new Color(255, 255, 255));  // Branco nítido
+        }
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.putClientProperty("JButton.arc", 6);
@@ -98,8 +104,8 @@ public final class UIComponents {
         ThemeTokens t = UITheme.tokens();
         JButton btn = new JButton(texto);
         btn.setFont(UITheme.FONT_BODY);
-        btn.setBackground(t.getBgCard()); // #1A1B1D
-        btn.setForeground(t.getTextPrimary()); // #F1F1F1
+        btn.setBackground(t.getBgCard());
+        btn.setForeground(t.getTextPrimary());
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.putClientProperty("JButton.arc", 6);
@@ -124,15 +130,15 @@ public final class UIComponents {
         if (s.contains("orçamento") || s.contains("aguardando aprovação") || s.contains("aguardando")) {
             return new Color(217, 119, 6); // Âmbar sóbrio
         } else if (s.contains("aprovad") || s.contains("manutenção") || s.contains("andamento")) {
-            return new Color(168, 168, 168); // Graphite neutro de processo
+            return t.isDark() ? new Color(168, 168, 168) : new Color(71, 85, 105);
         } else if (s.contains("peça")) {
-            return new Color(156, 163, 175); // Cinza chumbo sóbrio
+            return t.isDark() ? new Color(156, 163, 175) : new Color(100, 116, 139);
         } else if (s.contains("pronto") || s.contains("retirada")) {
-            return new Color(34, 197, 94); // Verde sóbrio
+            return t.isDark() ? new Color(34, 197, 94) : new Color(22, 101, 52);
         } else if (s.contains("entregue") || s.contains("finalizado") || s.contains("pago")) {
-            return new Color(34, 197, 94); // Verde sóbrio
+            return t.isDark() ? new Color(34, 197, 94) : new Color(22, 101, 52);
         } else if (s.contains("cancelad") || s.contains("recusad") || s.contains("inativ")) {
-            return new Color(239, 68, 68); // Vermelho discreto
+            return t.isDark() ? new Color(239, 68, 68) : new Color(185, 28, 28);
         } else if (s.contains("aberto") || s.contains("aberta")) {
             return new Color(217, 119, 6); // Âmbar sóbrio
         }
@@ -150,12 +156,12 @@ public final class UIComponents {
         tabela.setShowVerticalLines(false);
         tabela.setGridColor(t.getBorderSubtle());
         tabela.setFont(UITheme.FONT_BODY);
-        tabela.setSelectionBackground(new Color(41, 42, 45)); // #292A2D
+        tabela.setSelectionBackground(t.isDark() ? new Color(41, 42, 45) : new Color(226, 232, 240));
         tabela.setSelectionForeground(t.getTextPrimary());
 
         tabela.getTableHeader().setFont(UITheme.FONT_CAPTION);
-        tabela.getTableHeader().setBackground(t.getBgSidebar()); // #141516
-        tabela.getTableHeader().setForeground(t.getTextSecondary()); // #A8A8A8
+        tabela.getTableHeader().setBackground(t.getBgSidebar());
+        tabela.getTableHeader().setForeground(t.getTextSecondary());
         tabela.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, t.getBorderSubtle()));
         tabela.getTableHeader().setPreferredSize(new Dimension(0, 36));
 
@@ -165,9 +171,17 @@ public final class UIComponents {
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
                     boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                ThemeTokens currentT = UITheme.tokens();
                 if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36));
-                    c.setForeground(t.getTextPrimary());
+                    if (currentT.isDark()) {
+                        c.setBackground(row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36));
+                    } else {
+                        c.setBackground(row % 2 == 0 ? new Color(255, 255, 255) : new Color(248, 250, 252));
+                    }
+                    c.setForeground(currentT.getTextPrimary());
+                } else {
+                    c.setBackground(currentT.isDark() ? new Color(41, 42, 45) : new Color(226, 232, 240));
+                    c.setForeground(currentT.getTextPrimary());
                 }
                 if (c instanceof JComponent) {
                     ((JComponent) c).setBorder(BorderFactory.createEmptyBorder(0, UITheme.SPACE_8, 0, UITheme.SPACE_8));
@@ -188,14 +202,22 @@ public final class UIComponents {
                     JPanel pnlBadge = new JPanel(new GridBagLayout()) {
                         @Override
                         protected void paintComponent(Graphics g) {
+                            ThemeTokens currentT = UITheme.tokens();
                             Graphics2D g2 = (Graphics2D) g.create();
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            g2.setColor(isSelected ? table.getSelectionBackground()
-                                    : (row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36)));
+                            Color bgRow;
+                            if (isSelected) {
+                                bgRow = currentT.isDark() ? new Color(41, 42, 45) : new Color(226, 232, 240);
+                            } else if (currentT.isDark()) {
+                                bgRow = (row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36));
+                            } else {
+                                bgRow = (row % 2 == 0 ? new Color(255, 255, 255) : new Color(248, 250, 252));
+                            }
+                            g2.setColor(bgRow);
                             g2.fillRect(0, 0, getWidth(), getHeight());
 
                             // Fundo sóbrio do badge (4px radius)
-                            g2.setColor(UITheme.withAlpha(corStatus, 0.15f));
+                            g2.setColor(UITheme.withAlpha(corStatus, currentT.isDark() ? 0.15f : 0.12f));
                             int badgeW = Math.min(getWidth() - 16, 170);
                             int badgeH = getHeight() - 10;
                             int badgeX = (getWidth() - badgeW) / 2;
@@ -203,7 +225,7 @@ public final class UIComponents {
                             g2.fillRoundRect(badgeX, badgeY, badgeW, badgeH, 4, 4);
 
                             // Borda discreta do badge
-                            g2.setColor(UITheme.withAlpha(corStatus, 0.35f));
+                            g2.setColor(UITheme.withAlpha(corStatus, currentT.isDark() ? 0.35f : 0.40f));
                             g2.drawRoundRect(badgeX, badgeY, badgeW - 1, badgeH - 1, 4, 4);
                             g2.dispose();
                         }
