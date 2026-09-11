@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.1.0";
+    public static final String VERSAO_ATUAL = "1.2.0";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/versao.json";
 
     public static String getUpdateUrl() {
@@ -89,9 +89,16 @@ public class UpdateService {
     }
 
     public static boolean isNovaVersao(String remota, String local) {
+        if (remota == null || local == null) return false;
+        String rClean = remota.replaceAll("[^0-9.]", "").trim();
+        String lClean = local.replaceAll("[^0-9.]", "").trim();
+        if (rClean.isEmpty() || lClean.isEmpty() || rClean.equalsIgnoreCase(lClean)) {
+            return false;
+        }
+
         try {
-            String[] vRemota = remota.replaceAll("[^0-9.]", "").split("\\.");
-            String[] vLocal = local.replaceAll("[^0-9.]", "").split("\\.");
+            String[] vRemota = rClean.split("\\.");
+            String[] vLocal = lClean.split("\\.");
 
             int maxLen = Math.max(vRemota.length, vLocal.length);
             for (int i = 0; i < maxLen; i++) {
@@ -159,15 +166,27 @@ public class UpdateService {
             }
         }
 
-        // Criar o script de substituição e reinício do sistema no Windows
+        // Criar o script de substituição e reinício do sistema no Windows com tentativas
         File batScript = new File(baseDir, "atualizar_sistema.bat");
         String batContent = "@echo off\r\n" +
                 "chcp 65001 > nul\r\n" +
-                "timeout /t 2 /nobreak > nul\r\n" +
+                "setlocal enabledelayedexpansion\r\n" +
+                ":: Aguardar o processo Java encerrar e liberar o arquivo do JAR\r\n" +
+                "set TRIES=0\r\n" +
+                ":retry_copy\r\n" +
+                "timeout /t 1 /nobreak > nul\r\n" +
+                "set /a TRIES+=1\r\n" +
                 "if exist \"SistemaLoja.jar.update\" (\r\n" +
-                "    copy /y \"SistemaLoja.jar.update\" \"SystemPro.jar\" > nul\r\n" +
-                "    move /y \"SistemaLoja.jar.update\" \"SistemaLoja.jar\" > nul\r\n" +
+                "    copy /y \"SistemaLoja.jar.update\" \"SystemPro.jar\" > nul 2>&1\r\n" +
+                "    if errorlevel 1 (\r\n" +
+                "        if !TRIES! lss 20 goto retry_copy\r\n" +
+                "    ) else (\r\n" +
+                "        copy /y \"SistemaLoja.jar.update\" \"SistemaLoja.jar\" > nul 2>&1\r\n" +
+                "        del /f /q \"SistemaLoja.jar.update\" > nul 2>&1\r\n" +
+                "        goto start_app\r\n" +
+                "    )\r\n" +
                 ")\r\n" +
+                ":start_app\r\n" +
                 "if exist \"SystemPro.exe\" (\r\n" +
                 "    start \"\" \"SystemPro.exe\"\r\n" +
                 ") else if exist \"SistemaLoja.exe\" (\r\n" +

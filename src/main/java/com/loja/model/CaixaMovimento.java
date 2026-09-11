@@ -71,10 +71,10 @@ public class CaixaMovimento {
     }
 
     public String getTipoFormatado() {
-        if ("SANGRIA".equalsIgnoreCase(tipo)) return "🔴 Sangria (Retirada)";
-        if ("SUPRIMENTO".equalsIgnoreCase(tipo)) return "🟢 Suprimento (Troco)";
-        if ("VENDA_PDV".equalsIgnoreCase(tipo)) return "🛒 Venda PDV";
-        if ("RECEBIMENTO_OS".equalsIgnoreCase(tipo)) return "🛠️ Recebimento de OS";
+        if ("SANGRIA".equalsIgnoreCase(tipo)) return "Sangria (Retirada)";
+        if ("SUPRIMENTO".equalsIgnoreCase(tipo)) return "Suprimento (Troco)";
+        if ("VENDA_PDV".equalsIgnoreCase(tipo)) return "Venda PDV";
+        if ("RECEBIMENTO_OS".equalsIgnoreCase(tipo)) return "Recebimento de OS";
         return tipo;
     }
 }

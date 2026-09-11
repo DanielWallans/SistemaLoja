@@ -6,6 +6,7 @@ import com.loja.repository.UsuarioDAO;
 
 import javax.swing.*;
 import java.awt.*;
+import com.loja.view.theme.UITheme;
 
 public class UsuarioFormDialog extends JDialog {
     private final UsuarioDAO usuarioDAO;
@@ -35,15 +36,18 @@ public class UsuarioFormDialog extends JDialog {
 
     private void initComponents() {
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(new Color(41, 128, 185));
-        pnlHeader.setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
+        pnlHeader.setBackground(UITheme.tokens().getBgSidebar());
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.tokens().getBorderSubtle()),
+                BorderFactory.createEmptyBorder(12, 18, 12, 18)
+        ));
 
-        JLabel lblTit = new JLabel(usuarioEdicao == null ? "👤 Cadastro de Novo Usuário" : "✏️ Editar Usuário");
+        JLabel lblTit = new JLabel(usuarioEdicao == null ? "Cadastro de Novo Usuário" : "Editar Usuário");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 15f));
-        lblTit.setForeground(Color.WHITE);
+        lblTit.setForeground(UITheme.tokens().getTextPrimary());
 
         JLabel lblSub = new JLabel("Defina o perfil de acesso e credenciais de login.");
-        lblSub.setForeground(new Color(236, 240, 241));
+        lblSub.setForeground(UITheme.tokens().getTextSecondary());
 
         pnlHeader.add(lblTit, BorderLayout.NORTH);
         pnlHeader.add(lblSub, BorderLayout.SOUTH);
@@ -108,9 +112,9 @@ public class UsuarioFormDialog extends JDialog {
 
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         JButton btnCancelar = new JButton("Cancelar");
-        JButton btnSalvar = new JButton("💾 Salvar Usuário");
+        JButton btnSalvar = new JButton("Salvar Usuário");
         btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 12f));
-        btnSalvar.setBackground(new Color(39, 174, 96));
+        btnSalvar.setBackground(UITheme.tokens().getPrimaryAccent());
         btnSalvar.setForeground(Color.WHITE);
 
         btnCancelar.addActionListener(e -> dispose());

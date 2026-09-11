@@ -58,7 +58,8 @@ public class PDVPanel extends JPanel {
         this.vendaPDVDAO = new VendaPDVDAO();
 
         setLayout(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16,
+                UITheme.SPACE_20));
 
         initComponents();
         configurarAtalhosTeclado();
@@ -70,8 +71,7 @@ public class PDVPanel extends JPanel {
         pnlHeader.setOpaque(false);
         pnlHeader.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.tokens().getBorderSubtle()),
-                BorderFactory.createEmptyBorder(0, 0, UITheme.SPACE_12, 0)
-        ));
+                BorderFactory.createEmptyBorder(0, 0, UITheme.SPACE_12, 0)));
 
         JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, UITheme.SPACE_8, 0));
         pnlTitulo.setOpaque(false);
@@ -99,7 +99,8 @@ public class PDVPanel extends JPanel {
         pnlHeader.add(pnlStatusCaixa, BorderLayout.EAST);
         add(pnlHeader, BorderLayout.NORTH);
 
-        // 2. Área Central (Esquerda: Entrada + Vitrine + Carrinho | Direita: Totais + Pagamento)
+        // 2. Área Central (Esquerda: Entrada + Vitrine + Carrinho | Direita: Totais +
+        // Pagamento)
         JPanel pnlCentro = new JPanel(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
         pnlCentro.setOpaque(false);
 
@@ -122,7 +123,8 @@ public class PDVPanel extends JPanel {
             }
         };
         pnlBarraEntrada.setOpaque(false);
-        pnlBarraEntrada.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_12, UITheme.SPACE_16, UITheme.SPACE_12, UITheme.SPACE_16));
+        pnlBarraEntrada.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_12, UITheme.SPACE_16, UITheme.SPACE_12,
+                UITheme.SPACE_16));
 
         JLabel lblEntradaTit = new JLabel("LEITOR DE CÓDIGO DE BARRAS / BUSCA DE PRODUTO");
         lblEntradaTit.setFont(UITheme.FONT_SMALL);
@@ -133,7 +135,8 @@ public class PDVPanel extends JPanel {
 
         txtEntradaCodigoOuNome = new JTextField();
         txtEntradaCodigoOuNome.setFont(UITheme.FONT_BODY);
-        txtEntradaCodigoOuNome.putClientProperty("JTextField.placeholderText", "Bipe o código de barras ou digite o código/nome e tecle Enter...");
+        txtEntradaCodigoOuNome.putClientProperty("JTextField.placeholderText",
+                "Bipe o código de barras ou digite o código/nome e tecle Enter...");
 
         JPanel pnlQtdEAdicionar = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
         pnlQtdEAdicionar.setOpaque(false);
@@ -141,8 +144,8 @@ public class PDVPanel extends JPanel {
         spQuantidade.setPreferredSize(new Dimension(65, 34));
         spQuantidade.setFont(UITheme.FONT_BODY);
 
-        btnAdicionarItem = UIComponents.criarBotaoPrimario("➕ Adicionar [Enter]");
-        btnBuscarEstoque = UIComponents.criarBotaoSecundario("🔎 Buscar [F6]");
+        btnAdicionarItem = UIComponents.criarBotaoPrimario("Adicionar [Enter]");
+        btnBuscarEstoque = UIComponents.criarBotaoSecundario("Buscar [F6]");
 
         JLabel lblQtd = new JLabel("Qtd:");
         lblQtd.setFont(UITheme.FONT_CAPTION);
@@ -186,10 +189,12 @@ public class PDVPanel extends JPanel {
         JPanel pnlTabelaBox = new JPanel(new BorderLayout(UITheme.SPACE_8, UITheme.SPACE_8));
         pnlTabelaBox.setOpaque(false);
 
-        String[] colunas = {"Item #", "Cód / ID", "Descrição do Produto", "Qtd", "Preço Unit. (R$)", "Subtotal (R$)"};
+        String[] colunas = { "Item #", "Cód / ID", "Descrição do Produto", "Qtd", "Preço Unit. (R$)", "Subtotal (R$)" };
         modelCarrinho = new DefaultTableModel(colunas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         tabelaCarrinho = new JTable(modelCarrinho);
@@ -204,8 +209,8 @@ public class PDVPanel extends JPanel {
 
         JPanel pnlCarrinhoAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
         pnlCarrinhoAcoes.setOpaque(false);
-        JButton btnRemoverItem = UIComponents.criarBotaoSecundario("🗑️ Remover Item [Del]");
-        JButton btnLimparCarrinho = UIComponents.criarBotaoSecundario("🧹 Limpar Carrinho [F4]");
+        JButton btnRemoverItem = UIComponents.criarBotaoSecundario("Remover Item [Del]");
+        JButton btnLimparCarrinho = UIComponents.criarBotaoSecundario("Limpar Carrinho [F4]");
         btnRemoverItem.addActionListener(e -> removerItemSelecionado());
         btnLimparCarrinho.addActionListener(e -> limparCarrinho());
         pnlCarrinhoAcoes.add(btnRemoverItem);
@@ -239,7 +244,8 @@ public class PDVPanel extends JPanel {
         pnlDireita.setOpaque(false);
         pnlDireita.setLayout(new BoxLayout(pnlDireita, BoxLayout.Y_AXIS));
         pnlDireita.setPreferredSize(new Dimension(320, 0));
-        pnlDireita.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16));
+        pnlDireita.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16,
+                UITheme.SPACE_16));
 
         JLabel lblTitResumo = new JLabel("Resumo da Venda");
         lblTitResumo.setFont(UITheme.FONT_TITLE);
@@ -293,14 +299,15 @@ public class PDVPanel extends JPanel {
 
         // Card Total a Pagar
         lblTotalPagarValor = new JLabel("R$ 0,00");
-        JPanel pnlCardTotal = UIComponents.criarCardMetrica("TOTAL A PAGAR", lblTotalPagarValor, UITheme.tokens().getSuccess());
+        JPanel pnlCardTotal = UIComponents.criarCardMetrica("TOTAL A PAGAR", lblTotalPagarValor,
+                UITheme.tokens().getSuccess());
         pnlCardTotal.setMaximumSize(new Dimension(Integer.MAX_VALUE, 85));
         pnlCardTotal.setAlignmentX(Component.LEFT_ALIGNMENT);
         pnlDireita.add(pnlCardTotal);
         pnlDireita.add(Box.createVerticalStrut(UITheme.SPACE_20));
 
         // Botão de Destaque: FINALIZAR VENDA
-        JButton btnFinalizarVenda = UIComponents.criarBotaoPrimario("💳 FINALIZAR VENDA [F12]");
+        JButton btnFinalizarVenda = UIComponents.criarBotaoPrimario("FINALIZAR VENDA [F12]");
         btnFinalizarVenda.setFont(UITheme.FONT_TITLE);
         btnFinalizarVenda.setPreferredSize(new Dimension(280, 48));
         btnFinalizarVenda.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
@@ -309,7 +316,7 @@ public class PDVPanel extends JPanel {
         pnlDireita.add(btnFinalizarVenda);
         pnlDireita.add(Box.createVerticalStrut(UITheme.SPACE_12));
 
-        JButton btnComprovanteUltima = UIComponents.criarBotaoSecundario("📄 Imprimir Último Comprovante");
+        JButton btnComprovanteUltima = UIComponents.criarBotaoSecundario("Imprimir Último Comprovante");
         btnComprovanteUltima.setAlignmentX(Component.LEFT_ALIGNMENT);
         btnComprovanteUltima.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         btnComprovanteUltima.addActionListener(e -> exibirUltimoComprovante());
@@ -395,15 +402,18 @@ public class PDVPanel extends JPanel {
         }
 
         int qtd = (Integer) spQuantidade.getValue();
-        if (qtd <= 0) qtd = 1;
+        if (qtd <= 0)
+            qtd = 1;
 
         if (texto.contains("*")) {
             String[] partes = texto.split("\\*", 2);
             try {
                 int qtdDigitada = Integer.parseInt(partes[0].trim());
-                if (qtdDigitada > 0) qtd = qtdDigitada;
+                if (qtdDigitada > 0)
+                    qtd = qtdDigitada;
                 texto = partes[1].trim();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
 
         Produto prod = produtoDAO.buscarPorCodigoOuId(texto);
@@ -413,8 +423,8 @@ public class PDVPanel extends JPanel {
             spQuantidade.setValue(1);
             txtEntradaCodigoOuNome.requestFocus();
         } else {
-            int opt = JOptionPane.showConfirmDialog(this, 
-                    "Produto '" + texto + "' não localizado no estoque.\n\nDeseja realizar uma busca avançada?", 
+            int opt = JOptionPane.showConfirmDialog(this,
+                    "Produto '" + texto + "' não localizado no estoque.\n\nDeseja realizar uma busca avançada?",
                     "Produto Não Encontrado", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (opt == JOptionPane.YES_OPTION) {
                 abrirBuscaEstoqueDialog();
@@ -442,7 +452,7 @@ public class PDVPanel extends JPanel {
         modelCarrinho.setRowCount(0);
         int cont = 1;
         for (ItemVenda i : carrinho) {
-            modelCarrinho.addRow(new Object[]{
+            modelCarrinho.addRow(new Object[] {
                     cont++,
                     i.getProdutoId() > 0 ? "#" + i.getProdutoId() : "Avulso",
                     i.getNomeProduto(),
@@ -461,7 +471,8 @@ public class PDVPanel extends JPanel {
         double desconto = 0.0;
         try {
             desconto = Double.parseDouble(txtDescontoValor.getText().trim().replace(",", "."));
-            if (desconto < 0) desconto = 0.0;
+            if (desconto < 0)
+                desconto = 0.0;
         } catch (Exception e) {
             desconto = 0.0;
         }
@@ -479,13 +490,16 @@ public class PDVPanel extends JPanel {
             carrinho.remove(row);
             atualizarTabelaCarrinho();
         } else {
-            JOptionPane.showMessageDialog(this, "Selecione um item no carrinho para remover!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um item no carrinho para remover!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
     private void limparCarrinho() {
-        if (carrinho.isEmpty()) return;
-        int opt = JOptionPane.showConfirmDialog(this, "Deseja realmente limpar todos os itens do carrinho?", "Limpar Carrinho", JOptionPane.YES_NO_OPTION);
+        if (carrinho.isEmpty())
+            return;
+        int opt = JOptionPane.showConfirmDialog(this, "Deseja realmente limpar todos os itens do carrinho?",
+                "Limpar Carrinho", JOptionPane.YES_NO_OPTION);
         if (opt == JOptionPane.YES_OPTION) {
             carrinho.clear();
             txtDescontoValor.setText("0.00");
@@ -497,7 +511,8 @@ public class PDVPanel extends JPanel {
     private void abrirBuscaEstoqueDialog() {
         List<Produto> todos = produtoDAO.buscarTodos();
         if (todos.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Nenhum produto cadastrado no estoque.", "Estoque Vazio", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nenhum produto cadastrado no estoque.", "Estoque Vazio",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -513,7 +528,8 @@ public class PDVPanel extends JPanel {
         pnl.add(new JLabel("Quantidade:"));
         pnl.add(sp);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Pesquisar Produto no Estoque", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Pesquisar Produto no Estoque", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             Produto selecionado = (Produto) cb.getSelectedItem();
             int qtd = (Integer) sp.getValue();
@@ -524,7 +540,8 @@ public class PDVPanel extends JPanel {
     }
 
     public void atualizarStatusCaixa() {
-        if (lblStatusCaixa == null) return;
+        if (lblStatusCaixa == null)
+            return;
         com.loja.model.CaixaSessao s = caixaDAO.obterSessaoAberta();
         if (s != null) {
             lblStatusCaixa.setText("● Caixa Aberto (Turno #" + s.getId() + " • " + s.getOperadorAbertura() + ")");
@@ -545,13 +562,15 @@ public class PDVPanel extends JPanel {
         }
 
         int opt = JOptionPane.showConfirmDialog(this,
-                "O CAIXA ESTÁ FECHADO!\n\nPara realizar vendas e movimentações financeiras, é necessário abrir o turno.\n" +
-                "Deseja realizar a Abertura de Caixa agora?",
+                "O CAIXA ESTÁ FECHADO!\n\nPara realizar vendas e movimentações financeiras, é necessário abrir o turno.\n"
+                        +
+                        "Deseja realizar a Abertura de Caixa agora?",
                 "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (opt == JOptionPane.YES_OPTION) {
             com.loja.service.CaixaService service = new com.loja.service.CaixaService();
-            com.loja.view.dialogs.AberturaCaixaDialog dialog = new com.loja.view.dialogs.AberturaCaixaDialog(owner, service, caixaDAO);
+            com.loja.view.dialogs.AberturaCaixaDialog dialog = new com.loja.view.dialogs.AberturaCaixaDialog(owner,
+                    service, caixaDAO);
             dialog.setVisible(true);
             if (dialog.isAbertaComSucesso()) {
                 atualizarStatusCaixa();
@@ -567,7 +586,9 @@ public class PDVPanel extends JPanel {
         }
 
         if (carrinho.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "O carrinho está vazio! Adicione pelo menos um item para finalizar a venda.", "Carrinho Vazio", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "O carrinho está vazio! Adicione pelo menos um item para finalizar a venda.", "Carrinho Vazio",
+                    JOptionPane.WARNING_MESSAGE);
             txtEntradaCodigoOuNome.requestFocus();
             return;
         }
@@ -576,7 +597,8 @@ public class PDVPanel extends JPanel {
         double desconto = 0.0;
         try {
             desconto = Double.parseDouble(txtDescontoValor.getText().trim().replace(",", "."));
-            if (desconto < 0) desconto = 0.0;
+            if (desconto < 0)
+                desconto = 0.0;
         } catch (Exception e) {
             desconto = 0.0;
         }
@@ -597,8 +619,9 @@ public class PDVPanel extends JPanel {
             boolean sucesso = vendaPDVDAO.finalizarVenda(venda);
             if (sucesso) {
                 this.ultimaVendaConcluida = venda;
-                JOptionPane.showMessageDialog(this, 
-                        "✅ VENDA #" + venda.getId() + " CONCLUÍDA COM SUCESSO!\nValor Total: R$ " + String.format("%.2f", totalPagar), 
+                JOptionPane.showMessageDialog(this,
+                        "VENDA #" + venda.getId() + " CONCLUÍDA COM SUCESSO!\nValor Total: R$ "
+                                + String.format("%.2f", totalPagar),
                         "Venda Finalizada", JOptionPane.INFORMATION_MESSAGE);
 
                 exibirComprovanteVenda(venda);
@@ -608,14 +631,16 @@ public class PDVPanel extends JPanel {
                 atualizarTabelaCarrinho();
                 txtEntradaCodigoOuNome.requestFocus();
             } else {
-                JOptionPane.showMessageDialog(this, "Erro ao gravar a venda no banco de dados.", "Erro", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Erro ao gravar a venda no banco de dados.", "Erro",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void exibirUltimoComprovante() {
         if (ultimaVendaConcluida == null) {
-            JOptionPane.showMessageDialog(this, "Nenhuma venda foi realizada nesta sessão ainda.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Nenhuma venda foi realizada nesta sessão ainda.", "Aviso",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         exibirComprovanteVenda(ultimaVendaConcluida);
@@ -635,8 +660,10 @@ public class PDVPanel extends JPanel {
 
         for (ItemVenda item : venda.getItens()) {
             String nome = item.getNomeProduto();
-            if (nome.length() > 27) nome = nome.substring(0, 24) + "...";
-            sb.append(String.format("%-28s %4d %9.2f %12.2f\n", nome, item.getQuantidade(), item.getValorUnitario(), item.getSubtotal()));
+            if (nome.length() > 27)
+                nome = nome.substring(0, 24) + "...";
+            sb.append(String.format("%-28s %4d %9.2f %12.2f\n", nome, item.getQuantidade(), item.getValorUnitario(),
+                    item.getSubtotal()));
         }
 
         sb.append("------------------------------------------------------------\n");
@@ -650,7 +677,8 @@ public class PDVPanel extends JPanel {
         for (PagamentoItem p : venda.getPagamentos()) {
             sb.append(String.format("  • %-32s R$ %10.2f\n", p.getModalidadeFormatada(), p.getValorBruto()));
             if (p.getTroco() > 0) {
-                sb.append(String.format("    (Recebido: R$ %.2f | Troco: R$ %.2f)\n", p.getValorRecebidoCliente(), p.getTroco()));
+                sb.append(String.format("    (Recebido: R$ %.2f | Troco: R$ %.2f)\n", p.getValorRecebidoCliente(),
+                        p.getTroco()));
             }
         }
         sb.append("============================================================\n");
@@ -661,6 +689,7 @@ public class PDVPanel extends JPanel {
         area.setFont(new Font("Monospaced", Font.PLAIN, 12));
         area.setEditable(false);
 
-        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Comprovante de Venda #" + venda.getId(), JOptionPane.PLAIN_MESSAGE);
+        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Comprovante de Venda #" + venda.getId(),
+                JOptionPane.PLAIN_MESSAGE);
     }
 }

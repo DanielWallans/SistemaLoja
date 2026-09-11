@@ -3,6 +3,9 @@ package com.loja.view.dialogs;
 import com.loja.model.SessaoUsuario;
 import com.loja.model.Usuario;
 import com.loja.repository.UsuarioDAO;
+import com.loja.view.theme.ThemeTokens;
+import com.loja.view.theme.UIComponents;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,100 +23,127 @@ public class LoginDialog extends JDialog {
         super(owner, "System Pro • Autenticação de Usuário", true);
         this.usuarioDAO = usuarioDAO;
 
-        setSize(430, 480);
+        setSize(440, 520);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
         initComponents();
     }
 
     private void initComponents() {
-        // 1. Cabeçalho
-        JPanel pnlHeader = new JPanel(new BorderLayout(8, 6));
-        pnlHeader.setBackground(new Color(24, 28, 36));
-        pnlHeader.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
+        ThemeTokens t = UITheme.tokens();
+        getContentPane().setBackground(t.getBgApp());
 
-        JPanel pnlLogo = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
-        pnlLogo.setOpaque(false);
-        JLabel lblIcone = new JLabel("🛠️");
-        lblIcone.setFont(lblIcone.getFont().deriveFont(26f));
+        // Contêiner principal com margem
+        JPanel pnlWrapper = new JPanel(new GridBagLayout());
+        pnlWrapper.setOpaque(false);
+        pnlWrapper.setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        JLabel lblTit = new JLabel("SYSTEM PRO");
-        lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 19f));
-        lblTit.setForeground(Color.WHITE);
+        // Card central elevado
+        JPanel card = new JPanel(new BorderLayout(0, 16)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(t.getBgCard()); // #1A1B1D
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(t.getBorderSubtle()); // #2A2C2F
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setOpaque(false);
+        card.setBorder(BorderFactory.createEmptyBorder(24, 28, 24, 28));
 
-        pnlLogo.add(lblIcone);
-        pnlLogo.add(lblTit);
+        // 1. Cabeçalho da Marca
+        JPanel pnlHeader = new JPanel(new BorderLayout(0, 4));
+        pnlHeader.setOpaque(false);
+
+        JLabel lblTit = new JLabel("SYSTEM PRO", SwingConstants.CENTER);
+        lblTit.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        lblTit.setForeground(t.getTextPrimary());
 
         JLabel lblSub = new JLabel("Controle de Acesso • Digite suas credenciais", SwingConstants.CENTER);
-        lblSub.setFont(lblSub.getFont().deriveFont(12f));
-        lblSub.setForeground(new Color(170, 178, 190));
+        lblSub.setFont(UITheme.FONT_SMALL);
+        lblSub.setForeground(t.getTextSecondary());
 
-        pnlHeader.add(pnlLogo, BorderLayout.CENTER);
+        pnlHeader.add(lblTit, BorderLayout.NORTH);
         pnlHeader.add(lblSub, BorderLayout.SOUTH);
-        add(pnlHeader, BorderLayout.NORTH);
+        card.add(pnlHeader, BorderLayout.NORTH);
 
         // 2. Formulário Central
         JPanel pnlForm = new JPanel(new GridBagLayout());
-        pnlForm.setBorder(BorderFactory.createEmptyBorder(20, 30, 15, 30));
+        pnlForm.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 4, 6, 4);
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
 
-        // Login
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 1.0;
-        JLabel lblLoginTit = new JLabel("Usuário / Login:");
-        lblLoginTit.setFont(lblLoginTit.getFont().deriveFont(Font.BOLD, 12f));
+        // Label Usuário
+        gbc.gridy = 0;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        JLabel lblLoginTit = new JLabel("Usuário / Login");
+        lblLoginTit.setFont(UITheme.FONT_CAPTION);
+        lblLoginTit.setForeground(t.getTextSecondary());
         pnlForm.add(lblLoginTit, gbc);
 
+        // Campo Usuário
         gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 14, 0);
         txtLogin = new JTextField("admin");
-        txtLogin.setFont(txtLogin.getFont().deriveFont(14f));
-        txtLogin.putClientProperty("JTextField.placeholderText", "Digite seu login...");
+        txtLogin.setFont(UITheme.FONT_BODY);
+        txtLogin.setPreferredSize(new Dimension(300, 38));
+        txtLogin.putClientProperty("JTextField.placeholderText", "Digite seu usuário...");
         pnlForm.add(txtLogin, gbc);
 
-        // Senha
+        // Label Senha
         gbc.gridy = 2;
-        JLabel lblSenhaTit = new JLabel("Senha:");
-        lblSenhaTit.setFont(lblSenhaTit.getFont().deriveFont(Font.BOLD, 12f));
+        gbc.insets = new Insets(0, 0, 4, 0);
+        JLabel lblSenhaTit = new JLabel("Senha");
+        lblSenhaTit.setFont(UITheme.FONT_CAPTION);
+        lblSenhaTit.setForeground(t.getTextSecondary());
         pnlForm.add(lblSenhaTit, gbc);
 
+        // Campo Senha
         gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 8, 0);
         txtSenha = new JPasswordField();
-        txtSenha.setFont(txtSenha.getFont().deriveFont(14f));
+        txtSenha.setFont(UITheme.FONT_BODY);
+        txtSenha.setPreferredSize(new Dimension(300, 38));
         txtSenha.putClientProperty("JTextField.placeholderText", "Digite sua senha...");
         pnlForm.add(txtSenha, gbc);
 
-        // Mensagem de Erro
+        // Mensagem de Erro / Feedback
         gbc.gridy = 4;
-        lblMensagemErro = new JLabel(" ");
-        lblMensagemErro.setForeground(new Color(231, 76, 60));
-        lblMensagemErro.setFont(lblMensagemErro.getFont().deriveFont(Font.BOLD, 11f));
+        gbc.insets = new Insets(0, 0, 10, 0);
+        lblMensagemErro = new JLabel(" ", SwingConstants.CENTER);
+        lblMensagemErro.setForeground(t.getDanger());
+        lblMensagemErro.setFont(UITheme.FONT_SMALL);
         pnlForm.add(lblMensagemErro, gbc);
 
         // Botão Entrar
         gbc.gridy = 5;
-        JButton btnEntrar = new JButton("🔐 Entrar no Sistema");
-        btnEntrar.setFont(btnEntrar.getFont().deriveFont(Font.BOLD, 14f));
-        btnEntrar.setBackground(new Color(39, 174, 96));
-        btnEntrar.setForeground(Color.WHITE);
-        btnEntrar.setPreferredSize(new Dimension(280, 42));
-        btnEntrar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnEntrar.addActionListener(e -> realizarLogin());
+        gbc.insets = new Insets(0, 0, 14, 0);
+        JButton btnEntrar = UIComponents.criarBotaoPrimario("Entrar no Sistema", this::realizarLogin);
+        btnEntrar.setFont(UITheme.FONT_BODY_BOLD);
+        btnEntrar.setPreferredSize(new Dimension(300, 40));
         pnlForm.add(btnEntrar, gbc);
 
         // Dica de Acesso Padrão
         gbc.gridy = 6;
-        JLabel lblDica = new JLabel("<html><center><font color='#7f8c8d'>Usuário padrão inicial: <b>admin</b> | Senha: <b>admin</b></font></center></html>", SwingConstants.CENTER);
-        lblDica.setFont(lblDica.getFont().deriveFont(10.5f));
+        gbc.insets = new Insets(0, 0, 8, 0);
+        JLabel lblDica = new JLabel("Acesso inicial padrão: admin / admin", SwingConstants.CENTER);
+        lblDica.setFont(UITheme.FONT_SMALL);
+        lblDica.setForeground(t.getTextSecondary());
         pnlForm.add(lblDica, gbc);
 
-        // Botão Configurar Servidor / Banco de Dados
+        // Botão Configurar Servidor
         gbc.gridy = 7;
-        JButton btnConfigDb = new JButton("⚙️ Configurar Servidor / Banco de Dados");
-        btnConfigDb.setFont(btnConfigDb.getFont().deriveFont(11f));
+        gbc.insets = new Insets(0, 0, 0, 0);
+        JButton btnConfigDb = new JButton("Configurar Servidor / Banco de Dados");
+        btnConfigDb.setFont(UITheme.FONT_SMALL);
         btnConfigDb.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnConfigDb.setContentAreaFilled(false);
         btnConfigDb.setBorderPainted(false);
@@ -124,7 +154,15 @@ public class LoginDialog extends JDialog {
         });
         pnlForm.add(btnConfigDb, gbc);
 
-        add(pnlForm, BorderLayout.CENTER);
+        card.add(pnlForm, BorderLayout.CENTER);
+
+        GridBagConstraints gbcWrapper = new GridBagConstraints();
+        gbcWrapper.fill = GridBagConstraints.BOTH;
+        gbcWrapper.weightx = 1.0;
+        gbcWrapper.weighty = 1.0;
+        pnlWrapper.add(card, gbcWrapper);
+
+        add(pnlWrapper, BorderLayout.CENTER);
 
         // Listeners de Enter
         KeyAdapter enterListener = new KeyAdapter() {
@@ -156,7 +194,7 @@ public class LoginDialog extends JDialog {
             this.autenticado = true;
             dispose();
         } else {
-            lblMensagemErro.setText("❌ Usuário ou senha incorretos / inativo!");
+            lblMensagemErro.setText("Usuário ou senha incorretos ou inativo!");
             txtSenha.setText("");
             txtSenha.requestFocus();
         }

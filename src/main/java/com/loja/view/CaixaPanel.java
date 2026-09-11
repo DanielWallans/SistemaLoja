@@ -58,7 +58,8 @@ public class CaixaPanel extends JPanel {
         this.caixaDAO = caixaDAO;
 
         setLayout(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16,
+                UITheme.SPACE_20));
 
         initComponents();
         recarregarDados();
@@ -68,32 +69,33 @@ public class CaixaPanel extends JPanel {
         JPanel pnlTopoGeral = new JPanel(new BorderLayout(UITheme.SPACE_12, UITheme.SPACE_12));
         pnlTopoGeral.setOpaque(false);
 
-        // 1. Banner de Status do Turno (Card arredondado e sóbrio)
+        // 1. Banner de Status do Turno (Card arredondado 8px e sóbrio)
         pnlBannerStatus = new JPanel(new BorderLayout(UITheme.SPACE_12, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(UITheme.tokens().getBgCard());
-                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.setColor(UITheme.tokens().getBorderSubtle());
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
         pnlBannerStatus.setOpaque(false);
-        pnlBannerStatus.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_8, UITheme.SPACE_16, UITheme.SPACE_8, UITheme.SPACE_16));
+        pnlBannerStatus.setBorder(
+                BorderFactory.createEmptyBorder(UITheme.SPACE_8, UITheme.SPACE_16, UITheme.SPACE_8, UITheme.SPACE_16));
 
-        lblStatusTurno = new JLabel("● CAIXA ABERTO • Turno #1 (Operador: Daniel)");
+        lblStatusTurno = new JLabel("CAIXA ABERTO • Turno #1 (Operador: Daniel)");
         lblStatusTurno.setFont(UITheme.FONT_TITLE);
 
         JPanel pnlBotoesTurno = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
         pnlBotoesTurno.setOpaque(false);
 
-        btnAbrirCaixa = UIComponents.criarBotaoPrimario("🔓 Abrir Caixa / Iniciar Turno");
-        btnFecharCaixa = UIComponents.criarBotaoSecundario("🔒 Fechar Caixa / Conferência Cega");
-        btnConfigLoja = UIComponents.criarBotaoSecundario("⚙️ Preferências");
+        btnAbrirCaixa = UIComponents.criarBotaoPrimario("Abrir Caixa / Iniciar Turno");
+        btnFecharCaixa = UIComponents.criarBotaoSecundario("Fechar Caixa / Conferência Cega");
+        btnConfigLoja = UIComponents.criarBotaoSecundario("Preferências");
 
         btnAbrirCaixa.addActionListener(e -> abrirCaixaDialog());
         btnFecharCaixa.addActionListener(e -> fecharCaixaDialog());
@@ -107,7 +109,7 @@ public class CaixaPanel extends JPanel {
         pnlBannerStatus.add(pnlBotoesTurno, BorderLayout.EAST);
         pnlTopoGeral.add(pnlBannerStatus, BorderLayout.NORTH);
 
-        // 2. Grid de 6 Cards de Indicadores
+        // 2. Grid de 6 Cards de Indicadores (Monocromático Graphite)
         JPanel pnlCards = new JPanel(new GridLayout(1, 6, UITheme.SPACE_12, 0));
         pnlCards.setOpaque(false);
 
@@ -118,12 +120,12 @@ public class CaixaPanel extends JPanel {
         lblTotalSuprimentos = new JLabel("R$ 0,00");
         lblTotalSangrias = new JLabel("R$ 0,00");
 
-        pnlCards.add(UIComponents.criarCardMetrica("Dinheiro Gaveta", lblSaldoGaveta, UITheme.tokens().getSuccess()));
-        pnlCards.add(UIComponents.criarCardMetrica("Total PIX (Hoje)", lblTotalPix, UITheme.tokens().getInfo()));
-        pnlCards.add(UIComponents.criarCardMetrica("Cartão Débito", lblTotalDebito, UITheme.tokens().getPrimaryAccent()));
-        pnlCards.add(UIComponents.criarCardMetrica("Cartão Crédito", lblTotalCredito, new Color(139, 92, 246)));
-        pnlCards.add(UIComponents.criarCardMetrica("Suprimentos", lblTotalSuprimentos, UITheme.tokens().getSuccess()));
-        pnlCards.add(UIComponents.criarCardMetrica("Sangrias", lblTotalSangrias, UITheme.tokens().getDanger()));
+        pnlCards.add(UIComponents.criarCardMetrica("Dinheiro Gaveta", lblSaldoGaveta, null));
+        pnlCards.add(UIComponents.criarCardMetrica("Total PIX (Hoje)", lblTotalPix, null));
+        pnlCards.add(UIComponents.criarCardMetrica("Cartão Débito", lblTotalDebito, null));
+        pnlCards.add(UIComponents.criarCardMetrica("Cartão Crédito", lblTotalCredito, null));
+        pnlCards.add(UIComponents.criarCardMetrica("Suprimentos", lblTotalSuprimentos, null));
+        pnlCards.add(UIComponents.criarCardMetrica("Sangrias", lblTotalSangrias, null));
 
         pnlTopoGeral.add(pnlCards, BorderLayout.CENTER);
         add(pnlTopoGeral, BorderLayout.NORTH);
@@ -132,8 +134,8 @@ public class CaixaPanel extends JPanel {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setFont(UITheme.FONT_BODY);
 
-        tabbedPane.addTab("📋 Extrato & Movimentações do Turno Atual", criarPainelAbaExtrato());
-        tabbedPane.addTab("📈 Histórico de Fechamentos Anteriores", criarPainelAbaHistorico());
+        tabbedPane.addTab("Extrato & Movimentações do Turno Atual", criarPainelAbaExtrato());
+        tabbedPane.addTab("Histórico de Fechamentos Anteriores", criarPainelAbaHistorico());
 
         add(tabbedPane, BorderLayout.CENTER);
     }
@@ -146,7 +148,7 @@ public class CaixaPanel extends JPanel {
         pnlAcoes.setOpaque(false);
         JButton btnSangria = UIComponents.criarBotaoSecundario("+ Sangria (Retirada)");
         JButton btnSuprimento = UIComponents.criarBotaoSecundario("+ Suprimento (Troco)");
-        JButton btnTaxas = UIComponents.criarBotaoSecundario("⚙️ Taxas Maquininha");
+        JButton btnTaxas = UIComponents.criarBotaoSecundario("Taxas Maquininha");
         JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar");
 
         btnSangria.addActionListener(e -> abrirSangria());
@@ -160,10 +162,13 @@ public class CaixaPanel extends JPanel {
         pnlAcoes.add(btnAtualizar);
         pnl.add(pnlAcoes, BorderLayout.NORTH);
 
-        String[] colunas = {"Horário", "Tipo de Operação", "Modalidade", "Valor Bruto (R$)", "Taxa (R$)", "Valor Líquido (R$)", "Justificativa / Identificação"};
+        String[] colunas = { "Horário", "Tipo de Operação", "Modalidade", "Valor Bruto (R$)", "Taxa (R$)",
+                "Valor Líquido (R$)", "Justificativa / Identificação" };
         tableModelMov = new DefaultTableModel(colunas, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         tabelaMovimentacoes = new JTable(tableModelMov);
@@ -194,9 +199,9 @@ public class CaixaPanel extends JPanel {
 
         JPanel pnlAcoesHist = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
         pnlAcoesHist.setOpaque(false);
-        JButton btnVerDetalhes = UIComponents.criarBotaoSecundario("👁️ Ver Extrato Completo");
-        JButton btnReimprimirCupom = UIComponents.criarBotaoSecundario("🖨️ Imprimir Cupom 80mm");
-        JButton btnReenviarWhats = UIComponents.criarBotaoSecundario("📲 Enviar no WhatsApp");
+        JButton btnVerDetalhes = UIComponents.criarBotaoSecundario("Ver Extrato Completo");
+        JButton btnReimprimirCupom = UIComponents.criarBotaoSecundario("Imprimir Cupom 80mm");
+        JButton btnReenviarWhats = UIComponents.criarBotaoSecundario("Enviar no WhatsApp");
         JButton btnAtualizarHist = UIComponents.criarBotaoSecundario("Atualizar Histórico");
 
         btnVerDetalhes.addActionListener(e -> exibirDetalhesFechamentoSelecionado());
@@ -210,10 +215,13 @@ public class CaixaPanel extends JPanel {
         pnlAcoesHist.add(btnAtualizarHist);
         pnl.add(pnlAcoesHist, BorderLayout.NORTH);
 
-        String[] colsHist = {"Turno #", "Status", "Data Abertura", "Data Fechamento", "Operador", "Fundo Inicial", "Vendas Total", "Físico Informado", "Diferença", "Malote Cofre"};
+        String[] colsHist = { "Turno #", "Status", "Data Abertura", "Data Fechamento", "Operador", "Fundo Inicial",
+                "Vendas Total", "Físico Informado", "Diferença", "Malote Cofre" };
         tableModelHistorico = new DefaultTableModel(colsHist, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
 
         tabelaHistorico = new JTable(tableModelHistorico);
@@ -239,7 +247,8 @@ public class CaixaPanel extends JPanel {
     public void recarregarDados() {
         CaixaSessao sessaoAberta = caixaDAO.obterSessaoAberta();
         if (sessaoAberta != null) {
-            lblStatusTurno.setText("● CAIXA ABERTO • Turno #" + sessaoAberta.getId() + " (Operador: " + sessaoAberta.getOperadorAbertura() + " desde " + sessaoAberta.getHoraAberturaFormatada() + ")");
+            lblStatusTurno.setText("● CAIXA ABERTO • Turno #" + sessaoAberta.getId() + " (Operador: "
+                    + sessaoAberta.getOperadorAbertura() + " desde " + sessaoAberta.getHoraAberturaFormatada() + ")");
             lblStatusTurno.setForeground(UITheme.tokens().getSuccess());
             btnAbrirCaixa.setVisible(false);
             btnFecharCaixa.setVisible(true);
@@ -262,7 +271,7 @@ public class CaixaPanel extends JPanel {
         tableModelMov.setRowCount(0);
         List<CaixaMovimento> movs = resumo.getMovimentacoes();
         for (CaixaMovimento m : movs) {
-            tableModelMov.addRow(new Object[]{
+            tableModelMov.addRow(new Object[] {
                     m.getDataHora() != null ? m.getDataHora().format(FORMATTER_HORA) : "-",
                     m.getTipo(),
                     m.getModalidade(),
@@ -284,7 +293,7 @@ public class CaixaPanel extends JPanel {
         tableModelHistorico.setRowCount(0);
 
         for (CaixaSessao s : listaHistoricoFechamentos) {
-            tableModelHistorico.addRow(new Object[]{
+            tableModelHistorico.addRow(new Object[] {
                     "#" + s.getId(),
                     s.getStatus(),
                     s.getDataAberturaFormatada(),
@@ -310,7 +319,8 @@ public class CaixaPanel extends JPanel {
     private void fecharCaixaDialog() {
         CaixaSessao sessaoAberta = caixaDAO.obterSessaoAberta();
         if (sessaoAberta == null) {
-            JOptionPane.showMessageDialog(this, "O caixa já se encontra fechado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "O caixa já se encontra fechado!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -359,13 +369,15 @@ public class CaixaPanel extends JPanel {
         if (row >= 0 && listaHistoricoFechamentos != null && row < listaHistoricoFechamentos.size()) {
             return listaHistoricoFechamentos.get(row);
         }
-        JOptionPane.showMessageDialog(this, "Selecione um fechamento na tabela de histórico!", "Aviso", JOptionPane.WARNING_MESSAGE);
+        JOptionPane.showMessageDialog(this, "Selecione um fechamento na tabela de histórico!", "Aviso",
+                JOptionPane.WARNING_MESSAGE);
         return null;
     }
 
     private void exibirDetalhesFechamentoSelecionado() {
         CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
-        if (s == null) return;
+        if (s == null)
+            return;
 
         String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
         String textoCupom = CupomTermicoService.gerarTextoCupomFechamento(s, nomeLoja, true);
@@ -374,12 +386,14 @@ public class CaixaPanel extends JPanel {
         area.setFont(new Font("Monospaced", Font.PLAIN, 12));
         area.setEditable(false);
 
-        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Extrato de Fechamento - Turno #" + s.getId(), JOptionPane.PLAIN_MESSAGE);
+        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Extrato de Fechamento - Turno #" + s.getId(),
+                JOptionPane.PLAIN_MESSAGE);
     }
 
     private void reimprimirCupomSelecionado() {
         CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
-        if (s == null) return;
+        if (s == null)
+            return;
 
         String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
         String textoCupom = CupomTermicoService.gerarTextoCupomFechamento(s, nomeLoja, true);
@@ -388,14 +402,15 @@ public class CaixaPanel extends JPanel {
 
     private void reenviarWhatsAppSelecionado() {
         CaixaSessao s = getSessaoSelecionadaNaTabelaHistorico();
-        if (s == null) return;
+        if (s == null)
+            return;
 
         String telDono = caixaDAO.obterConfig("whatsapp_proprietario", "");
         String nomeLoja = caixaDAO.obterConfig("nome_loja", "Assistência Técnica & Gestão Pro");
 
         if (telDono.isEmpty()) {
-            telDono = JOptionPane.showInputDialog(this, 
-                    "Informe o número de WhatsApp do Proprietário (com DDD, ex: 11999998888):", 
+            telDono = JOptionPane.showInputDialog(this,
+                    "Informe o número de WhatsApp do Proprietário (com DDD, ex: 11999998888):",
                     "Configurar WhatsApp do Dono", JOptionPane.QUESTION_MESSAGE);
             if (telDono != null && !telDono.trim().isEmpty()) {
                 caixaDAO.salvarConfig("whatsapp_proprietario", telDono.trim());

@@ -32,7 +32,8 @@ public class ClientePanel extends JPanel {
         this.equipDAO = equipDAO;
 
         setLayout(new BorderLayout(0, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20, UITheme.SPACE_24));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20,
+                UITheme.SPACE_24));
 
         initComponents();
         recarregarTabela();
@@ -44,7 +45,7 @@ public class ClientePanel extends JPanel {
         // 1. Barra Superior (Título e Ações)
         JPanel topPanel = new JPanel(new BorderLayout(UITheme.SPACE_16, 0));
         topPanel.setOpaque(false);
-        
+
         JPanel pnlTitulo = new JPanel(new BorderLayout(0, UITheme.SPACE_4));
         pnlTitulo.setOpaque(false);
         JLabel lblTitulo = new JLabel("Gestão de Clientes");
@@ -62,44 +63,17 @@ public class ClientePanel extends JPanel {
         txtBusca = new JTextField(20);
         txtBusca.setFont(UITheme.FONT_BODY);
         txtBusca.putClientProperty("JTextField.placeholderText", "Buscar por nome ou CPF [F3]...");
-        
-        JButton btnBuscar = new JButton("Buscar");
-        btnBuscar.setFont(UITheme.FONT_BODY);
-        btnBuscar.putClientProperty("JButton.buttonType", "roundRect");
-        btnBuscar.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        JButton btnNovo = new JButton("+ Novo Cliente");
-        btnNovo.setFont(UITheme.FONT_BODY_BOLD);
-        btnNovo.setBackground(t.getPrimaryAccent());
-        btnNovo.setForeground(Color.WHITE);
-        btnNovo.setFocusPainted(false);
-        btnNovo.putClientProperty("JButton.buttonType", "roundRect");
-        btnNovo.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnEditar = new JButton("Editar");
-        btnEditar.setFont(UITheme.FONT_BODY);
-        btnEditar.putClientProperty("JButton.buttonType", "roundRect");
-        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnNovoEquip = new JButton("+ Vincular Aparelho");
-        btnNovoEquip.setFont(UITheme.FONT_BODY);
-        btnNovoEquip.putClientProperty("JButton.buttonType", "roundRect");
-        btnNovoEquip.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnAtualizar = new JButton("Atualizar [F5]");
-        btnAtualizar.setFont(UITheme.FONT_BODY);
-        btnAtualizar.putClientProperty("JButton.buttonType", "roundRect");
-        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        btnBuscar.addActionListener(e -> filtrarClientes());
-        txtBusca.addActionListener(e -> filtrarClientes());
-        btnNovo.addActionListener(e -> abrirNovoCliente());
-        btnEditar.addActionListener(e -> editarClienteSelecionado());
-        btnNovoEquip.addActionListener(e -> abrirEquipamentoDoCliente());
-        btnAtualizar.addActionListener(e -> {
+        JButton btnBuscar = UIComponents.criarBotaoSecundario("Buscar", this::filtrarClientes);
+        JButton btnNovo = UIComponents.criarBotaoPrimario("+ Novo Cliente", this::abrirNovoCliente);
+        JButton btnEditar = UIComponents.criarBotaoSecundario("Editar", this::editarClienteSelecionado);
+        JButton btnNovoEquip = UIComponents.criarBotaoSecundario("+ Vincular Aparelho", this::abrirEquipamentoDoCliente);
+        JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar [F5]", () -> {
             txtBusca.setText("");
             recarregarTabela();
         });
+
+        txtBusca.addActionListener(e -> filtrarClientes());
 
         pnlBuscaEAcoes.add(txtBusca);
         pnlBuscaEAcoes.add(btnBuscar);
@@ -113,7 +87,7 @@ public class ClientePanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // 2. Tabela de Clientes
-        String[] colunas = {"ID", "Nome Completo", "CPF / CNPJ", "Telefone", "E-mail", "Endereço"};
+        String[] colunas = { "ID", "Nome Completo", "CPF / CNPJ", "Telefone", "E-mail", "Endereço" };
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -160,7 +134,7 @@ public class ClientePanel extends JPanel {
         tableModel.setRowCount(0);
         List<Cliente> clientes = clienteDAO.buscarTodos();
         for (Cliente c : clientes) {
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     c.getId(),
                     c.getNome(),
                     c.getCpfCnpj() != null ? c.getCpfCnpj() : "-",
@@ -181,7 +155,7 @@ public class ClientePanel extends JPanel {
         tableModel.setRowCount(0);
         List<Cliente> clientes = clienteDAO.buscarPorNome(termo);
         for (Cliente c : clientes) {
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     c.getId(),
                     c.getNome(),
                     c.getCpfCnpj() != null ? c.getCpfCnpj() : "-",
@@ -204,7 +178,8 @@ public class ClientePanel extends JPanel {
     private void editarClienteSelecionado() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um cliente na tabela para editar!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um cliente na tabela para editar!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int id = (int) tableModel.getValueAt(row, 0);
@@ -221,7 +196,8 @@ public class ClientePanel extends JPanel {
     private void abrirEquipamentoDoCliente() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um cliente na tabela para vincular um equipamento!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um cliente na tabela para vincular um equipamento!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int clienteId = (int) tableModel.getValueAt(row, 0);

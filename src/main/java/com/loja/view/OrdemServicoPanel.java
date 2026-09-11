@@ -49,8 +49,8 @@ public class OrdemServicoPanel extends JPanel {
     private JComboBox<String> cbFiltroStatus;
     private JLabel lblContador;
 
-    public OrdemServicoPanel(Frame owner, OrdemServicoDAO osDAO, ClienteDAO clienteDAO, 
-                             EquipamentoDAO equipDAO, ProdutoDAO produtoDAO, CaixaService caixaService) {
+    public OrdemServicoPanel(Frame owner, OrdemServicoDAO osDAO, ClienteDAO clienteDAO,
+            EquipamentoDAO equipDAO, ProdutoDAO produtoDAO, CaixaService caixaService) {
         this.owner = owner;
         this.osDAO = osDAO;
         this.clienteDAO = clienteDAO;
@@ -59,7 +59,8 @@ public class OrdemServicoPanel extends JPanel {
         this.caixaService = caixaService;
 
         setLayout(new BorderLayout(0, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20, UITheme.SPACE_24));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20,
+                UITheme.SPACE_24));
 
         initComponents();
         recarregarTabela();
@@ -86,7 +87,7 @@ public class OrdemServicoPanel extends JPanel {
         JPanel pnlAcoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, UITheme.SPACE_8, 0));
         pnlAcoes.setOpaque(false);
 
-        cbFiltroStatus = new JComboBox<>(new String[]{
+        cbFiltroStatus = new JComboBox<>(new String[] {
                 "Todos os Status",
                 "Aguardando Orçamento",
                 "Aguardando Aprovação do Cliente",
@@ -99,44 +100,14 @@ public class OrdemServicoPanel extends JPanel {
         cbFiltroStatus.setFont(UITheme.FONT_BODY);
         cbFiltroStatus.addActionListener(e -> filtrarPorStatus());
 
-        this.btnNovaOS = new JButton("+ Abrir Nova OS [F2]");
-        this.btnNovaOS.setFont(UITheme.FONT_BODY_BOLD);
-        this.btnNovaOS.setBackground(t.getPrimaryAccent());
-        this.btnNovaOS.setForeground(Color.WHITE);
-        this.btnNovaOS.setFocusPainted(false);
-        this.btnNovaOS.putClientProperty("JButton.buttonType", "roundRect");
-        this.btnNovaOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        this.btnNovaOS = UIComponents.criarBotaoPrimario("+ Abrir Nova OS [F2]", this::abrirNovaOS);
+        this.btnMontarOrcamento = UIComponents.criarBotaoSecundario("Montar Orçamento", this::abrirMontarOrcamentoSelecionado);
+        this.btnFinalizarOS = UIComponents.criarBotaoPrimario("Finalizar OS [F4]", this::abrirFinalizarOSSelecionada);
+        JButton btnDetalhes = UIComponents.criarBotaoSecundario("Ver Detalhes", this::abrirDetalhesOSSelecionada);
+        JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar [F5]", this::recarregarTabela);
 
-        this.btnMontarOrcamento = new JButton("🛠️ Montar Orçamento");
-        this.btnMontarOrcamento.setFont(UITheme.FONT_BODY_BOLD);
-        this.btnMontarOrcamento.putClientProperty("JButton.buttonType", "roundRect");
-        this.btnMontarOrcamento.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        this.btnFinalizarOS = new JButton("💳 Finalizar OS [F4]");
-        this.btnFinalizarOS.setFont(UITheme.FONT_BODY_BOLD);
-        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
-        this.btnFinalizarOS.setForeground(Color.WHITE);
-        this.btnFinalizarOS.setFocusPainted(false);
-        this.btnFinalizarOS.putClientProperty("JButton.buttonType", "roundRect");
-        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnDetalhes = new JButton("Ver Detalhes");
-        btnDetalhes.setFont(UITheme.FONT_BODY);
-        btnDetalhes.putClientProperty("JButton.buttonType", "roundRect");
-        btnDetalhes.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnAtualizar = new JButton("Atualizar [F5]");
-        btnAtualizar.setFont(UITheme.FONT_BODY);
-        btnAtualizar.putClientProperty("JButton.buttonType", "roundRect");
-        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        btnNovaOS.addActionListener(e -> abrirNovaOS());
-        this.btnMontarOrcamento.addActionListener(e -> abrirMontarOrcamentoSelecionado());
-        this.btnFinalizarOS.addActionListener(e -> abrirFinalizarOSSelecionada());
-        btnDetalhes.addActionListener(e -> abrirDetalhesOSSelecionada());
-        btnAtualizar.addActionListener(e -> recarregarTabela());
-
-        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0), "finalizarOS");
+        getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT).put(KeyStroke.getKeyStroke(KeyEvent.VK_F4, 0),
+                "finalizarOS");
         getActionMap().put("finalizarOS", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -161,7 +132,8 @@ public class OrdemServicoPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // 2. Tabela de OS
-        String[] colunas = {"OS #", "Entrada", "Cliente", "Aparelho / Equipamento", "Status", "Mão de Obra", "Total (R$)", "Saída"};
+        String[] colunas = { "OS #", "Entrada", "Cliente", "Aparelho / Equipamento", "Status", "Mão de Obra",
+                "Total (R$)", "Saída" };
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -180,7 +152,8 @@ public class OrdemServicoPanel extends JPanel {
         tabela.getColumnModel().getColumn(6).setPreferredWidth(110);
         tabela.getColumnModel().getColumn(7).setPreferredWidth(120);
 
-        // Aplica o padrão SaaS de tabela moderna com Pills translúcidos na coluna 4 (Status)
+        // Aplica o padrão SaaS de tabela moderna com Pills translúcidos na coluna 4
+        // (Status)
         UIComponents.formatarTabelaModerna(tabela, 4);
 
         tabela.addMouseListener(new MouseAdapter() {
@@ -223,9 +196,10 @@ public class OrdemServicoPanel extends JPanel {
             Equipamento eq = equipDAO.buscarPorId(os.getEquipamentoId());
 
             String nomeCliente = c != null ? c.getNome() : "Cliente #" + os.getClienteId();
-            String descEquip = eq != null ? eq.getTipo() + " " + eq.getMarca() + " " + eq.getModelo() : "Equipamento #" + os.getEquipamentoId();
+            String descEquip = eq != null ? eq.getTipo() + " " + eq.getMarca() + " " + eq.getModelo()
+                    : "Equipamento #" + os.getEquipamentoId();
 
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     os.getId(),
                     os.getDataEntrada() != null ? os.getDataEntrada().format(formatter) : "-",
                     nomeCliente,
@@ -249,7 +223,7 @@ public class OrdemServicoPanel extends JPanel {
         if (user != null && user.isTecnico()) {
             JOptionPane.showMessageDialog(this,
                     "O perfil Técnico possui acesso apenas para visualização e atualização de Ordens de Serviço.\n" +
-                    "A abertura de novas Ordens de Serviço deve ser realizada pelo Atendente ou Administrador.",
+                            "A abertura de novas Ordens de Serviço deve ser realizada pelo Atendente ou Administrador.",
                     "Acesso Restrito", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
@@ -263,13 +237,15 @@ public class OrdemServicoPanel extends JPanel {
     private void abrirMontarOrcamentoSelecionado() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para montar o orçamento!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para montar o orçamento!",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
         int osId = (int) tableModel.getValueAt(row, 0);
         OrdemServico os = osDAO.buscarPorId(osId);
         if (os != null) {
-            MontarOrcamentoDialog dialog = new MontarOrcamentoDialog(owner, os, osDAO, clienteDAO, equipDAO, produtoDAO);
+            MontarOrcamentoDialog dialog = new MontarOrcamentoDialog(owner, os, osDAO, clienteDAO, equipDAO,
+                    produtoDAO);
             dialog.setVisible(true);
             if (dialog.isSalvo()) {
                 recarregarTabela();
@@ -280,13 +256,15 @@ public class OrdemServicoPanel extends JPanel {
     private void abrirDetalhesOSSelecionada() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para visualizar!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para visualizar!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int osId = (int) tableModel.getValueAt(row, 0);
         OrdemServico os = osDAO.buscarPorId(osId);
         if (os != null) {
-            DetalhesOSDialog dialog = new DetalhesOSDialog(owner, os, osDAO, clienteDAO, equipDAO, produtoDAO, caixaService);
+            DetalhesOSDialog dialog = new DetalhesOSDialog(owner, os, osDAO, clienteDAO, equipDAO, produtoDAO,
+                    caixaService);
             dialog.setVisible(true);
             if (dialog.isAlterado()) {
                 recarregarTabela();
@@ -297,15 +275,20 @@ public class OrdemServicoPanel extends JPanel {
     public void abrirFinalizarOSSelecionada() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para finalizar e receber o pagamento!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Selecione uma Ordem de Serviço na tabela para finalizar e receber o pagamento!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int osId = (int) tableModel.getValueAt(row, 0);
         OrdemServico os = osDAO.buscarPorId(osId);
-        if (os == null) return;
+        if (os == null)
+            return;
 
         if (os.getStatus() != null && os.getStatus().contains("Entregue")) {
-            JOptionPane.showMessageDialog(this, "A Ordem de Serviço #" + osId + " já está com status 'Entregue (Finalizado)'!", "OS Já Finalizada", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "A Ordem de Serviço #" + osId + " já está com status 'Entregue (Finalizado)'!", "OS Já Finalizada",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -315,14 +298,16 @@ public class OrdemServicoPanel extends JPanel {
         CaixaDAO caixaDAO = new CaixaDAO();
         if (caixaDAO.obterSessaoAberta() == null) {
             int opt = JOptionPane.showConfirmDialog(this,
-                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + os.getId() + ", é necessário abrir o turno.\nDeseja abrir o caixa agora?",
+                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + os.getId()
+                            + ", é necessário abrir o turno.\nDeseja abrir o caixa agora?",
                     "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (opt == JOptionPane.YES_OPTION) {
                 AberturaCaixaDialog abDialog = new AberturaCaixaDialog(owner, caixaService, caixaDAO);
                 abDialog.setVisible(true);
             }
             if (caixaDAO.obterSessaoAberta() == null) {
-                JOptionPane.showMessageDialog(this, "O caixa precisa estar aberto para registrar o pagamento da OS.", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "O caixa precisa estar aberto para registrar o pagamento da OS.",
+                        "Aviso", JOptionPane.WARNING_MESSAGE);
                 return;
             }
         }
@@ -331,17 +316,19 @@ public class OrdemServicoPanel extends JPanel {
         if (totalPagar <= 0) {
             String input = JOptionPane.showInputDialog(this,
                     "A OS #" + os.getId() + " está sem valor cadastrado (R$ 0,00).\n\n" +
-                    "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
-                    "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
+                            "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
+                            "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
                     "100.00");
             if (input == null) {
                 return; // Cancelou
             }
             try {
                 totalPagar = Double.parseDouble(input.trim().replace(",", "."));
-                if (totalPagar < 0) throw new NumberFormatException();
+                if (totalPagar < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -350,7 +337,8 @@ public class OrdemServicoPanel extends JPanel {
                         "Confirmar a finalização da OS #" + os.getId() + " SEM COBRANÇA (Cortesia / Garantia R$ 0,00)?",
                         "Finalizar sem Custo", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (opt == JOptionPane.YES_OPTION) {
-                    osDAO.atualizarStatusEServico(os.getId(), "Entregue (Finalizado)", os.getValorServico(), os.getDiagnosticoTecnico());
+                    osDAO.atualizarStatusEServico(os.getId(), "Entregue (Finalizado)", os.getValorServico(),
+                            os.getDiagnosticoTecnico());
                     os.setStatus("Entregue (Finalizado)");
                     os.setDataSaida(LocalDateTime.now());
                     recarregarTabela();
@@ -366,23 +354,28 @@ public class OrdemServicoPanel extends JPanel {
         }
 
         PagamentoPDVDialog pagDialog = new PagamentoPDVDialog(owner, totalPagar, caixaDAO);
-        pagDialog.setTitle("Recebimento da OS #" + os.getId() + " no PDV - Total a Pagar: R$ " + String.format("%.2f", totalPagar));
+        pagDialog.setTitle("Recebimento da OS #" + os.getId() + " no PDV - Total a Pagar: R$ "
+                + String.format("%.2f", totalPagar));
         pagDialog.setVisible(true);
 
         if (pagDialog.isConfirmado()) {
             caixaDAO.registrarRecebimentoOS(os.getId(), pagDialog.getPagamentos());
-            osDAO.atualizarStatusEServico(os.getId(), "Entregue (Finalizado)", os.getValorServico(), os.getDiagnosticoTecnico());
+            osDAO.atualizarStatusEServico(os.getId(), "Entregue (Finalizado)", os.getValorServico(),
+                    os.getDiagnosticoTecnico());
             os.setStatus("Entregue (Finalizado)");
             os.setDataSaida(LocalDateTime.now());
 
             JOptionPane.showMessageDialog(this,
-                    "OS #" + os.getId() + " finalizada com sucesso!\nPagamento de R$ " + String.format("%.2f", totalPagar) + " registrado no Caixa.",
+                    "OS #" + os.getId() + " finalizada com sucesso!\nPagamento de R$ "
+                            + String.format("%.2f", totalPagar) + " registrado no Caixa.",
                     "OS Finalizada", JOptionPane.INFORMATION_MESSAGE);
 
             recarregarTabela();
             perguntarComprovanteEntrega(os, cliente, equip);
         } else {
-            JOptionPane.showMessageDialog(this, "Pagamento cancelado. A OS #" + os.getId() + " permanece com status atual.", "Cancelado", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Pagamento cancelado. A OS #" + os.getId() + " permanece com status atual.", "Cancelado",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
@@ -406,15 +399,18 @@ public class OrdemServicoPanel extends JPanel {
                     }
                     List<PecaItem> pecas = osDAO.obterPecasItensOS(os.getId());
                     List<HistoricoOS> historico = osDAO.obterHistoricoOS(os.getId());
-                    ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, os, cliente, equip, servicos, pecas, historico);
+                    ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, os, cliente, equip,
+                            servicos, pecas, historico);
                     int opt = JOptionPane.showConfirmDialog(owner,
-                            "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo agora?",
+                            "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath()
+                                    + "\n\nDeseja abrir o arquivo agora?",
                             "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                     if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
                         Desktop.getDesktop().open(arquivoDestino);
                     }
                 } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(owner, "Erro ao gerar PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(owner, "Erro ao gerar PDF: " + ex.getMessage(), "Erro",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         }

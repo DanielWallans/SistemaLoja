@@ -20,8 +20,8 @@ public class PagamentoItem {
         this(0, null, null, modalidade, valorBruto, taxaPercentual, parcelas, LocalDateTime.now());
     }
 
-    public PagamentoItem(int id, Integer vendaId, Integer osId, String modalidade, double valorBruto, 
-                         double taxaPercentual, int parcelas, LocalDateTime dataHora) {
+    public PagamentoItem(int id, Integer vendaId, Integer osId, String modalidade, double valorBruto,
+            double taxaPercentual, int parcelas, LocalDateTime dataHora) {
         this.id = id;
         this.vendaId = vendaId;
         this.osId = osId;
@@ -36,56 +36,108 @@ public class PagamentoItem {
         this.dataHora = dataHora != null ? dataHora : LocalDateTime.now();
     }
 
-    public int getId() { return id; }
-    public void setId(int id) { this.id = id; }
+    public int getId() {
+        return id;
+    }
 
-    public Integer getVendaId() { return vendaId; }
-    public void setVendaId(Integer vendaId) { this.vendaId = vendaId; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public Integer getOsId() { return osId; }
-    public void setOsId(Integer osId) { this.osId = osId; }
+    public Integer getVendaId() {
+        return vendaId;
+    }
 
-    public String getModalidade() { return modalidade; }
-    public void setModalidade(String modalidade) { this.modalidade = modalidade; }
+    public void setVendaId(Integer vendaId) {
+        this.vendaId = vendaId;
+    }
 
-    public double getValorBruto() { return valorBruto; }
+    public Integer getOsId() {
+        return osId;
+    }
+
+    public void setOsId(Integer osId) {
+        this.osId = osId;
+    }
+
+    public String getModalidade() {
+        return modalidade;
+    }
+
+    public void setModalidade(String modalidade) {
+        this.modalidade = modalidade;
+    }
+
+    public double getValorBruto() {
+        return valorBruto;
+    }
+
     public void setValorBruto(double valorBruto) {
         this.valorBruto = valorBruto;
         this.valorTaxa = (this.valorBruto * this.taxaPercentual) / 100.0;
         this.valorLiquido = this.valorBruto - this.valorTaxa;
     }
 
-    public double getTaxaPercentual() { return taxaPercentual; }
+    public double getTaxaPercentual() {
+        return taxaPercentual;
+    }
+
     public void setTaxaPercentual(double taxaPercentual) {
         this.taxaPercentual = taxaPercentual;
         this.valorTaxa = (this.valorBruto * this.taxaPercentual) / 100.0;
         this.valorLiquido = this.valorBruto - this.valorTaxa;
     }
 
-    public double getValorTaxa() { return valorTaxa; }
-    public double getValorLiquido() { return valorLiquido; }
+    public double getValorTaxa() {
+        return valorTaxa;
+    }
 
-    public int getParcelas() { return parcelas; }
-    public void setParcelas(int parcelas) { this.parcelas = Math.max(1, parcelas); }
+    public double getValorLiquido() {
+        return valorLiquido;
+    }
 
-    public double getValorRecebidoCliente() { return valorRecebidoCliente; }
+    public int getParcelas() {
+        return parcelas;
+    }
+
+    public void setParcelas(int parcelas) {
+        this.parcelas = Math.max(1, parcelas);
+    }
+
+    public double getValorRecebidoCliente() {
+        return valorRecebidoCliente;
+    }
+
     public void setValorRecebidoCliente(double valorRecebidoCliente) {
         this.valorRecebidoCliente = valorRecebidoCliente;
         this.troco = Math.max(0.0, this.valorRecebidoCliente - this.valorBruto);
     }
 
-    public double getTroco() { return troco; }
-    public void setTroco(double troco) { this.troco = troco; }
+    public double getTroco() {
+        return troco;
+    }
 
-    public LocalDateTime getDataHora() { return dataHora; }
-    public void setDataHora(LocalDateTime dataHora) { this.dataHora = dataHora; }
+    public void setTroco(double troco) {
+        this.troco = troco;
+    }
+
+    public LocalDateTime getDataHora() {
+        return dataHora;
+    }
+
+    public void setDataHora(LocalDateTime dataHora) {
+        this.dataHora = dataHora;
+    }
 
     public String getModalidadeFormatada() {
-        if ("DINHEIRO".equalsIgnoreCase(modalidade)) return "💵 Dinheiro";
-        if ("PIX".equalsIgnoreCase(modalidade)) return "📱 PIX";
-        if ("DEBITO".equalsIgnoreCase(modalidade)) return "💳 Cartão de Débito";
+        if ("DINHEIRO".equalsIgnoreCase(modalidade))
+            return "Dinheiro";
+        if ("PIX".equalsIgnoreCase(modalidade))
+            return "PIX";
+        if ("DEBITO".equalsIgnoreCase(modalidade))
+            return "Cartão de Débito";
         if (modalidade != null && modalidade.contains("CREDITO")) {
-            return parcelas > 1 ? String.format("💳 Cartão de Crédito (%dx)", parcelas) : "💳 Cartão de Crédito (1x)";
+            return parcelas > 1 ? String.format("Cartão de Crédito (%dx)", parcelas) : "Cartão de Crédito (1x)";
         }
         return modalidade;
     }

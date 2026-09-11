@@ -27,7 +27,8 @@ public class EstoquePanel extends JPanel {
         this.produtoDAO = produtoDAO;
 
         setLayout(new BorderLayout(UITheme.SPACE_16, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16,
+                UITheme.SPACE_20));
 
         initComponents();
         recarregarTabela();
@@ -70,7 +71,8 @@ public class EstoquePanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // 2. Tabela de Peças
-        String[] colunas = {"Código", "Componente / Descrição", "Preço Unitário (R$)", "Quantidade em Estoque", "Status do Estoque"};
+        String[] colunas = { "Código", "Componente / Descrição", "Preço Unitário (R$)", "Quantidade em Estoque",
+                "Status do Estoque" };
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -123,7 +125,7 @@ public class EstoquePanel extends JPanel {
                 statusEstoque = "DISPONÍVEL";
             }
 
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     p.getId(),
                     p.getNome(),
                     String.format("R$ %.2f", p.getPreco()),
@@ -145,8 +147,9 @@ public class EstoquePanel extends JPanel {
         int cont = 0;
         for (Produto p : lista) {
             if (p.getNome().toLowerCase().contains(termo) || String.valueOf(p.getId()).equals(termo)) {
-                String statusEstoque = p.getEstoque() <= 0 ? "ZERADO" : (p.getEstoque() <= 3 ? "ESTOQUE BAIXO" : "DISPONÍVEL");
-                tableModel.addRow(new Object[]{
+                String statusEstoque = p.getEstoque() <= 0 ? "ZERADO"
+                        : (p.getEstoque() <= 3 ? "ESTOQUE BAIXO" : "DISPONÍVEL");
+                tableModel.addRow(new Object[] {
                         p.getId(),
                         p.getNome(),
                         String.format("R$ %.2f", p.getPreco()),
@@ -170,7 +173,8 @@ public class EstoquePanel extends JPanel {
     private void editarProdutoSelecionado() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione uma peça na tabela para editar!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione uma peça na tabela para editar!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int id = (int) tableModel.getValueAt(row, 0);

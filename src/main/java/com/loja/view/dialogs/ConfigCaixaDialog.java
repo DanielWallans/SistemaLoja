@@ -58,7 +58,7 @@ public class ConfigCaixaDialog extends JDialog {
                 BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_20, UITheme.SPACE_16, UITheme.SPACE_20)
         ));
 
-        JLabel lblTit = new JLabel("🏢 Preferências da Empresa & Sistema");
+        JLabel lblTit = new JLabel("Preferências da Empresa & Sistema");
         lblTit.setFont(UITheme.FONT_TITLE);
         lblTit.setForeground(UITheme.tokens().getTextPrimary());
 
@@ -70,7 +70,7 @@ public class ConfigCaixaDialog extends JDialog {
         pnlHeader.add(lblSub, BorderLayout.SOUTH);
 
         if (!ehAdmin) {
-            JLabel lblAviso = new JLabel("🔒 Modo Leitura: Apenas administradores podem salvar alterações nestas configurações.");
+            JLabel lblAviso = new JLabel("Modo Leitura: Apenas administradores podem salvar alterações nestas configurações.");
             lblAviso.setFont(UITheme.FONT_SMALL);
             lblAviso.setForeground(UITheme.tokens().getWarning());
             lblAviso.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_8, 0, 0, 0));
@@ -84,8 +84,8 @@ public class ConfigCaixaDialog extends JDialog {
         tabbedPane.setFont(UITheme.FONT_BODY);
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_8, UITheme.SPACE_16, UITheme.SPACE_8, UITheme.SPACE_16));
 
-        tabbedPane.addTab("📄 Dados da Empresa (PDF)", criarAbaEmpresa());
-        tabbedPane.addTab("💰 Caixa & Impressão", criarAbaCaixa());
+        tabbedPane.addTab("Dados da Empresa (PDF)", criarAbaEmpresa());
+        tabbedPane.addTab("Caixa & Impressão", criarAbaCaixa());
 
         add(tabbedPane, BorderLayout.CENTER);
 
@@ -96,7 +96,7 @@ public class ConfigCaixaDialog extends JDialog {
         JButton btnCancelar = UIComponents.criarBotaoSecundario("Cancelar");
         btnCancelar.addActionListener(e -> dispose());
 
-        btnSalvar = UIComponents.criarBotaoPrimario("💾 Salvar Alterações");
+        btnSalvar = UIComponents.criarBotaoPrimario("Salvar Alterações");
         btnSalvar.addActionListener(e -> salvar());
 
         pnlBotoes.add(btnCancelar);

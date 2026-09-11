@@ -6,7 +6,6 @@ import com.loja.model.OrdemServico;
 import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
 import com.loja.repository.OrdemServicoDAO;
-
 import com.loja.service.ComprovanteEntradaPDFService;
 
 import javax.swing.*;
@@ -33,21 +32,37 @@ public class NovaOSDialog extends JDialog {
     private JPanel pnlChecklistCards;
     private String tipoChecklistAtual = "NOTEBOOK";
 
-    // Checklist Notebook
-    private JComboBox<String> nbLigando, nbCarregando, nbTela, nbTeclado, nbArmazenamento, nbRuido, nbLiquido, nbCabo;
+    // 1. Checklist Console de Vídeo Game
+    private JComboBox<String> conLiga, conVideo, conArmazenamentoStatus, conLeitor, conControle, conCooler, conLacre;
+    private JTextField conArmazenamentoDetalhe, conOutros;
+
+    // 2. Checklist Notebook
+    private JComboBox<String> nbLiga, nbTela, nbTeclado, nbCarcaca, nbCooler;
     private JTextField nbOutros;
 
-    // Checklist Desktop
-    private JComboBox<String> dtLigando, dtFonte, dtGabinete, dtCaboForca, dtPerifericos, dtRuido, dtPoeira, dtArmazenamento;
+    // 3. Checklist Computador Desktop
+    private JComboBox<String> dtLiga, dtVideo, dtGpu, dtGabinete;
     private JTextField dtOutros;
 
-    // Checklist Impressora
-    private JComboBox<String> impLigando, impPapel, impCartucho, impNivelTinta, impCabeca, impCaboUsb, impCaboForca, impManchas, impRuido;
+    // 4. Checklist Smartphone
+    private JComboBox<String> celLiga, celTouch, celConector, celBateria, celCameras, celAudio, celRede, celBiometria;
+    private JTextField celOutros;
+
+    // 5. Checklist Tablet
+    private JComboBox<String> tabLiga, tabTouch, tabCarga, tabCameras, tabBotoes, tabEstrutura;
+    private JTextField tabOutros;
+
+    // 6. Checklist Impressora
+    private JComboBox<String> impLiga, impPapel, impTinta;
     private JTextField impOutros;
 
-    // Checklist Celular/Tablet/Outros
-    private JComboBox<String> celLigando, celTouch, celConector, celCameras, celCarregador;
-    private JTextField celOutros;
+    // 7. Checklist Monitor
+    private JComboBox<String> monLiga, monPainel, monPortas, monBotoes;
+    private JTextField monOutros;
+
+    // 8. Checklist Outros
+    private JComboBox<String> outLiga, outFuncao, outFisico, outConectores;
+    private JTextField outOutros;
 
     // Passo 4 & 5
     private JTextArea txtProblema;
@@ -71,14 +86,14 @@ public class NovaOSDialog extends JDialog {
     }
 
     public NovaOSDialog(Frame owner, ClienteDAO clienteDAO, EquipamentoDAO equipDAO, OrdemServicoDAO osDAO) {
-        super(owner, "Abertura de Ordem de Serviço (Checklist Dinâmico)", true);
+        super(owner, "Abertura de Ordem de Serviço (Vistoria Técnica de Entrada)", true);
         this.clienteDAO = clienteDAO;
         this.equipDAO = equipDAO;
         this.osDAO = osDAO;
 
         initComponents();
         carregarClientes();
-        setSize(780, 740);
+        setSize(860, 650);
         setLocationRelativeTo(owner);
     }
 
@@ -91,7 +106,9 @@ public class NovaOSDialog extends JDialog {
 
         // 1. Bloco Cliente & Equipamento
         JPanel pnlCabecalho = new JPanel(new GridBagLayout());
-        pnlCabecalho.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 1 & 2. Identificação do Cliente e Aparelho ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 13)));
+        pnlCabecalho.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), 
+                " 1 & 2. Identificação do Cliente e Aparelho ", TitledBorder.LEFT, TitledBorder.TOP, 
+                new Font("SansSerif", Font.BOLD, 13)));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new Insets(6, 6, 6, 6);
@@ -99,7 +116,7 @@ public class NovaOSDialog extends JDialog {
         cbClientes = new JComboBox<>();
         btnNovoCliente = new JButton("+ Novo Cliente");
         cbEquipamentos = new JComboBox<>();
-        btnNovoEquipamento = new JButton("+ Novo Equip.");
+        btnNovoEquipamento = new JButton("+ Novo Equipamento");
 
         cbClientes.addActionListener(e -> carregarEquipamentosDoCliente());
         cbEquipamentos.addActionListener(e -> atualizarChecklistPorTipoEquipamento());
@@ -126,11 +143,17 @@ public class NovaOSDialog extends JDialog {
         // 2. Bloco Checklist Técnico Dinâmico
         clChecklist = new CardLayout();
         pnlChecklistCards = new JPanel(clChecklist);
-        pnlChecklistCards.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 3. Checklist Técnico Específico de Entrada ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 13)));
+        pnlChecklistCards.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), 
+                " 3. Checklist Técnico Especializado de Entrada ", TitledBorder.LEFT, TitledBorder.TOP, 
+                new Font("SansSerif", Font.BOLD, 13)));
 
+        pnlChecklistCards.add(criarCardConsole(), "CONSOLE");
         pnlChecklistCards.add(criarCardNotebook(), "NOTEBOOK");
         pnlChecklistCards.add(criarCardDesktop(), "DESKTOP");
+        pnlChecklistCards.add(criarCardSmartphone(), "SMARTPHONE");
+        pnlChecklistCards.add(criarCardTablet(), "TABLET");
         pnlChecklistCards.add(criarCardImpressora(), "IMPRESSORA");
+        pnlChecklistCards.add(criarCardMonitor(), "MONITOR");
         pnlChecklistCards.add(criarCardOutros(), "OUTROS");
 
         mainPanel.add(pnlChecklistCards);
@@ -138,7 +161,11 @@ public class NovaOSDialog extends JDialog {
 
         // 3. Bloco Relato do Defeito e Observações
         JPanel pnlRelato = new JPanel(new GridLayout(2, 1, 5, 8));
-        pnlRelato.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 4 & 5. Defeito Relatado e Observações Técnicas ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 13)));
+        pnlRelato.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), 
+                " 4 & 5. Defeito Relatado e Observações Técnicas ", TitledBorder.LEFT, TitledBorder.TOP, 
+                new Font("SansSerif", Font.BOLD, 13)));
+        pnlRelato.setPreferredSize(new Dimension(0, 160));
+        pnlRelato.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
 
         txtProblema = new JTextArea(3, 30);
         txtProblema.setLineWrap(true);
@@ -162,6 +189,7 @@ public class NovaOSDialog extends JDialog {
 
         JScrollPane scroll = new JScrollPane(mainPanel);
         scroll.setBorder(null);
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
         add(scroll, BorderLayout.CENTER);
 
         // Barra inferior de botões
@@ -179,104 +207,422 @@ public class NovaOSDialog extends JDialog {
     }
 
     // --- CARDS ESPECÍFICOS DE CHECKLIST ---
+
+    // 1. Console de Vídeo Game
+    private JPanel criarCardConsole() {
+        JPanel pnl = new JPanel(new GridLayout(4, 2, 12, 6));
+        conLiga = new JComboBox<>(new String[]{
+                "Sim (Luz normal / Operante)", 
+                "Não Liga (Totalmente inoperante)", 
+                "Luz Azul / Vermelha (BLOD / Falha APU)", 
+                "Liga e desliga em poucos segundos", 
+                "Não testado"
+        });
+        conVideo = new JComboBox<>(new String[]{
+                "Sim (Vídeo e Áudio OK)", 
+                "Sem sinal de vídeo (Tela preta)", 
+                "Conector HDMI quebrado / Pinos danificados", 
+                "Imagem com chuvisco / Falha de sinal", 
+                "Não testado"
+        });
+        conArmazenamentoStatus = new JComboBox<>(new String[]{
+                "Detectado e Saudável", 
+                "Com lentidão / Erro de leitura", 
+                "Corrompido / Pedindo atualização", 
+                "Sem HD/SSD interno", 
+                "Não testado"
+        });
+        conArmazenamentoDetalhe = new JTextField("Capacidade / Modelo (ex: SSD 825GB PS5, HD 500GB)");
+
+        conLeitor = new JComboBox<>(new String[]{
+                "Puxa, lê e ejeta normal", 
+                "Não puxa / Não ejeta mídia", 
+                "Não lê mídias (Erro de leitura)", 
+                "Versão Digital (Sem leitor óptico)", 
+                "Não testado"
+        });
+        conControle = new JComboBox<>(new String[]{
+                "Sincroniza sem fio perfeitamente", 
+                "Só conecta com cabo USB", 
+                "Falha no módulo Bluetooth/Wi-Fi", 
+                "Não testado"
+        });
+        conCooler = new JComboBox<>(new String[]{
+                "Silencioso / Fluxo de ar normal", 
+                "Modo turbina / Ruído muito alto", 
+                "Superaquecendo com aviso na tela", 
+                "Cooler travado / Parado", 
+                "Não testado"
+        });
+        conLacre = new JComboBox<>(new String[]{
+                "Lacre original intacto", 
+                "Lacre rompido (Já aberto anteriormente)", 
+                "Sem lacre visível"
+        });
+        conOutros = new JTextField("Nenhuma");
+
+        pnl.add(criarItemChecklist("1. Liga / Led de Status:", conLiga));
+        pnl.add(criarItemChecklist("2. Saída HDMI / Sinal de Vídeo:", conVideo));
+        pnl.add(criarItemArmazenamento("3. Armazenamento Interno (Status & Capacidade):", conArmazenamentoStatus, conArmazenamentoDetalhe));
+        pnl.add(criarItemChecklist("4. Leitor de Disco (Drive Óptico):", conLeitor));
+        pnl.add(criarItemChecklist("5. Sincronização Controles / Bluetooth:", conControle));
+        pnl.add(criarItemChecklist("6. Cooler / Refrigeração / Ruído:", conCooler));
+        pnl.add(criarItemChecklist("7. Lacre de Fábrica / Garantia:", conLacre));
+        pnl.add(criarItemChecklist("8. Observações Adicionais do Console:", conOutros));
+        return criarWrapperCard(pnl);
+    }
+
+    // 2. Notebook
     private JPanel criarCardNotebook() {
-        JPanel pnl = new JPanel(new GridLayout(5, 2, 10, 6));
-        nbLigando = new JComboBox<>(new String[]{"Sim", "Não"});
-        nbCarregando = new JComboBox<>(new String[]{"Sim", "Não", "Não testado"});
-        nbTela = new JComboBox<>(new String[]{"Não (Tela Intacta)", "Sim (Com trinca/manchas)", "Não se aplica"});
-        nbTeclado = new JComboBox<>(new String[]{"Sim", "Não", "Não testado"});
-        nbArmazenamento = new JComboBox<>(new String[]{"Sim", "Não", "Não testado"});
-        nbRuido = new JComboBox<>(new String[]{"Não", "Sim (Ruído Anormal)"});
-        nbLiquido = new JComboBox<>(new String[]{"Não", "Sim (Indício de Líquido)"});
-        nbCabo = new JComboBox<>(new String[]{"Sim (Fonte/Carregador entregue)", "Não"});
-        nbOutros = new JTextField("Nenhum");
+        JPanel pnl = new JPanel(new GridLayout(3, 2, 12, 6));
+        nbLiga = new JComboBox<>(new String[]{
+                "Sim (Liga normalmente)", 
+                "Não liga", 
+                "Liga e desliga em seguida", 
+                "Não testado"
+        });
+        nbTela = new JComboBox<>(new String[]{
+                "Imagem perfeita sem avarias", 
+                "Tela trincada / Quebrada", 
+                "Linhas / Manchas no display", 
+                "Sem iluminação (Backlight apagado)", 
+                "Não testado"
+        });
+        nbTeclado = new JComboBox<>(new String[]{
+                "Teclado e touchpad 100% OK", 
+                "Teclas falhando / Disparando", 
+                "Touchpad inoperante / Travado", 
+                "Não testado"
+        });
+        nbCarcaca = new JComboBox<>(new String[]{
+                "Estrutura firme e intacta", 
+                "Dobradiça dura / Quebrando carcaça", 
+                "Parafusos faltando / Carcaça aberta", 
+                "Marcas normais de uso"
+        });
+        nbCooler = new JComboBox<>(new String[]{
+                "Silencioso e temperatura normal", 
+                "Aquecendo muito / Saída obstruída", 
+                "Cooler fazendo barulho anormal", 
+                "Não testado"
+        });
+        nbOutros = new JTextField("Nenhuma");
 
-        pnl.add(criarItemChecklist("1. Notebook Ligando?", nbLigando));
-        pnl.add(criarItemChecklist("2. Carregando / Bateria OK?", nbCarregando));
-        pnl.add(criarItemChecklist("3. Defeito na Tela?", nbTela));
-        pnl.add(criarItemChecklist("4. Teclado / Touchpad OK?", nbTeclado));
-        pnl.add(criarItemChecklist("5. HD/SSD Acessível?", nbArmazenamento));
-        pnl.add(criarItemChecklist("6. Ruído Anormal?", nbRuido));
-        pnl.add(criarItemChecklist("7. Dano por Líquido?", nbLiquido));
-        pnl.add(criarItemChecklist("8. Carregador / Fonte Entregue?", nbCabo));
-        pnl.add(criarItemChecklist("9. Outras Observações:", nbOutros));
-        return pnl;
+        pnl.add(criarItemChecklist("1. Notebook Liga?:", nbLiga));
+        pnl.add(criarItemChecklist("2. Imagem / Tela (Display):", nbTela));
+        pnl.add(criarItemChecklist("3. Teclado & Touchpad:", nbTeclado));
+        pnl.add(criarItemChecklist("4. Carcaça & Dobradiças:", nbCarcaca));
+        pnl.add(criarItemChecklist("5. Refrigeração & Ruído:", nbCooler));
+        pnl.add(criarItemChecklist("6. Observações Adicionais do Notebook:", nbOutros));
+        return criarWrapperCard(pnl);
     }
 
+    // 3. Computador Desktop
     private JPanel criarCardDesktop() {
-        JPanel pnl = new JPanel(new GridLayout(5, 2, 10, 6));
-        dtLigando = new JComboBox<>(new String[]{"Sim", "Não"});
-        dtFonte = new JComboBox<>(new String[]{"Sim (Fonte OK)", "Não (Fonte com defeito)", "Não testada"});
-        dtGabinete = new JComboBox<>(new String[]{"Não (Gabinete Intacto)", "Sim (Avarias/Amassados)"});
-        dtCaboForca = new JComboBox<>(new String[]{"Sim (Deixou cabo de força)", "Não"});
-        dtPerifericos = new JComboBox<>(new String[]{"Não deixou periféricos", "Sim (Teclado/Mouse inclusos)"});
-        dtRuido = new JComboBox<>(new String[]{"Não", "Sim (Ruído em Coolers/Ventoinha)"});
-        dtPoeira = new JComboBox<>(new String[]{"Não", "Sim (Poeira Excessiva / Oxidação)"});
-        dtArmazenamento = new JComboBox<>(new String[]{"Sim", "Não", "Não testado"});
-        dtOutros = new JTextField("Nenhum");
+        JPanel pnl = new JPanel(new GridLayout(3, 2, 12, 6));
+        dtLiga = new JComboBox<>(new String[]{
+                "Sim (Liga normalmente)", 
+                "Não liga", 
+                "Liga e desliga em seguida", 
+                "Não testado"
+        });
+        dtVideo = new JComboBox<>(new String[]{
+                "Dá vídeo normalmente", 
+                "Sem vídeo (Coolers giram)", 
+                "Imagem com artefatos gráficos", 
+                "Não testado"
+        });
+        dtGpu = new JComboBox<>(new String[]{
+                "Presente e gerando vídeo", 
+                "Presente mas com falha / Artefatos", 
+                "Não possui (Usa vídeo integrado)", 
+                "Não testado"
+        });
+        dtGabinete = new JComboBox<>(new String[]{
+                "Limpo e em bom estado", 
+                "Poeira excessiva / Oxidação", 
+                "Ventoinhas com ruído forte", 
+                "Gabinete amassado"
+        });
+        dtOutros = new JTextField("Nenhuma");
 
-        pnl.add(criarItemChecklist("1. Computador Ligando?", dtLigando));
-        pnl.add(criarItemChecklist("2. Fonte de Alimentação OK?", dtFonte));
-        pnl.add(criarItemChecklist("3. Gabinete com Avarias?", dtGabinete));
-        pnl.add(criarItemChecklist("4. Cabo de Força Incluso?", dtCaboForca));
-        pnl.add(criarItemChecklist("5. Mouse / Teclado Inclusos?", dtPerifericos));
-        pnl.add(criarItemChecklist("6. Ruído Anormal (Coolers)?", dtRuido));
-        pnl.add(criarItemChecklist("7. Poeira Excessiva / Oxidação?", dtPoeira));
-        pnl.add(criarItemChecklist("8. Armazenamento (HD/SSD)?", dtArmazenamento));
-        pnl.add(criarItemChecklist("9. Outras Observações:", dtOutros));
-        return pnl;
+        pnl.add(criarItemChecklist("1. Computador Liga?:", dtLiga));
+        pnl.add(criarItemChecklist("2. Gera Vídeo / Imagem:", dtVideo));
+        pnl.add(criarItemChecklist("3. Placa de Vídeo Dedicada:", dtGpu));
+        pnl.add(criarItemChecklist("4. Gabinete & Limpeza Interna:", dtGabinete));
+        pnl.add(criarItemChecklist("5. Observações Adicionais do Desktop:", dtOutros));
+        return criarWrapperCard(pnl);
     }
 
+    // 4. Smartphone
+    private JPanel criarCardSmartphone() {
+        JPanel pnl = new JPanel(new GridLayout(5, 2, 12, 6));
+        celLiga = new JComboBox<>(new String[]{
+                "Sim (Liga e acessa sistema)", 
+                "Não liga (Sem consumo/morto)", 
+                "Travado no logo / Loop infinito", 
+                "Apenas vibra / Som sem imagem", 
+                "Não testado"
+        });
+        celTouch = new JComboBox<>(new String[]{
+                "Display e touch 100% OK", 
+                "Vidro trincado (Touch funciona)", 
+                "Touch falhando / Toques fantasmas", 
+                "Display quebrado / Sem imagem", 
+                "Não testado"
+        });
+        celConector = new JComboBox<>(new String[]{
+                "Carrega normal / Firme", 
+                "Conector frouxo / Mau contato", 
+                "Não carrega / Danificado", 
+                "Não testado"
+        });
+        celBateria = new JComboBox<>(new String[]{
+                "Saúde normal / Segura carga", 
+                "Descarrega rápido / Viciada", 
+                "Bateria estufada (Perigo)", 
+                "Não testado"
+        });
+        celCameras = new JComboBox<>(new String[]{
+                "Ambas funcionando com foco", 
+                "Falha na câmera frontal", 
+                "Falha na câmera traseira", 
+                "Lentes riscadas / Trincadas", 
+                "Não testado"
+        });
+        celAudio = new JComboBox<>(new String[]{
+                "Áudio e microfone OK", 
+                "Som chiando / Sem som", 
+                "Microfone não funciona em ligação", 
+                "Não testado"
+        });
+        celRede = new JComboBox<>(new String[]{
+                "Reconhece chip (SIM) e Wi-Fi", 
+                "Sem serviço / Não lê chip", 
+                "Wi-Fi inoperante", 
+                "Não testado"
+        });
+        celBiometria = new JComboBox<>(new String[]{
+                "Biometria / Face ID funcionais", 
+                "Inoperante / Falha de leitura", 
+                "Não possui / Não testado"
+        });
+        celOutros = new JTextField("Nenhuma");
+
+        pnl.add(criarItemChecklist("1. Liga / Dá Sinal:", celLiga));
+        pnl.add(criarItemChecklist("2. Display & Touchscreen:", celTouch));
+        pnl.add(criarItemChecklist("3. Conector de Carga:", celConector));
+        pnl.add(criarItemChecklist("4. Bateria:", celBateria));
+        pnl.add(criarItemChecklist("5. Câmeras (Frontal & Traseira):", celCameras));
+        pnl.add(criarItemChecklist("6. Áudio & Microfone:", celAudio));
+        pnl.add(criarItemChecklist("7. Conectividade & Chip (SIM):", celRede));
+        pnl.add(criarItemChecklist("8. Biometria / Face ID:", celBiometria));
+        pnl.add(criarItemChecklist("9. Observações Adicionais do Smartphone:", celOutros));
+        return criarWrapperCard(pnl);
+    }
+
+    // 5. Tablet
+    private JPanel criarCardTablet() {
+        JPanel pnl = new JPanel(new GridLayout(4, 2, 12, 6));
+        tabLiga = new JComboBox<>(new String[]{
+                "Sim (Liga normalmente)", 
+                "Não liga (Sem sinal)", 
+                "Travado na inicialização", 
+                "Não testado"
+        });
+        tabTouch = new JComboBox<>(new String[]{
+                "Display e touch perfeitos", 
+                "Vidro quebrado (Touch funciona)", 
+                "Display manchado / Linhas", 
+                "Não testado"
+        });
+        tabCarga = new JComboBox<>(new String[]{
+                "Carrega normal e segura carga", 
+                "Mau contato no conector", 
+                "Não carrega", 
+                "Bateria descarrega rápido", 
+                "Não testado"
+        });
+        tabCameras = new JComboBox<>(new String[]{
+                "Funcionando normalmente", 
+                "Falha nas câmeras ou no som", 
+                "Não testado"
+        });
+        tabBotoes = new JComboBox<>(new String[]{
+                "Botões respondendo normal", 
+                "Botão afundado / Quebrado", 
+                "Não testado"
+        });
+        tabEstrutura = new JComboBox<>(new String[]{
+                "Estrutura reta e sem avarias", 
+                "Carcaça empenada / Amassada", 
+                "Não se aplica"
+        });
+        tabOutros = new JTextField("Nenhuma");
+
+        pnl.add(criarItemChecklist("1. Liga / Dá Sinal:", tabLiga));
+        pnl.add(criarItemChecklist("2. Tela & Touchscreen:", tabTouch));
+        pnl.add(criarItemChecklist("3. Conector de Carga & Bateria:", tabCarga));
+        pnl.add(criarItemChecklist("4. Câmeras e Alto-falantes:", tabCameras));
+        pnl.add(criarItemChecklist("5. Botões Físicos (Power/Volume):", tabBotoes));
+        pnl.add(criarItemChecklist("6. Estrutura / Carcaça:", tabEstrutura));
+        pnl.add(criarItemChecklist("7. Observações Adicionais do Tablet:", tabOutros));
+        return criarWrapperCard(pnl);
+    }
+
+    // 6. Impressora
     private JPanel criarCardImpressora() {
-        JPanel pnl = new JPanel(new GridLayout(5, 2, 10, 6));
-        impLigando = new JComboBox<>(new String[]{"Sim", "Não"});
-        impPapel = new JComboBox<>(new String[]{"Sim (Puxa normalmente)", "Não (Atolando/Não puxa)", "Não testado"});
-        impCartucho = new JComboBox<>(new String[]{"Sim (Instalado)", "Não (Sem cartucho/toner)"});
-        impNivelTinta = new JComboBox<>(new String[]{"Nível Normal/Cheio", "Tinta/Toner Baixo", "Vazio", "Não se aplica"});
-        impCabeca = new JComboBox<>(new String[]{"Não (Sem falhas)", "Sim (Cabeça/Cilindro falhando)", "Não testada"});
-        impCaboUsb = new JComboBox<>(new String[]{"Sim (Cabo USB/Rede entregue)", "Não"});
-        impCaboForca = new JComboBox<>(new String[]{"Sim (Cabo de força/Fonte entregue)", "Não"});
-        impManchas = new JComboBox<>(new String[]{"Não (Impressão limpa)", "Sim (Manchas/Borrões)", "Não testada"});
-        impRuido = new JComboBox<>(new String[]{"Não", "Sim (Ruído em Engrenagens/Tracionador)"});
-        impOutros = new JTextField("Nenhum");
+        JPanel pnl = new JPanel(new GridLayout(2, 2, 12, 6));
+        impLiga = new JComboBox<>(new String[]{
+                "Liga e faz auto-teste sem erro", 
+                "Não liga (Totalmente inoperante)", 
+                "Liga e acusa erro / Luzes piscando", 
+                "Não testado"
+        });
+        impPapel = new JComboBox<>(new String[]{
+                "Puxa papel perfeitamente", 
+                "Atolamento constante de papel", 
+                "Roletes patinam / Não puxa folha", 
+                "Puxa várias folhas juntas", 
+                "Não testado"
+        });
+        impTinta = new JComboBox<>(new String[]{
+                "Cartuchos/Toner instalados e cheios", 
+                "Nível baixo de tinta/toner", 
+                "Sem suprimentos", 
+                "Mangueiras com ar / Vazamento", 
+                "Não se aplica"
+        });
+        impOutros = new JTextField("Nenhuma");
 
-        pnl.add(criarItemChecklist("1. Impressora Ligando?", impLigando));
-        pnl.add(criarItemChecklist("2. Puxa Papel Corretamente?", impPapel));
-        pnl.add(criarItemChecklist("3. Cartucho / Toner Instalado?", impCartucho));
-        pnl.add(criarItemChecklist("4. Nível de Tinta / Toner:", impNivelTinta));
-        pnl.add(criarItemChecklist("5. Cabeça de Impressão OK?", impCabeca));
-        pnl.add(criarItemChecklist("6. Cabo USB / Rede Incluso?", impCaboUsb));
-        pnl.add(criarItemChecklist("7. Cabo de Força Incluso?", impCaboForca));
-        pnl.add(criarItemChecklist("8. Manchas ou Borrões?", impManchas));
-        pnl.add(criarItemChecklist("9. Ruído em Engrenagens?", impRuido));
-        pnl.add(criarItemChecklist("10. Outras Observações:", impOutros));
-        return pnl;
+        pnl.add(criarItemChecklist("1. Impressora Liga?:", impLiga));
+        pnl.add(criarItemChecklist("2. Tracionamento de Papel:", impPapel));
+        pnl.add(criarItemChecklist("3. Sistema de Tinta / Toner:", impTinta));
+        pnl.add(criarItemChecklist("4. Observações da Impressora:", impOutros));
+        return criarWrapperCard(pnl);
     }
 
-    private JPanel criarCardOutros() {
-        JPanel pnl = new JPanel(new GridLayout(3, 2, 10, 6));
-        celLigando = new JComboBox<>(new String[]{"Sim", "Não"});
-        celTouch = new JComboBox<>(new String[]{"Sim (Display/Touch Intacto)", "Não (Tela trincada/com falha)"});
-        celConector = new JComboBox<>(new String[]{"Sim (Carregando OK)", "Não (Conector com defeito)", "Não testado"});
-        celCameras = new JComboBox<>(new String[]{"Sim", "Não", "Não se aplica"});
-        celCarregador = new JComboBox<>(new String[]{"Sim (Cabo/Carregador entregue)", "Não"});
-        celOutros = new JTextField("Nenhum");
+    // 7. Monitor
+    private JPanel criarCardMonitor() {
+        JPanel pnl = new JPanel(new GridLayout(3, 2, 12, 6));
+        monLiga = new JComboBox<>(new String[]{
+                "Liga e dá imagem imediatamente", 
+                "Led acende mas não dá imagem", 
+                "Liga e desliga em segundos", 
+                "Totalmente inoperante (Morto)", 
+                "Não testado"
+        });
+        monPainel = new JComboBox<>(new String[]{
+                "Imagem nítida e perfeita", 
+                "Linhas verticais / Horizontais", 
+                "Display trincado / Mancha interna vazando", 
+                "Imagem piscando / Tremendo", 
+                "Não testado"
+        });
+        monPortas = new JComboBox<>(new String[]{
+                "Portas firmes e funcionais", 
+                "Porta com mau contato / Frouxa", 
+                "Mau contato no conector de energia", 
+                "Não testado"
+        });
+        monBotoes = new JComboBox<>(new String[]{
+                "Botões respondendo normal", 
+                "Botão Power afundado / Travado", 
+                "Não testado"
+        });
+        monOutros = new JTextField("Nenhuma");
 
-        pnl.add(criarItemChecklist("1. Aparelho Ligando / Dá Imagem?", celLigando));
-        pnl.add(criarItemChecklist("2. Display / Touch Intacto?", celTouch));
-        pnl.add(criarItemChecklist("3. Conector de Carga / USB OK?", celConector));
-        pnl.add(criarItemChecklist("4. Câmeras / Alto-falante OK?", celCameras));
-        pnl.add(criarItemChecklist("5. Cabo / Carregador Incluso?", celCarregador));
-        pnl.add(criarItemChecklist("6. Outras Observações:", celOutros));
-        return pnl;
+        pnl.add(criarItemChecklist("1. Liga / Led de Energia:", monLiga));
+        pnl.add(criarItemChecklist("2. Painel & Imagem:", monPainel));
+        pnl.add(criarItemChecklist("3. Portas de Vídeo (HDMI/VGA/DP):", monPortas));
+        pnl.add(criarItemChecklist("4. Botões de Controle / Menu:", monBotoes));
+        pnl.add(criarItemChecklist("5. Observações do Monitor:", monOutros));
+        return criarWrapperCard(pnl);
+    }
+
+    // 8. Outros / Genérico
+    private JPanel criarCardOutros() {
+        JPanel pnl = new JPanel(new GridLayout(3, 2, 12, 6));
+        outLiga = new JComboBox<>(new String[]{
+                "Sim (Liga normalmente)", 
+                "Não liga (Sem sinal)", 
+                "Liga intermitente / Desliga sozinho", 
+                "Não testado"
+        });
+        outFuncao = new JComboBox<>(new String[]{
+                "Operando conforme esperado", 
+                "Apresenta falhas no funcionamento", 
+                "Inoperante", 
+                "Não testado"
+        });
+        outFisico = new JComboBox<>(new String[]{
+                "Em bom estado / Sem avarias", 
+                "Apresenta danos físicos visíveis", 
+                "Sinais de oxidação / Líquido", 
+                "Não testado"
+        });
+        outConectores = new JComboBox<>(new String[]{
+                "Conectores e cabos íntegros", 
+                "Cabos partidos / Conectores danificados", 
+                "Não se aplica"
+        });
+        outOutros = new JTextField("Nenhuma");
+
+        pnl.add(criarItemChecklist("1. Liga / Alimentação:", outLiga));
+        pnl.add(criarItemChecklist("2. Funcionamento Principal:", outFuncao));
+        pnl.add(criarItemChecklist("3. Estado Físico Geral:", outFisico));
+        pnl.add(criarItemChecklist("4. Conectores & Fiação:", outConectores));
+        pnl.add(criarItemChecklist("5. Observações Adicionais:", outOutros));
+        return criarWrapperCard(pnl);
+    }
+
+    private JPanel criarWrapperCard(JPanel gridPanel) {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setOpaque(false);
+        wrapper.add(gridPanel, BorderLayout.NORTH);
+        return wrapper;
     }
 
     private JPanel criarItemChecklist(String rotulo, JComponent componente) {
-        JPanel p = new JPanel(new BorderLayout(4, 2));
+        JPanel p = new JPanel(new BorderLayout(0, 3));
+        p.setOpaque(false);
         JLabel lbl = new JLabel(rotulo);
-        lbl.setFont(lbl.getFont().deriveFont(11f));
+        lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
+
+        componente.setPreferredSize(new Dimension(componente.getPreferredSize().width, 30));
+        componente.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JPanel compWrapper = new JPanel(new BorderLayout());
+        compWrapper.setOpaque(false);
+        compWrapper.add(componente, BorderLayout.NORTH);
+
         p.add(lbl, BorderLayout.NORTH);
-        p.add(componente, BorderLayout.CENTER);
+        p.add(compWrapper, BorderLayout.CENTER);
+        return p;
+    }
+
+    private JPanel criarItemArmazenamento(String rotulo, JComboBox<String> cbStatus, JTextField txtDetalhe) {
+        JPanel p = new JPanel(new BorderLayout(0, 3));
+        p.setOpaque(false);
+        JLabel lbl = new JLabel(rotulo);
+        lbl.setFont(lbl.getFont().deriveFont(Font.BOLD, 11f));
+
+        cbStatus.setPreferredSize(new Dimension(0, 30));
+        cbStatus.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        txtDetalhe.setPreferredSize(new Dimension(0, 30));
+        txtDetalhe.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
+        JPanel pnlCampos = new JPanel(new GridLayout(1, 2, 6, 0));
+        pnlCampos.setOpaque(false);
+        pnlCampos.add(cbStatus);
+        pnlCampos.add(txtDetalhe);
+
+        JPanel compWrapper = new JPanel(new BorderLayout());
+        compWrapper.setOpaque(false);
+        compWrapper.add(pnlCampos, BorderLayout.NORTH);
+
+        p.add(lbl, BorderLayout.NORTH);
+        p.add(compWrapper, BorderLayout.CENTER);
         return p;
     }
 
@@ -314,15 +660,29 @@ public class NovaOSDialog extends JDialog {
         }
 
         String tipo = item.tipo.toLowerCase();
-        if (tipo.contains("notebook") || tipo.contains("laptop") || tipo.contains("macbook")) {
+        if (tipo.contains("console") || tipo.contains("game") || tipo.contains("playstation") 
+                || tipo.contains("ps4") || tipo.contains("ps5") || tipo.contains("ps3") 
+                || tipo.contains("xbox") || tipo.contains("nintendo") || tipo.contains("switch")) {
+            clChecklist.show(pnlChecklistCards, "CONSOLE");
+            tipoChecklistAtual = "CONSOLE";
+        } else if (tipo.contains("notebook") || tipo.contains("laptop") || tipo.contains("macbook")) {
             clChecklist.show(pnlChecklistCards, "NOTEBOOK");
             tipoChecklistAtual = "NOTEBOOK";
         } else if (tipo.contains("computador") || tipo.contains("desktop") || tipo.contains("pc") || tipo.contains("gabinete")) {
             clChecklist.show(pnlChecklistCards, "DESKTOP");
             tipoChecklistAtual = "DESKTOP";
+        } else if (tipo.contains("celular") || tipo.contains("smartphone") || tipo.contains("iphone")) {
+            clChecklist.show(pnlChecklistCards, "SMARTPHONE");
+            tipoChecklistAtual = "SMARTPHONE";
+        } else if (tipo.contains("tablet") || tipo.contains("ipad")) {
+            clChecklist.show(pnlChecklistCards, "TABLET");
+            tipoChecklistAtual = "TABLET";
         } else if (tipo.contains("impressora") || tipo.contains("multifuncional") || tipo.contains("plotter")) {
             clChecklist.show(pnlChecklistCards, "IMPRESSORA");
             tipoChecklistAtual = "IMPRESSORA";
+        } else if (tipo.contains("monitor") || tipo.contains("display") || tipo.contains("tela")) {
+            clChecklist.show(pnlChecklistCards, "MONITOR");
+            tipoChecklistAtual = "MONITOR";
         } else {
             clChecklist.show(pnlChecklistCards, "OUTROS");
             tipoChecklistAtual = "OUTROS";
@@ -375,43 +735,91 @@ public class NovaOSDialog extends JDialog {
 
         String obs = txtObservacoes.getText().trim();
 
-        // Montar checklist textual específico do tipo ativo
+        // Montar checklist textual específico e rico do tipo ativo
         String checklist;
         switch (tipoChecklistAtual) {
+            case "CONSOLE" -> checklist = String.format(
+                    "• Categoria: Console de Vídeo Game\n" +
+                    "• Liga / Led Status: %s | Saída HDMI/Vídeo: %s\n" +
+                    "• Armazenamento Interno: %s [Capacidade/Modelo: %s]\n" +
+                    "• Leitor de Disco: %s | Conexão Controles: %s\n" +
+                    "• Refrigeração/Cooler: %s | Lacre de Fábrica: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    conLiga.getSelectedItem(), conVideo.getSelectedItem(),
+                    conArmazenamentoStatus.getSelectedItem(), conArmazenamentoDetalhe.getText().trim(),
+                    conLeitor.getSelectedItem(), conControle.getSelectedItem(),
+                    conCooler.getSelectedItem(), conLacre.getSelectedItem(),
+                    conOutros.getText().trim()
+            );
             case "DESKTOP" -> checklist = String.format(
-                    "• Tipo: Desktop/PC | Ligando: %s | Fonte OK: %s\n" +
-                    "• Gabinete com Avarias: %s | Cabo Força: %s | Mouse/Teclado: %s\n" +
-                    "• Ruído Coolers: %s | Poeira/Oxidação: %s | HD/SSD: %s\n" +
-                    "• Outras Obs.: %s",
-                    dtLigando.getSelectedItem(), dtFonte.getSelectedItem(), dtGabinete.getSelectedItem(),
-                    dtCaboForca.getSelectedItem(), dtPerifericos.getSelectedItem(), dtRuido.getSelectedItem(),
-                    dtPoeira.getSelectedItem(), dtArmazenamento.getSelectedItem(), dtOutros.getText().trim()
+                    "• Categoria: Computador (Desktop)\n" +
+                    "• Computador Liga: %s | Gera Vídeo: %s\n" +
+                    "• Placa de Vídeo Dedicada: %s | Gabinete / Limpeza: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    dtLiga.getSelectedItem(), dtVideo.getSelectedItem(),
+                    dtGpu.getSelectedItem(), dtGabinete.getSelectedItem(),
+                    dtOutros.getText().trim()
+            );
+            case "SMARTPHONE" -> checklist = String.format(
+                    "• Categoria: Celular / Smartphone\n" +
+                    "• Liga / Sinal: %s | Display e Touchscreen: %s\n" +
+                    "• Conector de Carga: %s | Saúde da Bateria: %s\n" +
+                    "• Câmeras (Frontal/Traseira): %s | Áudio e Microfone: %s\n" +
+                    "• Conectividade / Chip: %s | Biometria / Face ID: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    celLiga.getSelectedItem(), celTouch.getSelectedItem(),
+                    celConector.getSelectedItem(), celBateria.getSelectedItem(),
+                    celCameras.getSelectedItem(), celAudio.getSelectedItem(),
+                    celRede.getSelectedItem(), celBiometria.getSelectedItem(),
+                    celOutros.getText().trim()
+            );
+            case "TABLET" -> checklist = String.format(
+                    "• Categoria: Tablet\n" +
+                    "• Liga / Sinal: %s | Display e Touchscreen: %s\n" +
+                    "• Conector Carga / Bateria: %s | Câmeras e Som: %s\n" +
+                    "• Botões Físicos: %s | Estrutura / Carcaça: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    tabLiga.getSelectedItem(), tabTouch.getSelectedItem(),
+                    tabCarga.getSelectedItem(), tabCameras.getSelectedItem(),
+                    tabBotoes.getSelectedItem(), tabEstrutura.getSelectedItem(),
+                    tabOutros.getText().trim()
             );
             case "IMPRESSORA" -> checklist = String.format(
-                    "• Tipo: Impressora | Ligando: %s | Puxa Papel: %s | Cartucho Instalado: %s\n" +
-                    "• Nível Tinta: %s | Cabeça Impressão: %s | Cabo USB: %s\n" +
-                    "• Cabo Força: %s | Manchas/Falhas: %s | Ruído Engrenagens: %s\n" +
-                    "• Outras Obs.: %s",
-                    impLigando.getSelectedItem(), impPapel.getSelectedItem(), impCartucho.getSelectedItem(),
-                    impNivelTinta.getSelectedItem(), impCabeca.getSelectedItem(), impCaboUsb.getSelectedItem(),
-                    impCaboForca.getSelectedItem(), impManchas.getSelectedItem(), impRuido.getSelectedItem(),
-                    impOutros.getText().trim()
+                    "• Categoria: Impressora / Multifuncional\n" +
+                    "• Impressora Liga: %s | Tracionador de Papel: %s\n" +
+                    "• Sistema de Tinta / Toner: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    impLiga.getSelectedItem(), impPapel.getSelectedItem(),
+                    impTinta.getSelectedItem(), impOutros.getText().trim()
+            );
+            case "MONITOR" -> checklist = String.format(
+                    "• Categoria: Monitor / Tela\n" +
+                    "• Liga / Led de Energia: %s | Imagem e Painel: %s\n" +
+                    "• Entradas de Vídeo (HDMI/VGA/DP): %s | Botões de Controle: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    monLiga.getSelectedItem(), monPainel.getSelectedItem(),
+                    monPortas.getSelectedItem(), monBotoes.getSelectedItem(),
+                    monOutros.getText().trim()
             );
             case "OUTROS" -> checklist = String.format(
-                    "• Tipo: Celular/Outro | Ligando/Imagem: %s | Touch/Display: %s\n" +
-                    "• Conector Carga: %s | Câmeras/Som: %s | Cabo/Carregador: %s\n" +
-                    "• Outras Obs.: %s",
-                    celLigando.getSelectedItem(), celTouch.getSelectedItem(), celConector.getSelectedItem(),
-                    celCameras.getSelectedItem(), celCarregador.getSelectedItem(), celOutros.getText().trim()
+                    "• Categoria: Equipamento Genérico / Outro\n" +
+                    "• Liga / Alimentação: %s | Funcionamento Principal: %s\n" +
+                    "• Estado Físico Geral: %s | Conectores / Cabos: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    outLiga.getSelectedItem(), outFuncao.getSelectedItem(),
+                    outFisico.getSelectedItem(), outConectores.getSelectedItem(),
+                    outOutros.getText().trim()
             );
             default -> checklist = String.format(
-                    "• Tipo: Notebook | Ligando: %s | Carregamento/Bateria: %s | Tela: %s\n" +
-                    "• Teclado/Touch: %s | HD/SSD: %s | Ruído: %s\n" +
-                    "• Líquido: %s | Cabo/Fonte Entregue: %s\n" +
-                    "• Outras Obs.: %s",
-                    nbLigando.getSelectedItem(), nbCarregando.getSelectedItem(), nbTela.getSelectedItem(),
-                    nbTeclado.getSelectedItem(), nbArmazenamento.getSelectedItem(), nbRuido.getSelectedItem(),
-                    nbLiquido.getSelectedItem(), nbCabo.getSelectedItem(), nbOutros.getText().trim()
+                    "• Categoria: Notebook\n" +
+                    "• Notebook Liga: %s | Imagem / Display: %s\n" +
+                    "• Teclado & Touchpad: %s | Carcaça & Dobradiças: %s\n" +
+                    "• Refrigeração & Ruído: %s\n" +
+                    "• Obs. Vistoria: %s",
+                    nbLiga.getSelectedItem(), nbTela.getSelectedItem(),
+                    nbTeclado.getSelectedItem(), nbCarcaca.getSelectedItem(),
+                    nbCooler.getSelectedItem(),
+                    nbOutros.getText().trim()
             );
         }
 

@@ -138,11 +138,11 @@ public class CaixaSessao {
 
     public String getStatusDiferencaFormatado() {
         if (Math.abs(diferenca) < 0.01) {
-            return "🟢 Bateu Exato (R$ 0,00)";
+            return "Bateu Exato (R$ 0,00)";
         } else if (diferenca > 0) {
-            return String.format("🟡 Sobra (+R$ %.2f)", diferenca);
+            return String.format("Sobra (+R$ %.2f)", diferenca);
         } else {
-            return String.format("🔴 Quebra / Falta (-R$ %.2f)", Math.abs(diferenca));
+            return String.format("Quebra / Falta (-R$ %.2f)", Math.abs(diferenca));
         }
     }
 }

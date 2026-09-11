@@ -6,7 +6,7 @@
 ; =====================================================================
 
 #define MyAppName "System Pro"
-#define MyAppVersion "1.0"
+#define MyAppVersion "1.2"
 #define MyAppPublisher "System Pro"
 #define MyAppExeName "SystemPro.exe"
 

@@ -1,9 +1,9 @@
 package com.loja.model;
 
 public enum PerfilUsuario {
-    ADMIN("Administrador", "👑 Acesso total ao sistema, faturamento e configurações"),
-    TECNICO("Técnico", "🛠️ Acesso a Ordens de Serviço e Estoque de Peças"),
-    ATENDENTE("Atendente / Balcão", "🛒 Acesso a Frente de Caixa, PDV, Clientes e Abertura de OS");
+    ADMIN("Administrador", "Acesso total ao sistema, faturamento e configurações"),
+    TECNICO("Técnico", "Acesso a Ordens de Serviço e Estoque de Peças"),
+    ATENDENTE("Atendente / Balcão", "Acesso a Frente de Caixa, PDV, Clientes e Abertura de OS");
 
     private final String nomeExibicao;
     private final String descricao;

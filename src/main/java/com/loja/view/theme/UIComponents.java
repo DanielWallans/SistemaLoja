@@ -7,7 +7,8 @@ import java.awt.*;
 
 public final class UIComponents {
 
-    private UIComponents() {}
+    private UIComponents() {
+    }
 
     /**
      * Cria um Card de Métrica moderno, minimalista e limpo (estilo SaaS).
@@ -20,16 +21,17 @@ public final class UIComponents {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(t.getBgCard());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
-                g2.setColor(t.getBorderSubtle());
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+                g2.setColor(t.getBgCard()); // #1A1B1D
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+                g2.setColor(t.getBorderSubtle()); // #2A2C2F
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 8, 8);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
         card.setOpaque(false);
-        card.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16));
+        card.setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_16, UITheme.SPACE_16, UITheme.SPACE_16,
+                UITheme.SPACE_16));
 
         // Topo: Rótulo + Ícone Discreto
         JPanel pnlTop = new JPanel(new BorderLayout());
@@ -40,7 +42,7 @@ public final class UIComponents {
         lblTit.setForeground(t.getTextSecondary());
 
         JLabel lblIco = new JLabel(icone);
-        lblIco.setFont(lblIco.getFont().deriveFont(16f));
+        lblIco.setFont(UITheme.FONT_CAPTION);
         if (acento != null) {
             lblIco.setForeground(acento);
         }
@@ -63,7 +65,7 @@ public final class UIComponents {
     }
 
     /**
-     * Botão com estilo primário moderno e cantos arredondados.
+     * Botão com estilo primário moderno e contraste limpo (estilo SaaS).
      */
     public static JButton criarBotaoPrimario(String texto) {
         return criarBotaoPrimario(texto, null);
@@ -73,12 +75,12 @@ public final class UIComponents {
         ThemeTokens t = UITheme.tokens();
         JButton btn = new JButton(texto);
         btn.setFont(UITheme.FONT_BODY_BOLD);
-        btn.setBackground(t.getPrimaryAccent());
-        btn.setForeground(Color.WHITE);
+        btn.setBackground(t.getPrimaryAccent()); // #EDEDED
+        btn.setForeground(new Color(15, 15, 16)); // #0F0F10 para contraste nítido
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.putClientProperty("JButton.buttonType", "roundRect");
-        btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+        btn.putClientProperty("JButton.arc", 6);
+        btn.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
         if (acao != null) {
             btn.addActionListener(e -> acao.run());
         }
@@ -86,7 +88,7 @@ public final class UIComponents {
     }
 
     /**
-     * Botão secundário com estilo outline sutil.
+     * Botão secundário com estilo outline sutil e cantos de 6px.
      */
     public static JButton criarBotaoSecundario(String texto) {
         return criarBotaoSecundario(texto, null);
@@ -96,15 +98,14 @@ public final class UIComponents {
         ThemeTokens t = UITheme.tokens();
         JButton btn = new JButton(texto);
         btn.setFont(UITheme.FONT_BODY);
-        btn.setBackground(t.getBgCard());
-        btn.setForeground(t.getTextPrimary());
+        btn.setBackground(t.getBgCard()); // #1A1B1D
+        btn.setForeground(t.getTextPrimary()); // #F1F1F1
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.putClientProperty("JButton.buttonType", "roundRect");
+        btn.putClientProperty("JButton.arc", 6);
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(t.getBorderSubtle(), 1),
-                BorderFactory.createEmptyBorder(7, 14, 7, 14)
-        ));
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)));
         if (acao != null) {
             btn.addActionListener(e -> acao.run());
         }
@@ -112,26 +113,35 @@ public final class UIComponents {
     }
 
     /**
-     * Retorna a cor semântica apropriada para cada status do sistema.
+     * Retorna a cor semântica sóbria apropriada para cada status do sistema.
      */
     public static Color obterCorStatus(String status) {
         ThemeTokens t = UITheme.tokens();
-        if (status == null) return t.getInfo();
+        if (status == null)
+            return t.getInfo();
         String s = status.toLowerCase();
-        if (s.contains("aguardando") || s.contains("aprovação") || s.contains("orçamento")) {
-            return t.getWarning();
-        } else if (s.contains("manutenção") || s.contains("andamento") || s.contains("peça")) {
-            return t.getPrimaryAccent();
-        } else if (s.contains("pronto") || s.contains("entregue") || s.contains("finalizado") || s.contains("ativo") || s.contains("aberto")) {
-            return t.getSuccess();
-        } else if (s.contains("cancelad") || s.contains("recusad") || s.contains("inativo") || s.contains("fechado")) {
-            return t.getDanger();
+
+        if (s.contains("orçamento") || s.contains("aguardando aprovação") || s.contains("aguardando")) {
+            return new Color(217, 119, 6); // Âmbar sóbrio
+        } else if (s.contains("aprovad") || s.contains("manutenção") || s.contains("andamento")) {
+            return new Color(168, 168, 168); // Graphite neutro de processo
+        } else if (s.contains("peça")) {
+            return new Color(156, 163, 175); // Cinza chumbo sóbrio
+        } else if (s.contains("pronto") || s.contains("retirada")) {
+            return new Color(34, 197, 94); // Verde sóbrio
+        } else if (s.contains("entregue") || s.contains("finalizado") || s.contains("pago")) {
+            return new Color(34, 197, 94); // Verde sóbrio
+        } else if (s.contains("cancelad") || s.contains("recusad") || s.contains("inativ")) {
+            return new Color(239, 68, 68); // Vermelho discreto
+        } else if (s.contains("aberto") || s.contains("aberta")) {
+            return new Color(217, 119, 6); // Âmbar sóbrio
         }
         return t.getInfo();
     }
 
     /**
-     * Formata uma JTable para o padrão visual moderno (SaaS/Linear), com badges para a coluna de status.
+     * Formata uma JTable para o padrão visual moderno (SaaS/Linear), com badges
+     * discretos de 4px para a coluna de status.
      */
     public static void formatarTabelaModerna(JTable tabela, int colunaStatus) {
         ThemeTokens t = UITheme.tokens();
@@ -140,22 +150,23 @@ public final class UIComponents {
         tabela.setShowVerticalLines(false);
         tabela.setGridColor(t.getBorderSubtle());
         tabela.setFont(UITheme.FONT_BODY);
-        tabela.setSelectionBackground(UITheme.withAlpha(t.getPrimaryAccent(), 0.25f));
+        tabela.setSelectionBackground(new Color(41, 42, 45)); // #292A2D
         tabela.setSelectionForeground(t.getTextPrimary());
 
         tabela.getTableHeader().setFont(UITheme.FONT_CAPTION);
-        tabela.getTableHeader().setBackground(t.getBgSidebar());
-        tabela.getTableHeader().setForeground(t.getTextSecondary());
+        tabela.getTableHeader().setBackground(t.getBgSidebar()); // #141516
+        tabela.getTableHeader().setForeground(t.getTextSecondary()); // #A8A8A8
         tabela.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, t.getBorderSubtle()));
         tabela.getTableHeader().setPreferredSize(new Dimension(0, 36));
 
-        // Renderizador padrão com zebra suave
+        // Renderizador padrão com zebra sutil
         tabela.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                    boolean hasFocus, int row, int column) {
                 Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (!isSelected) {
-                    c.setBackground(row % 2 == 0 ? t.getBgCard() : t.getBgCardHover());
+                    c.setBackground(row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36));
                     c.setForeground(t.getTextPrimary());
                 }
                 if (c instanceof JComponent) {
@@ -165,33 +176,35 @@ public final class UIComponents {
             }
         });
 
-        // Se houver coluna de status, aplicar renderizador de Pill Badge com fundo translúcido
+        // Se houver coluna de status, aplicar renderizador de Badge sóbrio (4px radius)
         if (colunaStatus >= 0 && colunaStatus < tabela.getColumnCount()) {
             tabela.getColumnModel().getColumn(colunaStatus).setCellRenderer(new DefaultTableCellRenderer() {
                 @Override
-                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                        boolean hasFocus, int row, int column) {
                     String texto = value != null ? value.toString() : "";
                     Color corStatus = obterCorStatus(texto);
 
-                    JPanel pnlPill = new JPanel(new GridBagLayout()) {
+                    JPanel pnlBadge = new JPanel(new GridBagLayout()) {
                         @Override
                         protected void paintComponent(Graphics g) {
                             Graphics2D g2 = (Graphics2D) g.create();
                             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                            g2.setColor(isSelected ? table.getSelectionBackground() : (row % 2 == 0 ? t.getBgCard() : t.getBgCardHover()));
+                            g2.setColor(isSelected ? table.getSelectionBackground()
+                                    : (row % 2 == 0 ? new Color(26, 27, 29) : new Color(32, 33, 36)));
                             g2.fillRect(0, 0, getWidth(), getHeight());
 
-                            // Fundo translúcido do pill badge (~15% opacidade)
+                            // Fundo sóbrio do badge (4px radius)
                             g2.setColor(UITheme.withAlpha(corStatus, 0.15f));
-                            int pillW = Math.min(getWidth() - 16, 170);
-                            int pillH = getHeight() - 10;
-                            int pillX = (getWidth() - pillW) / 2;
-                            int pillY = (getHeight() - pillH) / 2;
-                            g2.fillRoundRect(pillX, pillY, pillW, pillH, pillH, pillH);
+                            int badgeW = Math.min(getWidth() - 16, 170);
+                            int badgeH = getHeight() - 10;
+                            int badgeX = (getWidth() - badgeW) / 2;
+                            int badgeY = (getHeight() - badgeH) / 2;
+                            g2.fillRoundRect(badgeX, badgeY, badgeW, badgeH, 4, 4);
 
-                            // Borda ultra-sutil do pill
+                            // Borda discreta do badge
                             g2.setColor(UITheme.withAlpha(corStatus, 0.35f));
-                            g2.drawRoundRect(pillX, pillY, pillW - 1, pillH - 1, pillH, pillH);
+                            g2.drawRoundRect(badgeX, badgeY, badgeW - 1, badgeH - 1, 4, 4);
                             g2.dispose();
                         }
                     };
@@ -199,33 +212,36 @@ public final class UIComponents {
                     JLabel lbl = new JLabel(texto);
                     lbl.setFont(UITheme.FONT_CAPTION);
                     lbl.setForeground(corStatus);
-                    pnlPill.add(lbl);
+                    pnlBadge.add(lbl);
 
-                    return pnlPill;
+                    return pnlBadge;
                 }
             });
         }
     }
 
     /**
-     * Cria um badge interativo de tecla de atalho [F2, F3, etc.] com estilo keyboard key (kbd).
+     * Cria um badge interativo de tecla de atalho [F2, F3, etc.] com estilo
+     * keyboard key (kbd).
      */
     public static JButton criarBadgeAtalho(String tecla, String rotulo, Runnable acao) {
         ThemeTokens t = UITheme.tokens();
-        JButton btn = new JButton(String.format("<html><b><font color='%s'>[%s]</font></b> <font color='%s'>%s</font></html>",
-                String.format("#%02x%02x%02x", t.getPrimaryAccent().getRed(), t.getPrimaryAccent().getGreen(), t.getPrimaryAccent().getBlue()),
-                tecla,
-                String.format("#%02x%02x%02x", t.getTextSecondary().getRed(), t.getTextSecondary().getGreen(), t.getTextSecondary().getBlue()),
-                rotulo));
+        JButton btn = new JButton(
+                String.format("<html><b><font color='%s'>[%s]</font></b> <font color='%s'>%s</font></html>",
+                        String.format("#%02x%02x%02x", t.getPrimaryAccent().getRed(), t.getPrimaryAccent().getGreen(),
+                                t.getPrimaryAccent().getBlue()),
+                        tecla,
+                        String.format("#%02x%02x%02x", t.getTextSecondary().getRed(), t.getTextSecondary().getGreen(),
+                                t.getTextSecondary().getBlue()),
+                        rotulo));
         btn.setFont(UITheme.FONT_CAPTION);
         btn.setBackground(t.getBgCard());
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFocusable(false);
-        btn.putClientProperty("JButton.buttonType", "roundRect");
+        btn.putClientProperty("JButton.arc", 6);
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(t.getBorderSubtle(), 1),
-                BorderFactory.createEmptyBorder(4, 10, 4, 10)
-        ));
+                BorderFactory.createEmptyBorder(4, 10, 4, 10)));
         btn.setToolTipText("Pressione " + tecla + " ou clique aqui");
         if (acao != null) {
             btn.addActionListener(e -> acao.run());

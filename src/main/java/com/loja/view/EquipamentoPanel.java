@@ -32,7 +32,8 @@ public class EquipamentoPanel extends JPanel {
         this.clienteDAO = clienteDAO;
 
         setLayout(new BorderLayout(0, UITheme.SPACE_16));
-        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20, UITheme.SPACE_24));
+        setBorder(BorderFactory.createEmptyBorder(UITheme.SPACE_20, UITheme.SPACE_24, UITheme.SPACE_20,
+                UITheme.SPACE_24));
 
         initComponents();
         recarregarFiltroClientes();
@@ -64,27 +65,9 @@ public class EquipamentoPanel extends JPanel {
         cbFiltroCliente.setFont(UITheme.FONT_BODY);
         cbFiltroCliente.addActionListener(e -> filtrarPorCliente());
 
-        JButton btnNovo = new JButton("+ Novo Equipamento");
-        btnNovo.setFont(UITheme.FONT_BODY_BOLD);
-        btnNovo.setBackground(t.getPrimaryAccent());
-        btnNovo.setForeground(Color.WHITE);
-        btnNovo.setFocusPainted(false);
-        btnNovo.putClientProperty("JButton.buttonType", "roundRect");
-        btnNovo.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnEditar = new JButton("Editar");
-        btnEditar.setFont(UITheme.FONT_BODY);
-        btnEditar.putClientProperty("JButton.buttonType", "roundRect");
-        btnEditar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JButton btnAtualizar = new JButton("Atualizar [F5]");
-        btnAtualizar.setFont(UITheme.FONT_BODY);
-        btnAtualizar.putClientProperty("JButton.buttonType", "roundRect");
-        btnAtualizar.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        btnNovo.addActionListener(e -> abrirNovoEquipamento());
-        btnEditar.addActionListener(e -> editarEquipamentoSelecionado());
-        btnAtualizar.addActionListener(e -> {
+        JButton btnNovo = UIComponents.criarBotaoPrimario("+ Novo Equipamento", this::abrirNovoEquipamento);
+        JButton btnEditar = UIComponents.criarBotaoSecundario("Editar", this::editarEquipamentoSelecionado);
+        JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar [F5]", () -> {
             recarregarFiltroClientes();
             recarregarTabela();
         });
@@ -104,7 +87,8 @@ public class EquipamentoPanel extends JPanel {
         add(topPanel, BorderLayout.NORTH);
 
         // 2. Tabela de Equipamentos
-        String[] colunas = {"ID", "Cliente", "Tipo", "Marca / Modelo", "Nº Série", "Cor", "Avarias", "Senha", "Acessórios"};
+        String[] colunas = { "ID", "Cliente", "Tipo", "Marca / Modelo", "Nº Série", "Cor", "Avarias", "Senha",
+                "Acessórios" };
         tableModel = new DefaultTableModel(colunas, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -161,7 +145,8 @@ public class EquipamentoPanel extends JPanel {
     public void recarregarTabela() {
         UIComponents.formatarTabelaModerna(tabela, -1);
         tableModel.setRowCount(0);
-        EquipamentoDialog.ClienteComboItem item = (EquipamentoDialog.ClienteComboItem) cbFiltroCliente.getSelectedItem();
+        EquipamentoDialog.ClienteComboItem item = (EquipamentoDialog.ClienteComboItem) cbFiltroCliente
+                .getSelectedItem();
         List<Cliente> todosClientes = clienteDAO.buscarTodos();
 
         int contagem = 0;
@@ -184,7 +169,7 @@ public class EquipamentoPanel extends JPanel {
     }
 
     private void adicionarLinhaTabela(Equipamento eq, String nomeCliente) {
-        tableModel.addRow(new Object[]{
+        tableModel.addRow(new Object[] {
                 eq.getId(),
                 nomeCliente,
                 eq.getTipo(),
@@ -202,7 +187,8 @@ public class EquipamentoPanel extends JPanel {
     }
 
     private void abrirNovoEquipamento() {
-        EquipamentoDialog.ClienteComboItem item = (EquipamentoDialog.ClienteComboItem) cbFiltroCliente.getSelectedItem();
+        EquipamentoDialog.ClienteComboItem item = (EquipamentoDialog.ClienteComboItem) cbFiltroCliente
+                .getSelectedItem();
         int clienteId = (item != null && item.id > 0) ? item.id : -1;
         EquipamentoDialog dialog = new EquipamentoDialog(owner, equipDAO, clienteDAO, null, clienteId);
         dialog.setVisible(true);
@@ -214,7 +200,8 @@ public class EquipamentoPanel extends JPanel {
     private void editarEquipamentoSelecionado() {
         int row = tabela.getSelectedRow();
         if (row < 0) {
-            JOptionPane.showMessageDialog(this, "Selecione um equipamento na tabela para editar!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um equipamento na tabela para editar!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
         int id = (int) tableModel.getValueAt(row, 0);

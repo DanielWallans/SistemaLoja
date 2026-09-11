@@ -67,7 +67,7 @@ public class ConfigTaxasDialog extends JDialog {
 
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton btnCancelar = new JButton("Cancelar");
-        JButton btnSalvar = new JButton("💾 Salvar Taxas");
+        JButton btnSalvar = new JButton("Salvar Taxas");
         btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD));
 
         btnCancelar.addActionListener(e -> dispose());

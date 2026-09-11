@@ -6,6 +6,7 @@ import com.loja.service.CaixaService;
 
 import javax.swing.*;
 import java.awt.*;
+import com.loja.view.theme.UITheme;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -44,15 +45,18 @@ public class AberturaCaixaDialog extends JDialog {
     private void initComponents() {
         // 1. Cabeçalho
         JPanel pnlHeader = new JPanel(new BorderLayout());
-        pnlHeader.setBackground(new Color(41, 128, 185));
-        pnlHeader.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        pnlHeader.setBackground(UITheme.tokens().getBgSidebar());
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.tokens().getBorderSubtle()),
+                BorderFactory.createEmptyBorder(15, 20, 15, 20)
+        ));
 
-        JLabel lblTit = new JLabel("🔓 Abertura de Turno / Caixa");
+        JLabel lblTit = new JLabel("Abertura de Turno / Caixa");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 17f));
-        lblTit.setForeground(Color.WHITE);
+        lblTit.setForeground(UITheme.tokens().getTextPrimary());
 
         JLabel lblSub = new JLabel("Informe o operador e o fundo de troco inicial na gaveta.");
-        lblSub.setForeground(new Color(236, 240, 241));
+        lblSub.setForeground(UITheme.tokens().getTextSecondary());
 
         pnlHeader.add(lblTit, BorderLayout.NORTH);
         pnlHeader.add(lblSub, BorderLayout.SOUTH);
@@ -126,9 +130,9 @@ public class AberturaCaixaDialog extends JDialog {
         // 3. Rodapé com Botões
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         JButton btnCancelar = new JButton("Cancelar");
-        JButton btnConfirmar = new JButton("🔓 Abrir Turno de Caixa");
+        JButton btnConfirmar = new JButton("Abrir Turno de Caixa");
         btnConfirmar.setFont(btnConfirmar.getFont().deriveFont(Font.BOLD, 13f));
-        btnConfirmar.setBackground(new Color(39, 174, 96));
+        btnConfirmar.setBackground(UITheme.tokens().getPrimaryAccent());
         btnConfirmar.setForeground(Color.WHITE);
 
         btnCancelar.addActionListener(e -> dispose());
@@ -165,7 +169,7 @@ public class AberturaCaixaDialog extends JDialog {
             this.abertaComSucesso = true;
             this.sessaoAberta = s;
             JOptionPane.showMessageDialog(this, 
-                    "✅ CAIXA ABERTO COM SUCESSO!\n\n" +
+                    "CAIXA ABERTO COM SUCESSO!\n\n" +
                     "• Turno: #" + s.getId() + "\n" +
                     "• Operador: " + operador + "\n" +
                     "• Fundo de Troco: R$ " + String.format("%.2f", trocoInicial),

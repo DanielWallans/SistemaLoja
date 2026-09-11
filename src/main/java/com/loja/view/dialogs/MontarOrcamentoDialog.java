@@ -9,6 +9,7 @@ import com.loja.repository.ProdutoDAO;
 import com.loja.service.ComprovanteEntregaPDFService;
 import com.loja.service.OrcamentoPDFService;
 import com.loja.service.WhatsAppService;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -46,8 +47,8 @@ public class MontarOrcamentoDialog extends JDialog {
     private JLabel lblSubtotalPecas;
     private JLabel lblTotalGeral;
 
-    public MontarOrcamentoDialog(Frame owner, OrdemServico os, OrdemServicoDAO osDAO, 
-                                 ClienteDAO clienteDAO, EquipamentoDAO equipDAO, ProdutoDAO produtoDAO) {
+    public MontarOrcamentoDialog(Frame owner, OrdemServico os, OrdemServicoDAO osDAO,
+            ClienteDAO clienteDAO, EquipamentoDAO equipDAO, ProdutoDAO produtoDAO) {
         super(owner, "Ambiente Técnico - Montagem de Orçamento | OS #" + os.getId(), true);
         this.os = os;
         this.osDAO = osDAO;
@@ -74,21 +75,28 @@ public class MontarOrcamentoDialog extends JDialog {
 
         // 1. Cabeçalho Resumo
         JPanel pnlHeader = new JPanel(new GridLayout(2, 2, 10, 4));
-        pnlHeader.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Identificação da OS e Aparelho ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
-        pnlHeader.add(new JLabel("OS Nº: #" + os.getId() + "  |  Cliente: " + (cliente != null ? cliente.getNome() : "N/A")));
-        pnlHeader.add(new JLabel("Telefone/WhatsApp: " + (cliente != null && cliente.getTelefone() != null ? cliente.getTelefone() : "N/A")));
-        pnlHeader.add(new JLabel("Aparelho: " + (equip != null ? equip.getTipo() + " " + equip.getMarca() + " " + equip.getModelo() : "N/A")));
+        pnlHeader.setBorder(
+                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Identificação da OS e Aparelho ",
+                        TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        pnlHeader.add(
+                new JLabel("OS Nº: #" + os.getId() + "  |  Cliente: " + (cliente != null ? cliente.getNome() : "N/A")));
+        pnlHeader.add(new JLabel("Telefone/WhatsApp: "
+                + (cliente != null && cliente.getTelefone() != null ? cliente.getTelefone() : "N/A")));
+        pnlHeader.add(new JLabel("Aparelho: "
+                + (equip != null ? equip.getTipo() + " " + equip.getMarca() + " " + equip.getModelo() : "N/A")));
         pnlHeader.add(new JLabel("Defeito Relatado: " + os.getProblemaRelatado()));
         mainPanel.add(pnlHeader);
         mainPanel.add(Box.createVerticalStrut(8));
 
         // 2. Diagnóstico Técnico & Seletor de Status
         JPanel pnlDiagStatus = new JPanel(new BorderLayout(10, 8));
-        pnlDiagStatus.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Diagnóstico Técnico & Status da OS ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        pnlDiagStatus.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Diagnóstico Técnico & Status da OS ", TitledBorder.LEFT, TitledBorder.TOP,
+                new Font("SansSerif", Font.BOLD, 12)));
 
         JPanel pnlStatusRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         pnlStatusRow.add(new JLabel("Status da OS:"));
-        cbStatus = new JComboBox<>(new String[]{
+        cbStatus = new JComboBox<>(new String[] {
                 "Aguardando Orçamento",
                 "Aguardando Aprovação do Cliente",
                 "Aprovado - Em Manutenção",
@@ -99,9 +107,11 @@ public class MontarOrcamentoDialog extends JDialog {
         });
         cbStatus.setSelectedItem(os.getStatus());
         cbStatus.addActionListener(e -> {
-            if (atualizandoStatus) return;
+            if (atualizandoStatus)
+                return;
             String sel = (String) cbStatus.getSelectedItem();
-            if (sel != null && sel.contains("Entregue") && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
+            if (sel != null && sel.contains("Entregue")
+                    && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
                 finalizarOSComPDV(cliente, equip);
             }
         });
@@ -118,19 +128,23 @@ public class MontarOrcamentoDialog extends JDialog {
 
         // 3. Tabela de Serviços / Mão de Obra
         JPanel pnlServicos = new JPanel(new BorderLayout(8, 8));
-        pnlServicos.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 1. Serviços e Mão de Obra ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        pnlServicos.setBorder(
+                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 1. Serviços e Mão de Obra ",
+                        TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
 
-        modelServicos = new DefaultTableModel(new String[]{"Descrição do Serviço", "Valor (R$)"}, 0) {
+        modelServicos = new DefaultTableModel(new String[] { "Descrição do Serviço", "Valor (R$)" }, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         tabelaServicos = new JTable(modelServicos);
         tabelaServicos.setRowHeight(26);
 
         JPanel pnlBotoesServ = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        JButton btnSelServicoCat = new JButton("📑 + Selecionar do Catálogo");
-        JButton btnCriarNovoServico = new JButton("➕ + Criar Novo Serviço");
-        JButton btnRemoverServico = new JButton("🗑️ Remover");
+        JButton btnSelServicoCat = new JButton("Selecionar do Catálogo");
+        JButton btnCriarNovoServico = new JButton("+ Criar Novo Serviço");
+        JButton btnRemoverServico = new JButton("Remover");
 
         btnCriarNovoServico.setFont(btnCriarNovoServico.getFont().deriveFont(Font.BOLD));
         btnSelServicoCat.addActionListener(e -> selecionarServicoDoCatalogo());
@@ -149,21 +163,25 @@ public class MontarOrcamentoDialog extends JDialog {
 
         // 4. Tabela de Peças e Componentes
         JPanel pnlPecas = new JPanel(new BorderLayout(8, 8));
-        pnlPecas.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " 2. Peças e Componentes ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        pnlPecas.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " 2. Peças e Componentes ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
 
-        modelPecas = new DefaultTableModel(new String[]{"Origem", "Nome da Peça", "Quantidade", "Valor Unitário (R$)", "Subtotal (R$)"}, 0) {
+        modelPecas = new DefaultTableModel(
+                new String[] { "Origem", "Nome da Peça", "Quantidade", "Valor Unitário (R$)", "Subtotal (R$)" }, 0) {
             @Override
-            public boolean isCellEditable(int row, int column) { return false; }
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
         };
         tabelaPecas = new JTable(modelPecas);
         tabelaPecas.setRowHeight(26);
 
         JPanel pnlBotoesPecas = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        JButton btnSelPecaCat = new JButton("📑 + Selecionar do Catálogo");
-        JButton btnCriarNovaPeca = new JButton("➕ + Criar Nova Peça / Avulsa");
-        JButton btnAddPecaEstoque = new JButton("📦 + Peça do Estoque");
-        JButton btnCadastrarProduto = new JButton("📦 + Novo Produto no Estoque");
-        JButton btnRemoverPeca = new JButton("🗑️ Remover");
+        JButton btnSelPecaCat = new JButton("Selecionar do Catálogo");
+        JButton btnCriarNovaPeca = new JButton("+ Criar Nova Peça / Avulsa");
+        JButton btnAddPecaEstoque = new JButton("+ Peça do Estoque");
+        JButton btnCadastrarProduto = new JButton("+ Novo Produto no Estoque");
+        JButton btnRemoverPeca = new JButton("Remover");
 
         btnCriarNovaPeca.setFont(btnCriarNovaPeca.getFont().deriveFont(Font.BOLD));
 
@@ -188,19 +206,20 @@ public class MontarOrcamentoDialog extends JDialog {
         // 5. Bloco de Totais Calculados
         JPanel pnlTotais = new JPanel(new GridLayout(1, 3, 15, 0));
         pnlTotais.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(41, 128, 185), 2),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)
-        ));
+                BorderFactory.createLineBorder(UITheme.tokens().getBorderSubtle(), 1),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
 
         lblSubtotalServicos = new JLabel("Serviços: R$ 0,00");
         lblSubtotalServicos.setFont(lblSubtotalServicos.getFont().deriveFont(Font.BOLD, 13f));
+        lblSubtotalServicos.setForeground(UITheme.tokens().getTextPrimary());
 
         lblSubtotalPecas = new JLabel("Peças: R$ 0,00");
         lblSubtotalPecas.setFont(lblSubtotalPecas.getFont().deriveFont(Font.BOLD, 13f));
+        lblSubtotalPecas.setForeground(UITheme.tokens().getTextPrimary());
 
         lblTotalGeral = new JLabel("TOTAL: R$ 0,00");
         lblTotalGeral.setFont(lblTotalGeral.getFont().deriveFont(Font.BOLD, 16f));
-        lblTotalGeral.setForeground(new Color(39, 174, 96));
+        lblTotalGeral.setForeground(UITheme.tokens().getTextPrimary());
 
         pnlTotais.add(lblSubtotalServicos);
         pnlTotais.add(lblSubtotalPecas);
@@ -214,19 +233,20 @@ public class MontarOrcamentoDialog extends JDialog {
         // Barra inferior: Ações principais
         JPanel pnlActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
         JButton btnCancelar = new JButton("Fechar");
-        JButton btnWhatsApp = new JButton("📲 Enviar por WhatsApp");
-        JButton btnGerarPDF = new JButton("📄 Gerar Orçamento em PDF");
-        this.btnFinalizarOS = new JButton("💳 Finalizar OS e Pagar no PDV");
+        JButton btnWhatsApp = new JButton("Enviar por WhatsApp");
+        JButton btnGerarPDF = new JButton("Gerar Orçamento em PDF");
+        this.btnFinalizarOS = new JButton("Finalizar OS e Pagar no PDV");
         this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD, 13f));
-        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
+        this.btnFinalizarOS.setBackground(UITheme.tokens().getPrimaryAccent());
         this.btnFinalizarOS.setForeground(Color.WHITE);
         this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        boolean isFinalizada = os.getStatus() != null && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"));
+        boolean isFinalizada = os.getStatus() != null
+                && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"));
         if (isFinalizada) {
             btnFinalizarOS.setEnabled(false);
-            btnFinalizarOS.setText("✅ OS Já Finalizada");
+            btnFinalizarOS.setText("OS Já Finalizada");
         }
-        JButton btnSalvar = new JButton("💾 Salvar Orçamento");
+        JButton btnSalvar = new JButton("Salvar Orçamento");
         btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 13f));
 
         btnCancelar.addActionListener(e -> dispose());
@@ -235,11 +255,13 @@ public class MontarOrcamentoDialog extends JDialog {
         this.btnFinalizarOS.addActionListener(e -> finalizarOSComPDV(cliente, equip));
         btnSalvar.addActionListener(e -> {
             String sel = (String) cbStatus.getSelectedItem();
-            if (sel != null && sel.contains("Entregue") && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
+            if (sel != null && sel.contains("Entregue")
+                    && (os.getStatus() == null || !os.getStatus().contains("Entregue"))) {
                 finalizarOSComPDV(cliente, equip);
             } else {
                 if (salvarOrcamento()) {
-                    JOptionPane.showMessageDialog(this, "Orçamento e status salvos com sucesso no banco MySQL!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Orçamento e status salvos com sucesso no banco MySQL!",
+                            "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 }
             }
         });
@@ -268,14 +290,14 @@ public class MontarOrcamentoDialog extends JDialog {
         modelServicos.setRowCount(0);
         double totalServicos = 0;
         for (ServicoItem s : listaServicos) {
-            modelServicos.addRow(new Object[]{s.getDescricao(), String.format("R$ %.2f", s.getValor())});
+            modelServicos.addRow(new Object[] { s.getDescricao(), String.format("R$ %.2f", s.getValor()) });
             totalServicos += s.getValor();
         }
 
         modelPecas.setRowCount(0);
         double totalPecas = 0;
         for (PecaItem p : listaPecas) {
-            modelPecas.addRow(new Object[]{
+            modelPecas.addRow(new Object[] {
                     p.getProdutoId() > 0 ? "Estoque #" + p.getProdutoId() : "Catálogo / Avulsa",
                     p.getNome(),
                     p.getQuantidade(),
@@ -296,8 +318,8 @@ public class MontarOrcamentoDialog extends JDialog {
     private void selecionarServicoDoCatalogo() {
         List<ServicoItem> catalogo = catalogoDAO.listarServicos();
         if (catalogo.isEmpty()) {
-            int op = JOptionPane.showConfirmDialog(this, 
-                    "O catálogo de serviços está vazio no momento.\n\nDeseja criar e cadastrar um novo serviço agora?", 
+            int op = JOptionPane.showConfirmDialog(this,
+                    "O catálogo de serviços está vazio no momento.\n\nDeseja criar e cadastrar um novo serviço agora?",
                     "Catálogo Vazio", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (op == JOptionPane.YES_OPTION) {
                 criarNovoServico();
@@ -325,16 +347,19 @@ public class MontarOrcamentoDialog extends JDialog {
         pnl.add(new JLabel("Valor para esta OS (R$):"));
         pnl.add(txtPreco);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Selecionar Serviço do Catálogo", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Selecionar Serviço do Catálogo",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             int idx = cbServicos.getSelectedIndex();
-            if (idx < 0 || idx >= catalogo.size()) return;
+            if (idx < 0 || idx >= catalogo.size())
+                return;
 
             ServicoItem selecionado = catalogo.get(idx);
             double val;
             try {
                 val = Double.parseDouble(txtPreco.getText().trim().replace(",", "."));
-                if (val < 0) throw new NumberFormatException();
+                if (val < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
                 val = selecionado.getValor();
             }
@@ -355,19 +380,23 @@ public class MontarOrcamentoDialog extends JDialog {
         pnl.add(new JLabel("Valor do Serviço (R$) *:"));
         pnl.add(txtVal);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Criar Novo Serviço (Salva no Catálogo)", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Criar Novo Serviço (Salva no Catálogo)",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             String desc = txtDesc.getText().trim();
             if (desc.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Informe a descrição do serviço!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Informe a descrição do serviço!", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
             double val;
             try {
                 val = Double.parseDouble(txtVal.getText().trim().replace(",", "."));
-                if (val < 0) throw new NumberFormatException();
+                if (val < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Informe um valor numérico válido!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Informe um valor numérico válido!", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -387,7 +416,8 @@ public class MontarOrcamentoDialog extends JDialog {
             recarregarTabelasEValores();
             salvarOrcamento(); // auto-save
         } else {
-            JOptionPane.showMessageDialog(this, "Selecione um serviço na tabela para remover!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione um serviço na tabela para remover!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -396,8 +426,8 @@ public class MontarOrcamentoDialog extends JDialog {
     private void selecionarPecaDoCatalogo() {
         List<PecaItem> catalogo = catalogoDAO.listarPecas();
         if (catalogo.isEmpty()) {
-            int op = JOptionPane.showConfirmDialog(this, 
-                    "O catálogo de peças está vazio no momento.\n\nDeseja criar e cadastrar uma nova peça agora?", 
+            int op = JOptionPane.showConfirmDialog(this,
+                    "O catálogo de peças está vazio no momento.\n\nDeseja criar e cadastrar uma nova peça agora?",
                     "Catálogo Vazio", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (op == JOptionPane.YES_OPTION) {
                 criarNovaPeca();
@@ -411,7 +441,8 @@ public class MontarOrcamentoDialog extends JDialog {
         }
 
         JSpinner spQtd = new JSpinner(new SpinnerNumberModel(1, 1, 999, 1));
-        JTextField txtPreco = new JTextField(String.format("%.2f", catalogo.get(0).getValorUnitario()).replace(",", "."), 10);
+        JTextField txtPreco = new JTextField(
+                String.format("%.2f", catalogo.get(0).getValorUnitario()).replace(",", "."), 10);
 
         cbPecas.addActionListener(e -> {
             int idx = cbPecas.getSelectedIndex();
@@ -428,17 +459,20 @@ public class MontarOrcamentoDialog extends JDialog {
         pnl.add(new JLabel("Valor Unitário para esta OS (R$):"));
         pnl.add(txtPreco);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Selecionar Peça do Catálogo", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Selecionar Peça do Catálogo", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             int idx = cbPecas.getSelectedIndex();
-            if (idx < 0 || idx >= catalogo.size()) return;
+            if (idx < 0 || idx >= catalogo.size())
+                return;
 
             PecaItem selecionada = catalogo.get(idx);
             int qtd = (Integer) spQtd.getValue();
             double preco;
             try {
                 preco = Double.parseDouble(txtPreco.getText().trim().replace(",", "."));
-                if (preco < 0) throw new NumberFormatException();
+                if (preco < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
                 preco = selecionada.getValorUnitario();
             }
@@ -462,7 +496,8 @@ public class MontarOrcamentoDialog extends JDialog {
         pnl.add(new JLabel("Valor Unitário (R$) *:"));
         pnl.add(txtPreco);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Criar Nova Peça (Salva no Catálogo)", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Criar Nova Peça (Salva no Catálogo)",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
             String nome = txtNome.getText().trim();
             if (nome.isEmpty()) {
@@ -472,9 +507,11 @@ public class MontarOrcamentoDialog extends JDialog {
             double preco;
             try {
                 preco = Double.parseDouble(txtPreco.getText().trim().replace(",", "."));
-                if (preco < 0) throw new NumberFormatException();
+                if (preco < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Informe um valor unitário válido!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Informe um valor unitário válido!", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
             int qtd = (Integer) spQtd.getValue();
@@ -491,8 +528,8 @@ public class MontarOrcamentoDialog extends JDialog {
     private void adicionarPecaEstoqueDialog() {
         List<Produto> produtos = produtoDAO.buscarTodos();
         if (produtos.isEmpty()) {
-            int op = JOptionPane.showConfirmDialog(this, 
-                    "Nenhuma peça cadastrada no estoque no momento.\n\nDeseja cadastrar uma nova peça no estoque agora?", 
+            int op = JOptionPane.showConfirmDialog(this,
+                    "Nenhuma peça cadastrada no estoque no momento.\n\nDeseja cadastrar uma nova peça no estoque agora?",
                     "Estoque Vazio", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
             if (op == JOptionPane.YES_OPTION) {
                 cadastrarNovoProdutoDireto();
@@ -509,12 +546,14 @@ public class MontarOrcamentoDialog extends JDialog {
         JTextField txtPrecoNegociado = new JTextField(8);
 
         cbProd.addActionListener(e -> {
-            AdicionarPecaOSDialog.ProdutoComboItem item = (AdicionarPecaOSDialog.ProdutoComboItem) cbProd.getSelectedItem();
+            AdicionarPecaOSDialog.ProdutoComboItem item = (AdicionarPecaOSDialog.ProdutoComboItem) cbProd
+                    .getSelectedItem();
             if (item != null) {
                 txtPrecoNegociado.setText(String.format("%.2f", item.produto.getPreco()).replace(",", "."));
             }
         });
-        if (cbProd.getItemCount() > 0) cbProd.setSelectedIndex(0);
+        if (cbProd.getItemCount() > 0)
+            cbProd.setSelectedIndex(0);
 
         JPanel pnl = new JPanel(new GridLayout(3, 2, 8, 8));
         pnl.add(new JLabel("Componente do Estoque:"));
@@ -524,10 +563,13 @@ public class MontarOrcamentoDialog extends JDialog {
         pnl.add(new JLabel("Preço Unitário (R$):"));
         pnl.add(txtPrecoNegociado);
 
-        int res = JOptionPane.showConfirmDialog(this, pnl, "Adicionar Peça do Estoque", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int res = JOptionPane.showConfirmDialog(this, pnl, "Adicionar Peça do Estoque", JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
         if (res == JOptionPane.OK_OPTION) {
-            AdicionarPecaOSDialog.ProdutoComboItem item = (AdicionarPecaOSDialog.ProdutoComboItem) cbProd.getSelectedItem();
-            if (item == null) return;
+            AdicionarPecaOSDialog.ProdutoComboItem item = (AdicionarPecaOSDialog.ProdutoComboItem) cbProd
+                    .getSelectedItem();
+            if (item == null)
+                return;
             int qtd = (Integer) spQtd.getValue();
             double preco;
             try {
@@ -546,14 +588,16 @@ public class MontarOrcamentoDialog extends JDialog {
         dialog.setVisible(true);
         if (dialog.isSalvo() && dialog.getProdutoCriado() != null) {
             Produto p = dialog.getProdutoCriado();
-            String qtdStr = JOptionPane.showInputDialog(this, 
-                    "Peça '" + p.getNome() + "' cadastrada com sucesso no estoque!\n\nQuantas unidades deseja vincular a este orçamento agora?", 
+            String qtdStr = JOptionPane.showInputDialog(this,
+                    "Peça '" + p.getNome()
+                            + "' cadastrada com sucesso no estoque!\n\nQuantas unidades deseja vincular a este orçamento agora?",
                     "1");
             int qtd = 1;
             try {
                 if (qtdStr != null && !qtdStr.trim().isEmpty()) {
                     qtd = Integer.parseInt(qtdStr.trim());
-                    if (qtd <= 0) qtd = 1;
+                    if (qtd <= 0)
+                        qtd = 1;
                 }
             } catch (Exception ex) {
                 qtd = 1;
@@ -572,7 +616,8 @@ public class MontarOrcamentoDialog extends JDialog {
             recarregarTabelasEValores();
             salvarOrcamento(); // auto-save
         } else {
-            JOptionPane.showMessageDialog(this, "Selecione uma peça na tabela para remover!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Selecione uma peça na tabela para remover!", "Aviso",
+                    JOptionPane.WARNING_MESSAGE);
         }
     }
 
@@ -584,7 +629,8 @@ public class MontarOrcamentoDialog extends JDialog {
         String novoStatus = (String) cbStatus.getSelectedItem();
         String diagnostico = txtDiagnostico.getText().trim();
 
-        boolean ok = osDAO.salvarOrcamentoCompleto(os.getId(), novoStatus, diagnostico, listaServicos, listaPecas, subtotalServicos, totalGeral);
+        boolean ok = osDAO.salvarOrcamentoCompleto(os.getId(), novoStatus, diagnostico, listaServicos, listaPecas,
+                subtotalServicos, totalGeral);
 
         if (ok) {
             os.setStatus(novoStatus);
@@ -593,14 +639,16 @@ public class MontarOrcamentoDialog extends JDialog {
             os.setDiagnosticoTecnico(diagnostico);
             this.salvo = true;
         } else {
-            JOptionPane.showMessageDialog(this, "Falha ao gravar orçamento no banco MySQL!", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Falha ao gravar orçamento no banco MySQL!", "Erro",
+                    JOptionPane.ERROR_MESSAGE);
         }
         return ok;
     }
 
     private void finalizarOSComPDV(Cliente cliente, Equipamento equip) {
         if (os.getStatus() != null && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"))) {
-            JOptionPane.showMessageDialog(this, "Esta Ordem de Serviço já se encontra finalizada!", "Aviso", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Esta Ordem de Serviço já se encontra finalizada!", "Aviso",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
 
@@ -611,13 +659,14 @@ public class MontarOrcamentoDialog extends JDialog {
         String diagnostico = txtDiagnostico.getText().trim();
 
         // Salva os itens e diagnóstico atuais no banco mantendo o status anterior
-        osDAO.salvarOrcamentoCompleto(os.getId(), os.getStatus(), diagnostico, listaServicos, listaPecas, subtotalServicos, totalGeral);
+        osDAO.salvarOrcamentoCompleto(os.getId(), os.getStatus(), diagnostico, listaServicos, listaPecas,
+                subtotalServicos, totalGeral);
 
         if (totalGeral <= 0) {
             String input = JOptionPane.showInputDialog(this,
                     "O orçamento está sem valor cadastrado (R$ 0,00).\n\n" +
-                    "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
-                    "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
+                            "Informe o valor total a cobrar para ir ao pagamento no PDV (R$):\n" +
+                            "(Ou informe 0 para finalizar como Cortesia/Garantia sem custo)",
                     "100.00");
             if (input == null) {
                 restaurarStatusAnterior();
@@ -625,9 +674,11 @@ public class MontarOrcamentoDialog extends JDialog {
             }
             try {
                 totalGeral = Double.parseDouble(input.trim().replace(",", "."));
-                if (totalGeral < 0) throw new NumberFormatException();
+                if (totalGeral < 0)
+                    throw new NumberFormatException();
             } catch (NumberFormatException e) {
-                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Valor numérico inválido informado!", "Aviso",
+                        JOptionPane.WARNING_MESSAGE);
                 restaurarStatusAnterior();
                 return;
             }
@@ -637,13 +688,14 @@ public class MontarOrcamentoDialog extends JDialog {
                         "Confirmar a finalização da OS #" + os.getId() + " SEM COBRANÇA (Cortesia / Garantia R$ 0,00)?",
                         "Finalizar sem Custo", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
                 if (opt == JOptionPane.YES_OPTION) {
-                    osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos, listaPecas, subtotalServicos, 0.0);
+                    osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos,
+                            listaPecas, subtotalServicos, 0.0);
                     os.setStatus("Entregue (Finalizado)");
                     os.setDataSaida(java.time.LocalDateTime.now());
                     this.salvo = true;
                     if (btnFinalizarOS != null) {
                         btnFinalizarOS.setEnabled(false);
-                        btnFinalizarOS.setText("✅ OS Já Finalizada");
+                        btnFinalizarOS.setText("OS Já Finalizada");
                     }
                     atualizandoStatus = true;
                     try {
@@ -671,16 +723,19 @@ public class MontarOrcamentoDialog extends JDialog {
         com.loja.repository.CaixaDAO caixaDAO = new com.loja.repository.CaixaDAO();
         if (caixaDAO.obterSessaoAberta() == null) {
             int opt = JOptionPane.showConfirmDialog(this,
-                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + os.getId() + ", é necessário abrir o turno.\n" +
-                    "Deseja realizar a Abertura de Caixa agora?",
+                    "O CAIXA ESTÁ FECHADO!\n\nPara receber o pagamento da OS #" + os.getId()
+                            + ", é necessário abrir o turno.\n" +
+                            "Deseja realizar a Abertura de Caixa agora?",
                     "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
             if (opt == JOptionPane.YES_OPTION) {
                 com.loja.service.CaixaService srv = new com.loja.service.CaixaService();
-                com.loja.view.dialogs.AberturaCaixaDialog abDialog = new com.loja.view.dialogs.AberturaCaixaDialog(this, srv, caixaDAO);
+                com.loja.view.dialogs.AberturaCaixaDialog abDialog = new com.loja.view.dialogs.AberturaCaixaDialog(this,
+                        srv, caixaDAO);
                 abDialog.setVisible(true);
             }
             if (caixaDAO.obterSessaoAberta() == null) {
-                JOptionPane.showMessageDialog(this, "A finalização da OS foi cancelada pois o caixa não foi aberto.", "Operação Cancelada", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "A finalização da OS foi cancelada pois o caixa não foi aberto.",
+                        "Operação Cancelada", JOptionPane.WARNING_MESSAGE);
                 restaurarStatusAnterior();
                 return;
             }
@@ -692,7 +747,8 @@ public class MontarOrcamentoDialog extends JDialog {
 
         if (pagDialog.isConfirmado()) {
             caixaDAO.registrarRecebimentoOS(os.getId(), pagDialog.getPagamentos());
-            osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos, listaPecas, subtotalServicos, totalGeral);
+            osDAO.salvarOrcamentoCompleto(os.getId(), "Entregue (Finalizado)", diagnostico, listaServicos, listaPecas,
+                    subtotalServicos, totalGeral);
             os.setStatus("Entregue (Finalizado)");
             os.setValorServico(subtotalServicos);
             os.setValorTotal(totalGeral);
@@ -702,11 +758,12 @@ public class MontarOrcamentoDialog extends JDialog {
 
             if (btnFinalizarOS != null) {
                 btnFinalizarOS.setEnabled(false);
-                btnFinalizarOS.setText("✅ OS Já Finalizada");
+                btnFinalizarOS.setText("OS Já Finalizada");
             }
 
             JOptionPane.showMessageDialog(this,
-                    "OS #" + os.getId() + " finalizada com sucesso!\nPagamento de R$ " + String.format("%.2f", totalGeral) + " registrado no Caixa.",
+                    "OS #" + os.getId() + " finalizada com sucesso!\nPagamento de R$ "
+                            + String.format("%.2f", totalGeral) + " registrado no Caixa.",
                     "OS Finalizada", JOptionPane.INFORMATION_MESSAGE);
 
             atualizandoStatus = true;
@@ -723,7 +780,9 @@ public class MontarOrcamentoDialog extends JDialog {
                 gerarComprovanteEntregaPDF(cliente, equip);
             }
         } else {
-            JOptionPane.showMessageDialog(this, "Pagamento cancelado. A OS #" + os.getId() + " permanece com o status anterior.", "Cancelado", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Pagamento cancelado. A OS #" + os.getId() + " permanece com o status anterior.", "Cancelado",
+                    JOptionPane.INFORMATION_MESSAGE);
             restaurarStatusAnterior();
         }
     }
@@ -738,12 +797,14 @@ public class MontarOrcamentoDialog extends JDialog {
     }
 
     private void gerarPDF(Cliente cliente, Equipamento equip) {
-        if (!salvarOrcamento()) return;
+        if (!salvarOrcamento())
+            return;
 
         String statusAtual = (String) cbStatus.getSelectedItem();
-        boolean isFinalizada = statusAtual != null && (statusAtual.contains("Entregue") || statusAtual.contains("Finalizado"));
+        boolean isFinalizada = statusAtual != null
+                && (statusAtual.contains("Entregue") || statusAtual.contains("Finalizado"));
         if (isFinalizada) {
-            Object[] opcoes = {"📦 Comprovante de Entrega (PDF)", "📋 Orçamento Original (PDF)", "Cancelar"};
+            Object[] opcoes = { "Comprovante de Entrega (PDF)", "Orçamento Original (PDF)", "Cancelar" };
             int escolha = JOptionPane.showOptionDialog(
                     this,
                     "Esta Ordem de Serviço está FINALIZADA.\nQual documento em PDF deseja emitir?",
@@ -752,8 +813,7 @@ public class MontarOrcamentoDialog extends JDialog {
                     JOptionPane.QUESTION_MESSAGE,
                     null,
                     opcoes,
-                    opcoes[0]
-            );
+                    opcoes[0]);
             if (escolha == 0) {
                 gerarComprovanteEntregaPDF(cliente, equip);
                 return;
@@ -775,15 +835,18 @@ public class MontarOrcamentoDialog extends JDialog {
 
             try {
                 List<HistoricoOS> historico = osDAO.obterHistoricoOS(os.getId());
-                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas, historico);
-                int opt = JOptionPane.showConfirmDialog(this, 
-                        "Orçamento gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?", 
+                OrcamentoPDFService.gerarOrcamentoPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas,
+                        historico);
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Orçamento gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath()
+                                + "\n\nDeseja abrir o arquivo PDF agora?",
                         "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().open(arquivoDestino);
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Erro ao gerar PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Erro ao gerar PDF: " + ex.getMessage(), "Erro",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -802,21 +865,25 @@ public class MontarOrcamentoDialog extends JDialog {
 
             try {
                 List<HistoricoOS> historico = osDAO.obterHistoricoOS(os.getId());
-                ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, os, cliente, equip, listaServicos, listaPecas, historico);
-                int opt = JOptionPane.showConfirmDialog(this, 
-                        "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath() + "\n\nDeseja abrir o arquivo PDF agora?", 
+                ComprovanteEntregaPDFService.gerarComprovanteEntregaPDF(arquivoDestino, os, cliente, equip,
+                        listaServicos, listaPecas, historico);
+                int opt = JOptionPane.showConfirmDialog(this,
+                        "Comprovante de Entrega gerado com sucesso em:\n" + arquivoDestino.getAbsolutePath()
+                                + "\n\nDeseja abrir o arquivo PDF agora?",
                         "PDF Gerado", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
                 if (opt == JOptionPane.YES_OPTION && Desktop.isDesktopSupported()) {
                     Desktop.getDesktop().open(arquivoDestino);
                 }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrega em PDF: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Erro ao gerar Comprovante de Entrega em PDF: " + ex.getMessage(),
+                        "Erro", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void enviarWhatsApp(Cliente cliente, Equipamento equip) {
-        if (!salvarOrcamento()) return;
+        if (!salvarOrcamento())
+            return;
         if (cliente == null && os != null) {
             cliente = clienteDAO.buscarPorId(os.getClienteId());
         }
@@ -825,12 +892,12 @@ public class MontarOrcamentoDialog extends JDialog {
         }
         boolean sucesso = WhatsAppService.enviarOrcamentoWhatsApp(os, cliente, equip, listaServicos, listaPecas);
         if (sucesso) {
-            JOptionPane.showMessageDialog(this, 
-                    "WhatsApp aberto no navegador com o orçamento pré-formatado!\n\n(O texto completo do orçamento também foi copiado para a Área de Transferência como garantia)", 
+            JOptionPane.showMessageDialog(this,
+                    "WhatsApp aberto no navegador com o orçamento pré-formatado!\n\n(O texto completo do orçamento também foi copiado para a Área de Transferência como garantia)",
                     "WhatsApp", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, 
-                    "Não foi possível abrir o navegador automaticamente.\nO texto do orçamento foi COPIADO para a Área de Transferência (Ctrl+V)!", 
+            JOptionPane.showMessageDialog(this,
+                    "Não foi possível abrir o navegador automaticamente.\nO texto do orçamento foi COPIADO para a Área de Transferência (Ctrl+V)!",
                     "Orçamento Copiado", JOptionPane.INFORMATION_MESSAGE);
         }
     }

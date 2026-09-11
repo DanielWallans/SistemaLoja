@@ -8,6 +8,7 @@ import com.loja.repository.CaixaDAO;
 import com.loja.service.CaixaService;
 import com.loja.service.CupomTermicoService;
 import com.loja.service.WhatsAppService;
+import com.loja.view.theme.UITheme;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -79,7 +80,7 @@ public class FechamentoCegoDialog extends JDialog {
         pnlHeader.setBackground(new Color(33, 43, 54));
         pnlHeader.setBorder(BorderFactory.createEmptyBorder(12, 18, 12, 18));
 
-        JLabel lblTit = new JLabel("🔒 Fechamento de Turno & Conferência Cega de Caixa");
+        JLabel lblTit = new JLabel("Fechamento de Turno & Conferência Cega de Caixa");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 16f));
         lblTit.setForeground(Color.WHITE);
 
@@ -113,8 +114,8 @@ public class FechamentoCegoDialog extends JDialog {
         ));
 
         JPanel pnlAcoesExtras = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        btnImprimirCupom = new JButton("🖨️ Imprimir Cupom 80mm");
-        btnEnviarWhatsApp = new JButton("📲 WhatsApp do Dono");
+        btnImprimirCupom = new JButton("Imprimir Cupom 80mm");
+        btnEnviarWhatsApp = new JButton("WhatsApp do Dono");
         btnImprimirCupom.setVisible(false);
         btnEnviarWhatsApp.setVisible(false);
 
@@ -125,11 +126,11 @@ public class FechamentoCegoDialog extends JDialog {
         pnlAcoesExtras.add(btnEnviarWhatsApp);
 
         JPanel pnlNavBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        btnVoltar = new JButton("⬅️ Voltar");
+        btnVoltar = new JButton("Voltar");
         btnVoltar.setEnabled(false);
-        btnAvancar = new JButton("Avançar para Apuração ➡️");
+        btnAvancar = new JButton("Avançar para Apuração");
         btnAvancar.setFont(btnAvancar.getFont().deriveFont(Font.BOLD, 13f));
-        btnAvancar.setBackground(new Color(41, 128, 185));
+        btnAvancar.setBackground(UITheme.tokens().getPrimaryAccent());
         btnAvancar.setForeground(Color.WHITE);
 
         btnVoltar.addActionListener(e -> voltarPasso());
@@ -160,7 +161,7 @@ public class FechamentoCegoDialog extends JDialog {
         // Bloco Cédulas
         JPanel pnlCedulas = new JPanel(new GridLayout(7, 2, 6, 6));
         pnlCedulas.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), " 💵 Cédulas / Notas ",
+                BorderFactory.createEtchedBorder(), " Cédulas / Notas ",
                 TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)
         ));
 
@@ -183,7 +184,7 @@ public class FechamentoCegoDialog extends JDialog {
         // Bloco Moedas & Avulsos
         JPanel pnlMoedas = new JPanel(new GridLayout(7, 2, 6, 6));
         pnlMoedas.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), " 🪙 Moedas & Outros Valores ",
+                BorderFactory.createEtchedBorder(), " Moedas & Outros Valores ",
                 TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)
         ));
 
@@ -211,17 +212,17 @@ public class FechamentoCegoDialog extends JDialog {
         // Totalizador Cego em Destaque
         JPanel pnlTotalCego = new JPanel(new BorderLayout());
         pnlTotalCego.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(41, 128, 185), 2),
+                BorderFactory.createLineBorder(UITheme.tokens().getBorderSubtle(), 1),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)
         ));
-        pnlTotalCego.setBackground(new Color(41, 128, 185, 15));
+        pnlTotalCego.setBackground(UITheme.withAlpha(UITheme.tokens().getPrimaryAccent(), 0.08f));
 
         JLabel lblTitTotal = new JLabel("TOTAL FÍSICO CONTADO NA GAVETA:");
         lblTitTotal.setFont(lblTitTotal.getFont().deriveFont(Font.BOLD, 13f));
 
         lblTotalContagemCega = new JLabel("R$ 0,00");
         lblTotalContagemCega.setFont(lblTotalContagemCega.getFont().deriveFont(Font.BOLD, 22f));
-        lblTotalContagemCega.setForeground(new Color(41, 128, 185));
+        lblTotalContagemCega.setForeground(UITheme.tokens().getTextPrimary());
 
         pnlTotalCego.add(lblTitTotal, BorderLayout.WEST);
         pnlTotalCego.add(lblTotalContagemCega, BorderLayout.EAST);
@@ -284,18 +285,18 @@ public class FechamentoCegoDialog extends JDialog {
 
         lblSaldoSistemaEsperado = new JLabel("R$ 0,00");
         lblTotalFisicoInformado = new JLabel("R$ 0,00");
-        lblDiferencaStatus = new JLabel("🟢 Bateu Exato (R$ 0,00)");
+        lblDiferencaStatus = new JLabel("Bateu Exato (R$ 0,00)");
 
-        pnlComparativo.add(criarCardComparativo("1. Saldo Esperado Sistema", lblSaldoSistemaEsperado, new Color(41, 128, 185)));
-        pnlComparativo.add(criarCardComparativo("2. Contagem Física Real", lblTotalFisicoInformado, new Color(39, 174, 96)));
-        pnlComparativo.add(criarCardComparativo("3. Diferença / Quebra", lblDiferencaStatus, new Color(142, 68, 173)));
+        pnlComparativo.add(criarCardComparativo("1. Saldo Esperado Sistema", lblSaldoSistemaEsperado, UITheme.tokens().getPrimaryAccent()));
+        pnlComparativo.add(criarCardComparativo("2. Contagem Física Real", lblTotalFisicoInformado, UITheme.tokens().getSuccess()));
+        pnlComparativo.add(criarCardComparativo("3. Diferença / Quebra", lblDiferencaStatus, UITheme.tokens().getWarning()));
 
         pnlCentro.add(pnlComparativo);
 
         // Justificativa e Operador
         JPanel pnlJustificativaBox = new JPanel(new BorderLayout(6, 6));
         pnlJustificativaBox.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createEtchedBorder(), " 📝 Justificativa Obrigatória de Sobra/Falta & Operador ",
+                BorderFactory.createEtchedBorder(), " Justificativa Obrigatória de Sobra/Falta & Operador ",
                 TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)
         ));
 
@@ -381,20 +382,20 @@ public class FechamentoCegoDialog extends JDialog {
             lblTotalFisicoInformado.setText(String.format("R$ %.2f", totalContado));
 
             if (Math.abs(diferenca) < 0.01) {
-                lblDiferencaStatus.setText("🟢 Bateu Exato (R$ 0,00)");
+                lblDiferencaStatus.setText("Bateu Exato (R$ 0,00)");
                 lblDiferencaStatus.setForeground(new Color(39, 174, 96));
             } else if (diferenca > 0) {
-                lblDiferencaStatus.setText(String.format("🟡 Sobra (+R$ %.2f)", diferenca));
+                lblDiferencaStatus.setText(String.format("Sobra (+R$ %.2f)", diferenca));
                 lblDiferencaStatus.setForeground(new Color(230, 126, 34));
             } else {
-                lblDiferencaStatus.setText(String.format("🔴 Quebra (-R$ %.2f)", Math.abs(diferenca)));
+                lblDiferencaStatus.setText(String.format("Quebra (-R$ %.2f)", Math.abs(diferenca)));
                 lblDiferencaStatus.setForeground(new Color(231, 76, 60));
             }
 
             passoAtual = 2;
             cardLayout.show(pnlCardsPassos, "PASSO_2");
             btnVoltar.setEnabled(true);
-            btnAvancar.setText("Avançar para Conclusão ➡️");
+            btnAvancar.setText("Avançar para Conclusão");
 
         } else if (passoAtual == 2) {
             double saldoEsperado = caixaDAO.obterSaldo();
@@ -415,7 +416,7 @@ public class FechamentoCegoDialog extends JDialog {
 
             passoAtual = 3;
             cardLayout.show(pnlCardsPassos, "PASSO_3");
-            btnAvancar.setText("🔒 Concluir e Encerrar Caixa");
+            btnAvancar.setText("Concluir e Encerrar Caixa");
             btnAvancar.setBackground(new Color(39, 174, 96));
             btnImprimirCupom.setVisible(true);
             btnEnviarWhatsApp.setVisible(true);
@@ -430,12 +431,12 @@ public class FechamentoCegoDialog extends JDialog {
             passoAtual = 1;
             cardLayout.show(pnlCardsPassos, "PASSO_1");
             btnVoltar.setEnabled(false);
-            btnAvancar.setText("Avançar para Apuração ➡️");
+            btnAvancar.setText("Avançar para Apuração");
         } else if (passoAtual == 3) {
             passoAtual = 2;
             cardLayout.show(pnlCardsPassos, "PASSO_2");
-            btnAvancar.setText("Avançar para Conclusão ➡️");
-            btnAvancar.setBackground(new Color(41, 128, 185));
+            btnAvancar.setText("Avançar para Conclusão");
+            btnAvancar.setBackground(UITheme.tokens().getPrimaryAccent());
             btnImprimirCupom.setVisible(false);
             btnEnviarWhatsApp.setVisible(false);
         }
@@ -519,7 +520,7 @@ public class FechamentoCegoDialog extends JDialog {
         if (ok) {
             this.fechadoComSucesso = true;
             JOptionPane.showMessageDialog(this,
-                    "✅ CAIXA FECHADO COM SUCESSO!\n\n" +
+                    "CAIXA FECHADO COM SUCESSO!\n\n" +
                     "• Turno: #" + s.getId() + "\n" +
                     "• Saldo em Gaveta: R$ " + String.format("%.2f", s.getSaldoFinalInformado()) + "\n" +
                     "• Status da Apuração: " + s.getStatusDiferencaFormatado(),

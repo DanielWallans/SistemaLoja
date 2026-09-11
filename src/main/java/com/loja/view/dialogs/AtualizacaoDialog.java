@@ -36,8 +36,7 @@ public class AtualizacaoDialog extends JDialog {
         JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         pnlTitulo.setOpaque(false);
 
-        JLabel lblIcone = new JLabel("🚀");
-        lblIcone.setFont(lblIcone.getFont().deriveFont(24f));
+        JLabel lblIcone = new JLabel("");
 
         JLabel lblTit = new JLabel("NOVA ATUALIZAÇÃO DISPONÍVEL!");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 15f));
@@ -46,7 +45,8 @@ public class AtualizacaoDialog extends JDialog {
         pnlTitulo.add(lblIcone);
         pnlTitulo.add(lblTit);
 
-        JLabel lblVersao = new JLabel("Versão Atual: " + UpdateService.VERSAO_ATUAL + "  ➜  Nova Versão: " + updateInfo.getVersao());
+        JLabel lblVersao = new JLabel(
+                "Versão Atual: " + UpdateService.VERSAO_ATUAL + " -> Nova Versão: " + updateInfo.getVersao());
         lblVersao.setFont(lblVersao.getFont().deriveFont(Font.BOLD, 12f));
         lblVersao.setForeground(new Color(46, 204, 113));
 
@@ -96,12 +96,12 @@ public class AtualizacaoDialog extends JDialog {
         JPanel pnlFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         pnlFooter.setBorder(BorderFactory.createEmptyBorder(0, 15, 10, 15));
 
-        btnMaisTarde = new JButton("⏳ Lembrar Mais Tarde");
+        btnMaisTarde = new JButton("Lembrar Mais Tarde");
         btnMaisTarde.setFont(btnMaisTarde.getFont().deriveFont(12f));
         btnMaisTarde.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnMaisTarde.addActionListener(e -> dispose());
 
-        btnAtualizar = new JButton("🚀 Atualizar Agora");
+        btnAtualizar = new JButton("Atualizar Agora");
         btnAtualizar.setFont(btnAtualizar.getFont().deriveFont(Font.BOLD, 12f));
         btnAtualizar.setBackground(new Color(39, 174, 96));
         btnAtualizar.setForeground(Color.WHITE);
@@ -147,7 +147,7 @@ public class AtualizacaoDialog extends JDialog {
                     btnAtualizar.setEnabled(true);
                     btnMaisTarde.setEnabled(true);
                     progressBar.setVisible(false);
-                    lblStatus.setText("❌ Erro ao atualizar: " + ex.getMessage());
+                    lblStatus.setText("Erro ao atualizar: " + ex.getMessage());
                     lblStatus.setForeground(new Color(231, 76, 60));
                     JOptionPane.showMessageDialog(AtualizacaoDialog.this,
                             "Falha ao baixar a atualização:\n" + ex.getMessage(),

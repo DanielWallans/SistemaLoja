@@ -68,7 +68,7 @@ public class Usuario {
     }
 
     public String getStatusFormatado() {
-        return ativo ? "🟢 Ativo" : "🔴 Inativo";
+        return ativo ? "Ativo" : "Inativo";
     }
 
     @Override

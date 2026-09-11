@@ -113,15 +113,19 @@ dir /s /b src\*.java > sources.txt
 set "COMP_STATUS=%ERRORLEVEL%"
 if exist sources.txt del sources.txt
 
-if %COMP_STATUS% neq 0 (
-    echo.
-    echo [ERRO] Falha ao compilar o projeto! (Codigo de erro: %COMP_STATUS%)
-    pause
-    exit /b %COMP_STATUS%
-)
+if %COMP_STATUS% neq 0 goto :erro_compilacao
 
 echo [SISTEMA] Iniciando a aplicacao...
 echo ====================================================
 "%JAVA_EXE%" -cp "%CLASSPATH%" com.loja.app.Main
 echo ====================================================
 pause
+exit /b 0
+
+:erro_compilacao
+echo.
+echo [ERRO] Falha ao compilar o projeto! Codigo de erro: %COMP_STATUS%
+pause
+exit /b %COMP_STATUS%
+
+

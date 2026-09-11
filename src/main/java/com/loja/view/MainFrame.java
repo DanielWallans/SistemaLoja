@@ -60,9 +60,9 @@ public class MainFrame extends JFrame {
 
     private boolean modoEscuro = true;
 
-    public MainFrame(ClienteDAO clienteDAO, EquipamentoDAO equipDAO, OrdemServicoDAO osDAO, 
-                     ProdutoDAO produtoDAO, CaixaDAO caixaDAO, CaixaService caixaService, 
-                     UsuarioDAO usuarioDAO, boolean dbConectado) {
+    public MainFrame(ClienteDAO clienteDAO, EquipamentoDAO equipDAO, OrdemServicoDAO osDAO,
+            ProdutoDAO produtoDAO, CaixaDAO caixaDAO, CaixaService caixaService,
+            UsuarioDAO usuarioDAO, boolean dbConectado) {
         super("System Pro - Gestão & Assistência Técnica v2.0");
         this.clienteDAO = clienteDAO;
         this.equipDAO = equipDAO;
@@ -92,14 +92,11 @@ public class MainFrame extends JFrame {
         header = new JPanel(new BorderLayout(15, 0));
         header.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, t.getBorderSubtle()),
-                BorderFactory.createEmptyBorder(10, 20, 10, 20)
-        ));
+                BorderFactory.createEmptyBorder(10, 20, 10, 20)));
         header.setBackground(t.getBgSidebar());
 
         JPanel pnlLogo = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         pnlLogo.setOpaque(false);
-        JLabel lblIcone = new JLabel("🛠️");
-        lblIcone.setFont(lblIcone.getFont().deriveFont(20f));
 
         lblTituloLogo = new JLabel("SYSTEM PRO");
         lblTituloLogo.setFont(UITheme.FONT_TITLE);
@@ -109,7 +106,6 @@ public class MainFrame extends JFrame {
         lblSubLogo.setFont(UITheme.FONT_SUBTITLE);
         lblSubLogo.setForeground(t.getTextSecondary());
 
-        pnlLogo.add(lblIcone);
         pnlLogo.add(lblTituloLogo);
         pnlLogo.add(lblSubLogo);
 
@@ -123,35 +119,33 @@ public class MainFrame extends JFrame {
         lblUsuarioLogado.setForeground(t.getTextPrimary());
 
         // Botões Administrativos
-        btnGerenciarUsuarios = new JButton("👥 Usuários");
+        btnGerenciarUsuarios = new JButton("Usuários");
         btnGerenciarUsuarios.setFont(UITheme.FONT_CAPTION);
-        btnGerenciarUsuarios.putClientProperty("JButton.buttonType", "roundRect");
+        btnGerenciarUsuarios.putClientProperty("JButton.arc", 6);
         btnGerenciarUsuarios.addActionListener(e -> abrirGerenciadorUsuarios());
 
-        btnBackup = new JButton("💾 Backup MySQL");
+        btnBackup = new JButton("Backup MySQL");
         btnBackup.setFont(UITheme.FONT_CAPTION);
-        btnBackup.putClientProperty("JButton.buttonType", "roundRect");
+        btnBackup.putClientProperty("JButton.arc", 6);
         btnBackup.addActionListener(e -> abrirBackupDialog());
 
-        JLabel lblDbStatus = new JLabel(dbConectado ? "🟢 3306" : "🔴 Offline");
+        JLabel lblDbStatus = new JLabel(dbConectado ? "MySQL 3306" : "MySQL Offline");
         lblDbStatus.setFont(UITheme.FONT_CAPTION);
         lblDbStatus.setForeground(dbConectado ? t.getSuccess() : t.getDanger());
 
-        JButton btnTema = new JButton(modoEscuro ? "☀️ Claro" : "🌙 Escuro");
+        JButton btnTema = new JButton(modoEscuro ? "Claro" : "Escuro");
         btnTema.setFont(UITheme.FONT_CAPTION);
-        btnTema.putClientProperty("JButton.buttonType", "roundRect");
+        btnTema.putClientProperty("JButton.arc", 6);
         btnTema.addActionListener(e -> alternarTema(btnTema));
 
-        JButton btnLogout = new JButton("🚪 Sair");
+        JButton btnLogout = new JButton("Sair");
         btnLogout.setFont(UITheme.FONT_CAPTION);
-        btnLogout.putClientProperty("JButton.buttonType", "roundRect");
-        btnLogout.setBackground(t.getDanger());
-        btnLogout.setForeground(Color.WHITE);
+        btnLogout.putClientProperty("JButton.arc", 6);
         btnLogout.addActionListener(e -> realizarLogout());
 
-        JButton btnAtualizacoes = new JButton("🔄 Atualizações");
+        JButton btnAtualizacoes = new JButton("Atualizações");
         btnAtualizacoes.setFont(UITheme.FONT_CAPTION);
-        btnAtualizacoes.putClientProperty("JButton.buttonType", "roundRect");
+        btnAtualizacoes.putClientProperty("JButton.arc", 6);
         btnAtualizacoes.addActionListener(e -> checarAtualizacoesManual());
 
         pnlHeaderRight.add(lblUsuarioLogado);
@@ -173,8 +167,7 @@ public class MainFrame extends JFrame {
         sidebar.setBackground(t.getBgSidebar());
         sidebar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 0, 1, t.getBorderSubtle()),
-                BorderFactory.createEmptyBorder(16, 12, 16, 12)
-        ));
+                BorderFactory.createEmptyBorder(16, 12, 16, 12)));
 
         add(sidebar, BorderLayout.WEST);
 
@@ -183,7 +176,7 @@ public class MainFrame extends JFrame {
         cardsPanel = new JPanel(cardLayout);
         cardsPanel.setBackground(t.getBgApp());
 
-        dashboardPanel = new DashboardPanel(this, clienteDAO, equipDAO, osDAO, produtoDAO, caixaDAO);
+        dashboardPanel = new DashboardPanel(this, clienteDAO, equipDAO, osDAO, produtoDAO, caixaDAO, caixaService);
         pdvPanel = new PDVPanel(this, produtoDAO, caixaDAO);
         clientePanel = new ClientePanel(this, clienteDAO, equipDAO);
         equipPanel = new EquipamentoPanel(this, equipDAO, clienteDAO);
@@ -205,8 +198,7 @@ public class MainFrame extends JFrame {
         footer = new JPanel(new BorderLayout(15, 0));
         footer.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(1, 0, 0, 0, t.getBorderSubtle()),
-                BorderFactory.createEmptyBorder(8, 20, 8, 20)
-        ));
+                BorderFactory.createEmptyBorder(8, 20, 8, 20)));
         footer.setBackground(t.getBgSidebar());
 
         pnlAtalhos = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
@@ -217,7 +209,7 @@ public class MainFrame extends JFrame {
         pnlAtalhos.add(UIComponents.criarBadgeAtalho("F4", "Frente de Caixa", this::acionarAtalhoF4FrenteCaixa));
         pnlAtalhos.add(UIComponents.criarBadgeAtalho("F5", "Atualizar Tabelas", this::acionarAtalhoF5AtualizarTabelas));
 
-        lblStatusFeedback = new JLabel("⚡ Atalhos Rápidos Ativos • F2, F3, F4, F5");
+        lblStatusFeedback = new JLabel("Atalhos Rápidos Ativos • F2, F3, F4, F5");
         lblStatusFeedback.setFont(UITheme.FONT_SMALL);
         lblStatusFeedback.setForeground(t.getTextSecondary());
 
@@ -227,9 +219,10 @@ public class MainFrame extends JFrame {
     }
 
     private String formatarBadgeUsuario(Usuario user) {
-        if (user == null) return "👤 Convidado";
-        String perfilEmoji = user.isAdmin() ? "👑" : (user.isTecnico() ? "🛠️" : "🛒");
-        return String.format("%s %s (%s)", perfilEmoji, user.getNome(), user.getPerfil() != null ? user.getPerfil().getNomeExibicao() : "Usuário");
+        if (user == null)
+            return "Convidado";
+        String perfil = user.getPerfil() != null ? user.getPerfil().getNomeExibicao() : "Usuário";
+        return String.format("%s • %s", user.getNome(), perfil);
     }
 
     public void aplicarPermissoesPerfil() {
@@ -246,39 +239,39 @@ public class MainFrame extends JFrame {
         lblUsuarioLogado.setText(formatarBadgeUsuario(user));
 
         if (isAdmin) {
-            adicionarBotaoNavegacao(sidebar, "🏠 Visão Geral", "DASHBOARD");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "🛒 PDV Balcão [F4]", "PDV");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "👥 Clientes [F3]", "CLIENTES");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "💻 Equipamentos", "EQUIPAMENTOS");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "🛠️ Ordens de Serviço [F2]", "OS");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "📦 Estoque de Peças", "ESTOQUE");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "💵 Caixa & Finanças", "CAIXA");
+            adicionarBotaoNavegacao(sidebar, "Visão Geral", "DASHBOARD");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "PDV Balcão [F4]", "PDV");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Clientes [F3]", "CLIENTES");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Equipamentos", "EQUIPAMENTOS");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Ordens de Serviço [F2]", "OS");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Estoque de Peças", "ESTOQUE");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Caixa & Finanças", "CAIXA");
             selecionarAba("DASHBOARD");
 
         } else if (isTecnico) {
-            adicionarBotaoNavegacao(sidebar, "🛠️ Ordens de Serviço [F2]", "OS");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "📦 Estoque de Peças", "ESTOQUE");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "👥 Clientes [F3]", "CLIENTES");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "💻 Equipamentos", "EQUIPAMENTOS");
+            adicionarBotaoNavegacao(sidebar, "Ordens de Serviço [F2]", "OS");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Estoque de Peças", "ESTOQUE");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Clientes [F3]", "CLIENTES");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Equipamentos", "EQUIPAMENTOS");
             selecionarAba("OS");
 
         } else if (isAtendente) {
-            adicionarBotaoNavegacao(sidebar, "🛒 PDV Balcão [F4]", "PDV");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "👥 Clientes [F3]", "CLIENTES");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "💻 Equipamentos", "EQUIPAMENTOS");
-            sidebar.add(Box.createVerticalStrut(6));
-            adicionarBotaoNavegacao(sidebar, "🛠️ Ordens de Serviço [F2]", "OS");
+            adicionarBotaoNavegacao(sidebar, "PDV Balcão [F4]", "PDV");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Clientes [F3]", "CLIENTES");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Equipamentos", "EQUIPAMENTOS");
+            sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Ordens de Serviço [F2]", "OS");
             selecionarAba("PDV");
         }
 
@@ -293,13 +286,13 @@ public class MainFrame extends JFrame {
 
     private void adicionarBotaoNavegacao(JPanel sidebar, String texto, String cardName) {
         JButton btn = new JButton(texto);
-        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
-        btn.setPreferredSize(new Dimension(210, 44));
+        btn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        btn.setPreferredSize(new Dimension(210, 36));
         btn.setHorizontalAlignment(SwingConstants.LEFT);
         btn.setFont(UITheme.FONT_BODY);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFocusPainted(false);
-        btn.putClientProperty("JButton.buttonType", "roundRect");
+        btn.putClientProperty("JButton.arc", 6);
 
         btn.addActionListener(e -> selecionarAba(cardName));
 
@@ -317,21 +310,19 @@ public class MainFrame extends JFrame {
     private void aplicarEstiloBotoesNav() {
         ThemeTokens t = UITheme.tokens();
         navButtons.forEach((name, btn) -> {
+            btn.putClientProperty("JButton.arc", 6);
             if (name.equals(abaAtiva)) {
-                btn.putClientProperty("JButton.buttonType", "roundRect");
-                btn.setBackground(UITheme.withAlpha(t.getPrimaryAccent(), 0.15f));
-                btn.setForeground(t.getPrimaryAccent());
+                btn.setBackground(new Color(34, 35, 38)); // #222326
+                btn.setForeground(new Color(241, 241, 241)); // #F1F1F1
                 btn.setFont(UITheme.FONT_BODY_BOLD);
                 btn.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(UITheme.withAlpha(t.getPrimaryAccent(), 0.35f), 1),
-                        BorderFactory.createEmptyBorder(8, 14, 8, 14)
-                ));
+                        BorderFactory.createMatteBorder(0, 3, 0, 0, new Color(237, 237, 237)),
+                        BorderFactory.createEmptyBorder(6, 12, 6, 14)));
             } else {
-                btn.putClientProperty("JButton.buttonType", "roundRect");
-                btn.setBackground(t.getBgSidebar());
-                btn.setForeground(t.getTextSecondary());
+                btn.setBackground(t.getBgSidebar()); // #141516
+                btn.setForeground(new Color(168, 168, 168)); // #A8A8A8
                 btn.setFont(UITheme.FONT_BODY);
-                btn.setBorder(BorderFactory.createEmptyBorder(8, 14, 8, 14));
+                btn.setBorder(BorderFactory.createEmptyBorder(6, 15, 6, 14));
             }
         });
     }
@@ -342,19 +333,20 @@ public class MainFrame extends JFrame {
             header.setBackground(t.getBgSidebar());
             header.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 0, 1, 0, t.getBorderSubtle()),
-                    BorderFactory.createEmptyBorder(10, 20, 10, 20)
-            ));
+                    BorderFactory.createEmptyBorder(10, 20, 10, 20)));
         }
-        if (lblTituloLogo != null) lblTituloLogo.setForeground(t.getTextPrimary());
-        if (lblSubLogo != null) lblSubLogo.setForeground(t.getTextSecondary());
-        if (lblUsuarioLogado != null) lblUsuarioLogado.setForeground(t.getTextPrimary());
+        if (lblTituloLogo != null)
+            lblTituloLogo.setForeground(t.getTextPrimary());
+        if (lblSubLogo != null)
+            lblSubLogo.setForeground(t.getTextSecondary());
+        if (lblUsuarioLogado != null)
+            lblUsuarioLogado.setForeground(t.getTextPrimary());
 
         if (sidebar != null) {
             sidebar.setBackground(t.getBgSidebar());
             sidebar.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(0, 0, 0, 1, t.getBorderSubtle()),
-                    BorderFactory.createEmptyBorder(16, 12, 16, 12)
-            ));
+                    BorderFactory.createEmptyBorder(16, 12, 16, 12)));
         }
 
         if (cardsPanel != null) {
@@ -365,8 +357,7 @@ public class MainFrame extends JFrame {
             footer.setBackground(t.getBgSidebar());
             footer.setBorder(BorderFactory.createCompoundBorder(
                     BorderFactory.createMatteBorder(1, 0, 0, 0, t.getBorderSubtle()),
-                    BorderFactory.createEmptyBorder(8, 20, 8, 20)
-            ));
+                    BorderFactory.createEmptyBorder(8, 20, 8, 20)));
         }
 
         aplicarEstiloBotoesNav();
@@ -417,21 +408,36 @@ public class MainFrame extends JFrame {
         try {
             if (modoEscuro) {
                 UIManager.setLookAndFeel(new FlatDarkLaf());
-                btnTema.setText("☀️ Claro");
+                btnTema.setText("Claro");
             } else {
                 UIManager.setLookAndFeel(new FlatLightLaf());
-                btnTema.setText("🌙 Escuro");
+                btnTema.setText("Escuro");
             }
-            // Reaplicar propriedades FlatLaf
-            UIManager.put("Button.arc", 10);
-            UIManager.put("Component.arc", 10);
-            UIManager.put("TextComponent.arc", 8);
+            // Reaplicar propriedades FlatLaf modernas com cantos sutis
+            UIManager.put("Button.arc", 6);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("TextComponent.arc", 6);
+            UIManager.put("TabbedPane.tabArc", 6);
+            UIManager.put("Table.arc", 8);
             UIManager.put("ScrollBar.thumbArc", 999);
             UIManager.put("ScrollBar.thumbInsets", new Insets(2, 2, 2, 2));
             UIManager.put("Table.rowHeight", 34);
             UIManager.put("Table.showHorizontalLines", true);
             UIManager.put("Table.showVerticalLines", false);
             UIManager.put("Table.intercellSpacing", new Dimension(0, 1));
+
+            ThemeTokens t = UITheme.tokens();
+            UIManager.put("Component.accentColor", t.getPrimaryAccent());
+            UIManager.put("Component.focusColor", UITheme.withAlpha(t.getPrimaryAccent(), 0.35f));
+            UIManager.put("Component.focusedBorderColor", t.getPrimaryAccent());
+            UIManager.put("Label.foreground", t.getTextPrimary());
+            UIManager.put("Table.foreground", t.getTextPrimary());
+            UIManager.put("TableHeader.foreground", t.getTextPrimary());
+            UIManager.put("TextField.foreground", t.getTextPrimary());
+            UIManager.put("TextArea.foreground", t.getTextPrimary());
+            UIManager.put("ComboBox.foreground", t.getTextPrimary());
+            UIManager.put("CheckBox.foreground", t.getTextPrimary());
+            UIManager.put("TitledBorder.titleColor", t.getTextPrimary());
 
             atualizarEstilosTema();
             SwingUtilities.updateComponentTreeUI(this);
@@ -489,19 +495,19 @@ public class MainFrame extends JFrame {
             selecionarAba("OS");
             JOptionPane.showMessageDialog(this,
                     "O perfil Técnico possui acesso apenas para visualização e atualização de Ordens de Serviço.\n" +
-                    "A abertura de novas Ordens de Serviço é de responsabilidade do Atendente ou Administrador.",
+                            "A abertura de novas Ordens de Serviço é de responsabilidade do Atendente ou Administrador.",
                     "Acesso Restrito", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         selecionarAba("OS");
         SwingUtilities.invokeLater(() -> osPanel.abrirNovaOS());
-        atualizarStatusFeedback("✨ Atalho [F2]: Nova Ordem de Serviço!");
+        atualizarStatusFeedback("Atalho [F2]: Nova Ordem de Serviço!");
     }
 
     public void acionarAtalhoF3BuscarCliente() {
         selecionarAba("CLIENTES");
         SwingUtilities.invokeLater(() -> clientePanel.focarBusca());
-        atualizarStatusFeedback("🔍 Atalho [F3]: Campo de busca de clientes focado!");
+        atualizarStatusFeedback("Atalho [F3]: Campo de busca de clientes focado!");
     }
 
     public void acionarAtalhoF4FrenteCaixa() {
@@ -514,16 +520,17 @@ public class MainFrame extends JFrame {
         }
         selecionarAba("PDV");
         SwingUtilities.invokeLater(() -> pdvPanel.focarEntrada());
-        atualizarStatusFeedback("🛒 Atalho [F4]: Frente de Caixa (PDV) aberta!");
+        atualizarStatusFeedback("Atalho [F4]: Frente de Caixa (PDV) aberta!");
     }
 
     public void acionarAtalhoF5AtualizarTabelas() {
         recarregarTodasAsAbas();
-        atualizarStatusFeedback("🔄 Atalho [F5]: Todas as tabelas e dados foram atualizados!");
+        atualizarStatusFeedback("Atalho [F5]: Todas as tabelas e dados foram atualizados!");
     }
 
     private JButton criarBadgeAtalho(String tecla, String rotulo, Runnable acao) {
-        JButton btn = new JButton(String.format("<html><b><font color='#3498db'>[%s]</font></b> %s</html>", tecla, rotulo));
+        JButton btn = new JButton(
+                String.format("<html><b><font color='#3498db'>[%s]</font></b> %s</html>", tecla, rotulo));
         btn.setFont(btn.getFont().deriveFont(11.5f));
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btn.setFocusable(false);
@@ -537,7 +544,7 @@ public class MainFrame extends JFrame {
             lblStatusFeedback.setText(msg);
             lblStatusFeedback.setForeground(new Color(46, 204, 113));
             Timer timer = new Timer(3500, e -> {
-                lblStatusFeedback.setText("⚡ Atalhos Rápidos Ativos • F2, F3, F4, F5");
+                lblStatusFeedback.setText("Atalhos Rápidos Ativos • F2, F3, F4, F5");
                 lblStatusFeedback.setForeground(new Color(160, 172, 188));
             });
             timer.setRepeats(false);
@@ -560,7 +567,8 @@ public class MainFrame extends JFrame {
                         if (info != null) {
                             new AtualizacaoDialog(MainFrame.this, info).setVisible(true);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             };
             worker.execute();
@@ -571,7 +579,7 @@ public class MainFrame extends JFrame {
 
     private void checarAtualizacoesManual() {
         setCursor(new Cursor(Cursor.WAIT_CURSOR));
-        atualizarStatusFeedback("🔍 Verificando se há novas atualizações na nuvem...");
+        atualizarStatusFeedback("Verificando se há novas atualizações na nuvem...");
 
         SwingWorker<UpdateInfo, Void> worker = new SwingWorker<UpdateInfo, Void>() {
             @Override
@@ -588,10 +596,12 @@ public class MainFrame extends JFrame {
                         new AtualizacaoDialog(MainFrame.this, info).setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(MainFrame.this,
-                                "Você já está utilizando a versão mais recente do sistema!\n\nVersão atual: v" + UpdateService.VERSAO_ATUAL,
+                                "Você já está utilizando a versão mais recente do sistema!\n\nVersão atual: v"
+                                        + UpdateService.VERSAO_ATUAL,
                                 "Sistema Atualizado",
                                 JOptionPane.INFORMATION_MESSAGE);
-                        atualizarStatusFeedback("✅ Sistema na versão mais recente (v" + UpdateService.VERSAO_ATUAL + ")");
+                        atualizarStatusFeedback(
+                                "Sistema na versão mais recente (v" + UpdateService.VERSAO_ATUAL + ")");
                     }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(MainFrame.this,

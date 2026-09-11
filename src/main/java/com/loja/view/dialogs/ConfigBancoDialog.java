@@ -42,8 +42,7 @@ public class ConfigBancoDialog extends JDialog {
         JPanel pnlTitulo = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         pnlTitulo.setOpaque(false);
 
-        JLabel lblIcone = new JLabel("⚙️");
-        lblIcone.setFont(lblIcone.getFont().deriveFont(24f));
+        JLabel lblIcone = new JLabel("");
 
         JLabel lblTit = new JLabel("CONEXÃO COM O BANCO DE DADOS");
         lblTit.setFont(lblTit.getFont().deriveFont(Font.BOLD, 15f));
@@ -68,30 +67,39 @@ public class ConfigBancoDialog extends JDialog {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Servidor / Host
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.7;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.7;
         JLabel lblHost = new JLabel("Servidor / Host (IP ou Domínio):");
         lblHost.setFont(lblHost.getFont().deriveFont(Font.BOLD, 12f));
         pnlForm.add(lblHost, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.3;
+        gbc.gridx = 1;
+        gbc.weightx = 0.3;
         JLabel lblPorta = new JLabel("Porta:");
         lblPorta.setFont(lblPorta.getFont().deriveFont(Font.BOLD, 12f));
         pnlForm.add(lblPorta, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.7;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.7;
         txtHost = new JTextField();
         txtHost.setFont(txtHost.getFont().deriveFont(13f));
         txtHost.putClientProperty("JTextField.placeholderText", "Ex: localhost ou 192.168.1.100");
         pnlForm.add(txtHost, gbc);
 
-        gbc.gridx = 1; gbc.weightx = 0.3;
+        gbc.gridx = 1;
+        gbc.weightx = 0.3;
         txtPorta = new JTextField();
         txtPorta.setFont(txtPorta.getFont().deriveFont(13f));
         txtPorta.putClientProperty("JTextField.placeholderText", "Ex: 3306");
         pnlForm.add(txtPorta, gbc);
 
         // Nome do Banco
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 2; gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
         JLabel lblBanco = new JLabel("Nome do Banco de Dados:");
         lblBanco.setFont(lblBanco.getFont().deriveFont(Font.BOLD, 12f));
         pnlForm.add(lblBanco, gbc);
@@ -140,12 +148,12 @@ public class ConfigBancoDialog extends JDialog {
 
         JPanel pnlBotoesAcao = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
 
-        btnTestar = new JButton("🔄 Testar Conexão");
+        btnTestar = new JButton("Testar Conexão");
         btnTestar.setFont(btnTestar.getFont().deriveFont(Font.BOLD, 12f));
         btnTestar.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnTestar.addActionListener(e -> testarConexaoAsync());
 
-        btnSalvar = new JButton("💾 Salvar e Conectar");
+        btnSalvar = new JButton("Salvar e Conectar");
         btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 12f));
         btnSalvar.setBackground(new Color(39, 174, 96));
         btnSalvar.setForeground(Color.WHITE);
@@ -155,7 +163,7 @@ public class ConfigBancoDialog extends JDialog {
         pnlBotoesAcao.add(btnTestar);
         pnlBotoesAcao.add(btnSalvar);
 
-        JButton btnAjuda = new JButton("❓ Preciso de Ajuda / XAMPP");
+        JButton btnAjuda = new JButton("Ajuda / XAMPP");
         btnAjuda.setFont(btnAjuda.getFont().deriveFont(11f));
         btnAjuda.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnAjuda.addActionListener(e -> exibirAjuda());
@@ -196,14 +204,14 @@ public class ConfigBancoDialog extends JDialog {
         String senha = new String(txtSenha.getPassword());
 
         if (host.isEmpty() || porta.isEmpty() || banco.isEmpty() || usuario.isEmpty()) {
-            lblStatus.setText("⚠️ Preencha todos os campos obrigatórios!");
+            lblStatus.setText("Preencha todos os campos obrigatórios!");
             lblStatus.setForeground(new Color(230, 126, 34));
             return;
         }
 
         btnTestar.setEnabled(false);
         btnSalvar.setEnabled(false);
-        lblStatus.setText("⏳ Testando conexão com o servidor...");
+        lblStatus.setText("Testando conexão com o servidor...");
         lblStatus.setForeground(new Color(52, 152, 219));
 
         SwingWorker<String, Void> worker = new SwingWorker<String, Void>() {
@@ -219,14 +227,14 @@ public class ConfigBancoDialog extends JDialog {
                 try {
                     String erro = get();
                     if (erro == null) {
-                        lblStatus.setText("✅ Conexão realizada com sucesso!");
+                        lblStatus.setText("Conexão realizada com sucesso!");
                         lblStatus.setForeground(new Color(46, 204, 113));
                     } else {
-                        lblStatus.setText("❌ Erro ao conectar: " + erro);
+                        lblStatus.setText("Erro ao conectar: " + erro);
                         lblStatus.setForeground(new Color(231, 76, 60));
                     }
                 } catch (Exception ex) {
-                    lblStatus.setText("❌ Erro inesperado ao testar conexão.");
+                    lblStatus.setText("Erro inesperado ao testar conexão.");
                     lblStatus.setForeground(new Color(231, 76, 60));
                 }
             }
@@ -285,7 +293,7 @@ public class ConfigBancoDialog extends JDialog {
                                 JOptionPane.INFORMATION_MESSAGE);
                         dispose();
                     } else {
-                        lblStatus.setText("❌ Erro: " + (erroMsg != null ? erroMsg : "Não foi possível conectar."));
+                        lblStatus.setText("Erro: " + (erroMsg != null ? erroMsg : "Não foi possível conectar."));
                         lblStatus.setForeground(new Color(231, 76, 60));
                         JOptionPane.showMessageDialog(ConfigBancoDialog.this,
                                 "Não foi possível conectar ao banco com esses dados:\n\n" + erroMsg +
@@ -294,7 +302,7 @@ public class ConfigBancoDialog extends JDialog {
                                 JOptionPane.ERROR_MESSAGE);
                     }
                 } catch (Exception ex) {
-                    lblStatus.setText("❌ Falha crítica: " + ex.getMessage());
+                    lblStatus.setText("Falha crítica: " + ex.getMessage());
                     lblStatus.setForeground(new Color(231, 76, 60));
                 }
             }
@@ -313,11 +321,13 @@ public class ConfigBancoDialog extends JDialog {
                 "   - Deixe o Servidor como 'localhost', Porta '3306' e Usuário 'root'.\n" +
                 "   - Deseja abrir o site do XAMPP para baixar o instalador?";
 
-        int opt = JOptionPane.showConfirmDialog(this, msg, "Ajuda - Servidor MySQL", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        int opt = JOptionPane.showConfirmDialog(this, msg, "Ajuda - Servidor MySQL", JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
         if (opt == JOptionPane.YES_OPTION) {
             try {
                 Desktop.getDesktop().browse(new URI("https://www.apachefriends.org/pt_br/download.html"));
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
     }
 
