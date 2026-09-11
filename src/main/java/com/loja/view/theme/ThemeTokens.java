@@ -19,6 +19,8 @@ public interface ThemeTokens {
 
     Color getPrimaryAccent();
 
+    Color getPrimaryAccentForeground();
+
     Color getAccentHover();
 
     Color getFocusRing();

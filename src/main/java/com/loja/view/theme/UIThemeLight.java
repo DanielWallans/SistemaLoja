@@ -44,6 +44,11 @@ public class UIThemeLight implements ThemeTokens {
     } // #334155 - Cinza executivo sólido (substitui o azul)
 
     @Override
+    public Color getPrimaryAccentForeground() {
+        return Color.WHITE;
+    }
+
+    @Override
     public Color getAccentHover() {
         return new Color(15, 23, 42);
     } // #0f172a - Grafite profundo

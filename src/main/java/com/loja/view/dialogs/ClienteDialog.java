@@ -5,6 +5,7 @@ import com.loja.repository.ClienteDAO;
 
 import javax.swing.*;
 import java.awt.*;
+import com.loja.view.theme.UIComponents;
 
 public class ClienteDialog extends JDialog {
     private final ClienteDAO clienteDAO;
@@ -55,8 +56,10 @@ public class ClienteDialog extends JDialog {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 15));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnSalvar = new JButton("Salvar Cliente");
-        btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD));
+        UIComponents.estilizarBotaoPrimario(btnSalvar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnSalvar.addActionListener(e -> salvar());

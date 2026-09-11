@@ -7,6 +7,7 @@ import com.loja.service.CaixaService;
 import javax.swing.*;
 import java.awt.*;
 import com.loja.view.theme.UITheme;
+import com.loja.view.theme.UIComponents;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -130,10 +131,10 @@ public class AberturaCaixaDialog extends JDialog {
         // 3. Rodapé com Botões
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnConfirmar = new JButton("Abrir Turno de Caixa");
-        btnConfirmar.setFont(btnConfirmar.getFont().deriveFont(Font.BOLD, 13f));
-        btnConfirmar.setBackground(UITheme.tokens().getPrimaryAccent());
-        btnConfirmar.setForeground(Color.WHITE);
+        UIComponents.estilizarBotaoPrimario(btnConfirmar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnConfirmar.addActionListener(e -> confirmarAbertura());

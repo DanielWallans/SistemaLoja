@@ -1,6 +1,6 @@
 {
-  "versao": "1.2.1",
+  "versao": "1.2.2",
   "data": "11/09/2026",
-  "novidades": "• Modo Claro Otimizado:\n- Correção de fundo e remoção de blocos escuros sob tabelas e painéis no modo claro.\n- Total harmonia visual e legibilidade em todas as listagens.\n\n• Interface e Checklist:\n- Interface minimalista e moderna Dark Grey / Grafite.\n- Checklists de bancada rápidos e objetivos para Desktop, Notebook e Impressora.",
+  "novidades": "• Correção Crítica no Auto-Updater:\n- Solução definitiva para persistência da atualização após reiniciar ou reabrir o sistema.\n- Espera inteligente de liberação de processos Java com suporte a elevação de permissão UAC.\n- Validação estrita da integridade dos arquivos atualizados.\n\n• Correção Visual no Modo Escuro:\n- Correção de botões que ficavam com fundo branco e texto branco em diálogos.\n- Alto contraste e legibilidade perfeita em Abertura/Fechamento de Caixa, Orçamentos e Formulários.",
   "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }

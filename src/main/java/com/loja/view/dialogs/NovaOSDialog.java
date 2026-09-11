@@ -11,6 +11,7 @@ import com.loja.service.ComprovanteEntradaPDFService;
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import com.loja.view.theme.UIComponents;
 import java.io.File;
 import java.util.List;
 
@@ -115,8 +116,10 @@ public class NovaOSDialog extends JDialog {
 
         cbClientes = new JComboBox<>();
         btnNovoCliente = new JButton("+ Novo Cliente");
+        UIComponents.estilizarBotaoSecundario(btnNovoCliente);
         cbEquipamentos = new JComboBox<>();
         btnNovoEquipamento = new JButton("+ Novo Equipamento");
+        UIComponents.estilizarBotaoSecundario(btnNovoEquipamento);
 
         cbClientes.addActionListener(e -> carregarEquipamentosDoCliente());
         cbEquipamentos.addActionListener(e -> atualizarChecklistPorTipoEquipamento());
@@ -195,8 +198,10 @@ public class NovaOSDialog extends JDialog {
         // Barra inferior de botões
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnSalvar = new JButton("Gerar e Abrir Ordem de Serviço");
-        btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 13f));
+        UIComponents.estilizarBotaoPrimario(btnSalvar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnSalvar.addActionListener(e -> salvarOS());

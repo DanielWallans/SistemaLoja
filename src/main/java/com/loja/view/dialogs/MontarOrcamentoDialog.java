@@ -10,6 +10,7 @@ import com.loja.service.ComprovanteEntregaPDFService;
 import com.loja.service.OrcamentoPDFService;
 import com.loja.service.WhatsAppService;
 import com.loja.view.theme.UITheme;
+import com.loja.view.theme.UIComponents;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -233,13 +234,16 @@ public class MontarOrcamentoDialog extends JDialog {
         // Barra inferior: Ações principais
         JPanel pnlActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
         JButton btnCancelar = new JButton("Fechar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnWhatsApp = new JButton("Enviar por WhatsApp");
+        UIComponents.estilizarBotaoSecundario(btnWhatsApp);
+
         JButton btnGerarPDF = new JButton("Gerar Orçamento em PDF");
+        UIComponents.estilizarBotaoSecundario(btnGerarPDF);
+
         this.btnFinalizarOS = new JButton("Finalizar OS e Pagar no PDV");
-        this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD, 13f));
-        this.btnFinalizarOS.setBackground(UITheme.tokens().getPrimaryAccent());
-        this.btnFinalizarOS.setForeground(Color.WHITE);
-        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        UIComponents.estilizarBotaoPrimario(this.btnFinalizarOS);
         boolean isFinalizada = os.getStatus() != null
                 && (os.getStatus().contains("Entregue") || os.getStatus().contains("Finalizado"));
         if (isFinalizada) {
@@ -247,7 +251,7 @@ public class MontarOrcamentoDialog extends JDialog {
             btnFinalizarOS.setText("OS Já Finalizada");
         }
         JButton btnSalvar = new JButton("Salvar Orçamento");
-        btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 13f));
+        UIComponents.estilizarBotaoPrimario(btnSalvar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnWhatsApp.addActionListener(e -> enviarWhatsApp(cliente, equip));

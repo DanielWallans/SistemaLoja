@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.2.1";
+    public static final String VERSAO_ATUAL = "1.2.2";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/versao.json";
 
     public static String getUpdateUrl() {
@@ -166,26 +166,55 @@ public class UpdateService {
             }
         }
 
+        long pid = ProcessHandle.current().pid();
+
         // Criar o script de substituição e reinício do sistema no Windows com tentativas
         File batScript = new File(baseDir, "atualizar_sistema.bat");
         String batContent = "@echo off\r\n" +
                 "chcp 65001 > nul\r\n" +
                 "setlocal enabledelayedexpansion\r\n" +
-                ":: Aguardar o processo Java encerrar e liberar o arquivo do JAR\r\n" +
+                ":: 1. Fixar diretorio de trabalho na pasta do aplicativo\r\n" +
+                "cd /d \"%~dp0\"\r\n" +
+                "echo [System Pro Updater] Iniciando atualizacao... >> \"atualizacao.log\" 2>&1\r\n" +
+                "echo [System Pro Updater] Diretorio: \"%~dp0\" >> \"atualizacao.log\" 2>&1\r\n" +
+                ":: 2. Testar permissao de gravacao (se instalado em Program Files, solicitar elevacao)\r\n" +
+                "echo teste_permissao > \".teste_perm\" 2>nul\r\n" +
+                "if not exist \".teste_perm\" (\r\n" +
+                "    if \"%~1\" neq \"elevated\" (\r\n" +
+                "        echo [System Pro Updater] Solicitando permissao de Administrador (UAC)... >> \"atualizacao.log\" 2>&1\r\n" +
+                "        powershell -Command \"Start-Process cmd.exe -ArgumentList '/c \"\"%~f0\"\" elevated' -Verb RunAs\"\r\n" +
+                "        exit /b 0\r\n" +
+                "    )\r\n" +
+                ") else (\r\n" +
+                "    del /f /q \".teste_perm\" >nul 2>&1\r\n" +
+                ")\r\n" +
+                ":: 3. Aguardar o processo Java (" + pid + ") encerrar completamente\r\n" +
+                "powershell -Command \"try { $p = Get-Process -Id " + pid + " -ErrorAction SilentlyContinue; if ($p) { $p.WaitForExit(7000) } } catch {}\" >> \"atualizacao.log\" 2>&1\r\n" +
+                ":: 4. Loop de substituicao com espera confiavel (ping)\r\n" +
                 "set TRIES=0\r\n" +
                 ":retry_copy\r\n" +
-                "timeout /t 1 /nobreak > nul\r\n" +
+                "ping 127.0.0.1 -n 2 > nul\r\n" +
                 "set /a TRIES+=1\r\n" +
+                "set COPY_OK=0\r\n" +
                 "if exist \"SistemaLoja.jar.update\" (\r\n" +
-                "    copy /y \"SistemaLoja.jar.update\" \"SystemPro.jar\" > nul 2>&1\r\n" +
-                "    if errorlevel 1 (\r\n" +
-                "        if !TRIES! lss 20 goto retry_copy\r\n" +
-                "    ) else (\r\n" +
-                "        copy /y \"SistemaLoja.jar.update\" \"SistemaLoja.jar\" > nul 2>&1\r\n" +
-                "        del /f /q \"SistemaLoja.jar.update\" > nul 2>&1\r\n" +
-                "        goto start_app\r\n" +
+                "    copy /y \"SistemaLoja.jar.update\" \"SystemPro.jar\" >> \"atualizacao.log\" 2>&1\r\n" +
+                "    if !errorlevel! equ 0 (\r\n" +
+                "        copy /y \"SistemaLoja.jar.update\" \"SistemaLoja.jar\" >> \"atualizacao.log\" 2>&1\r\n" +
+                "        set COPY_OK=1\r\n" +
                 "    )\r\n" +
                 ")\r\n" +
+                "if \"!COPY_OK!\"==\"0\" (\r\n" +
+                "    if !TRIES! lss 25 (\r\n" +
+                "        echo [System Pro Updater] Tentativa !TRIES! falhou (arquivo ocupado), tentando novamente... >> \"atualizacao.log\" 2>&1\r\n" +
+                "        goto retry_copy\r\n" +
+                "    ) else (\r\n" +
+                "        echo [System Pro Updater] ERRO CRITICO: Nao foi possivel sobrescrever o JAR apos 25 tentativas. >> \"atualizacao.log\" 2>&1\r\n" +
+                "    )\r\n" +
+                ") else (\r\n" +
+                "    echo [System Pro Updater] JARs atualizados com sucesso! >> \"atualizacao.log\" 2>&1\r\n" +
+                "    del /f /q \"SistemaLoja.jar.update\" >> \"atualizacao.log\" 2>&1\r\n" +
+                ")\r\n" +
+                ":: 5. Iniciar aplicacao atualizada\r\n" +
                 ":start_app\r\n" +
                 "if exist \"SystemPro.exe\" (\r\n" +
                 "    start \"\" \"SystemPro.exe\"\r\n" +
@@ -194,14 +223,15 @@ public class UpdateService {
                 ") else (\r\n" +
                 "    start \"\" javaw -jar \"SystemPro.jar\"\r\n" +
                 ")\r\n" +
-                "del \"%~f0\"\r\n";
+                "ping 127.0.0.1 -n 2 > nul\r\n" +
+                "(goto) 2>nul & del \"%~f0\"\r\n";
 
         try (FileWriter fw = new FileWriter(batScript, StandardCharsets.UTF_8)) {
             fw.write(batContent);
         }
 
         // Executar o script em segundo plano e fechar o Java atual para liberar o arquivo
-        new ProcessBuilder("cmd.exe", "/c", "start", "", batScript.getAbsolutePath())
+        new ProcessBuilder("cmd.exe", "/c", "start", "\"System Pro Updater\"", batScript.getAbsolutePath())
                 .directory(baseDir)
                 .start();
 

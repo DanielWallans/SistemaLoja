@@ -68,25 +68,25 @@ public final class UIComponents {
     /**
      * Botão com estilo primário moderno e contraste limpo (estilo SaaS).
      */
+    public static void estilizarBotaoPrimario(JButton btn) {
+        if (btn == null) return;
+        ThemeTokens t = UITheme.tokens();
+        btn.setFont(UITheme.FONT_BODY_BOLD);
+        btn.setBackground(t.getPrimaryAccent());
+        btn.setForeground(t.getPrimaryAccentForeground());
+        btn.setFocusPainted(false);
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btn.putClientProperty("JButton.arc", 6);
+        btn.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+    }
+
     public static JButton criarBotaoPrimario(String texto) {
         return criarBotaoPrimario(texto, null);
     }
 
     public static JButton criarBotaoPrimario(String texto, Runnable acao) {
-        ThemeTokens t = UITheme.tokens();
         JButton btn = new JButton(texto);
-        btn.setFont(UITheme.FONT_BODY_BOLD);
-        if (t.isDark()) {
-            btn.setBackground(new Color(237, 237, 237)); // #EDEDED
-            btn.setForeground(new Color(15, 15, 16));     // #0F0F10 para contraste nítido
-        } else {
-            btn.setBackground(new Color(15, 23, 42));     // Grafite escuro elegante
-            btn.setForeground(new Color(255, 255, 255));  // Branco nítido
-        }
-        btn.setFocusPainted(false);
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.putClientProperty("JButton.arc", 6);
-        btn.setBorder(BorderFactory.createEmptyBorder(6, 14, 6, 14));
+        estilizarBotaoPrimario(btn);
         if (acao != null) {
             btn.addActionListener(e -> acao.run());
         }
@@ -96,13 +96,9 @@ public final class UIComponents {
     /**
      * Botão secundário com estilo outline sutil e cantos de 6px.
      */
-    public static JButton criarBotaoSecundario(String texto) {
-        return criarBotaoSecundario(texto, null);
-    }
-
-    public static JButton criarBotaoSecundario(String texto, Runnable acao) {
+    public static void estilizarBotaoSecundario(JButton btn) {
+        if (btn == null) return;
         ThemeTokens t = UITheme.tokens();
-        JButton btn = new JButton(texto);
         btn.setFont(UITheme.FONT_BODY);
         btn.setBackground(t.getBgCard());
         btn.setForeground(t.getTextPrimary());
@@ -112,6 +108,15 @@ public final class UIComponents {
         btn.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(t.getBorderSubtle(), 1),
                 BorderFactory.createEmptyBorder(6, 14, 6, 14)));
+    }
+
+    public static JButton criarBotaoSecundario(String texto) {
+        return criarBotaoSecundario(texto, null);
+    }
+
+    public static JButton criarBotaoSecundario(String texto, Runnable acao) {
+        JButton btn = new JButton(texto);
+        estilizarBotaoSecundario(btn);
         if (acao != null) {
             btn.addActionListener(e -> acao.run());
         }

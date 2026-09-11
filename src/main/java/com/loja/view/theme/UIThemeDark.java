@@ -54,6 +54,11 @@ public class UIThemeDark implements ThemeTokens {
     }
 
     @Override
+    public Color getPrimaryAccentForeground() {
+        return new Color(15, 15, 16); // #0F0F10 - Grafite escuro para contraste nítido sobre fundo claro
+    }
+
+    @Override
     public Color getAccentHover() {
         return new Color(255, 255, 255); // Branco no hover primário
     }

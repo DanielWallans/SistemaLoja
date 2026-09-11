@@ -7,6 +7,7 @@ import com.loja.repository.UsuarioDAO;
 import javax.swing.*;
 import java.awt.*;
 import com.loja.view.theme.UITheme;
+import com.loja.view.theme.UIComponents;
 
 public class UsuarioFormDialog extends JDialog {
     private final UsuarioDAO usuarioDAO;
@@ -112,10 +113,10 @@ public class UsuarioFormDialog extends JDialog {
 
         JPanel pnlBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnSalvar = new JButton("Salvar Usuário");
-        btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD, 12f));
-        btnSalvar.setBackground(UITheme.tokens().getPrimaryAccent());
-        btnSalvar.setForeground(Color.WHITE);
+        UIComponents.estilizarBotaoPrimario(btnSalvar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnSalvar.addActionListener(e -> salvar());

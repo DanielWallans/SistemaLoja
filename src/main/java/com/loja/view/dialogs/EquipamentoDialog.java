@@ -7,6 +7,7 @@ import com.loja.repository.EquipamentoDAO;
 
 import javax.swing.*;
 import java.awt.*;
+import com.loja.view.theme.UIComponents;
 import java.util.List;
 
 public class EquipamentoDialog extends JDialog {
@@ -99,8 +100,10 @@ public class EquipamentoDialog extends JDialog {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 15));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnSalvar = new JButton("Salvar Equipamento");
-        btnSalvar.setFont(btnSalvar.getFont().deriveFont(Font.BOLD));
+        UIComponents.estilizarBotaoPrimario(btnSalvar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnSalvar.addActionListener(e -> salvar());

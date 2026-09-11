@@ -4,6 +4,7 @@ import com.loja.service.CaixaService;
 
 import javax.swing.*;
 import java.awt.*;
+import com.loja.view.theme.UIComponents;
 
 public class SuprimentoDialog extends JDialog {
     private final CaixaService caixaService;
@@ -40,8 +41,10 @@ public class SuprimentoDialog extends JDialog {
 
         JPanel pnlButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
         JButton btnCancelar = new JButton("Cancelar");
+        UIComponents.estilizarBotaoSecundario(btnCancelar);
+
         JButton btnConfirmar = new JButton("Confirmar Suprimento");
-        btnConfirmar.setFont(btnConfirmar.getFont().deriveFont(Font.BOLD));
+        UIComponents.estilizarBotaoPrimario(btnConfirmar);
 
         btnCancelar.addActionListener(e -> dispose());
         btnConfirmar.addActionListener(e -> confirmarSuprimento());

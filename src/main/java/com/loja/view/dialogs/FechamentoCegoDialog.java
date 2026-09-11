@@ -9,6 +9,7 @@ import com.loja.service.CaixaService;
 import com.loja.service.CupomTermicoService;
 import com.loja.service.WhatsAppService;
 import com.loja.view.theme.UITheme;
+import com.loja.view.theme.UIComponents;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -128,10 +129,10 @@ public class FechamentoCegoDialog extends JDialog {
         JPanel pnlNavBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
         btnVoltar = new JButton("Voltar");
         btnVoltar.setEnabled(false);
+        UIComponents.estilizarBotaoSecundario(btnVoltar);
+
         btnAvancar = new JButton("Avançar para Apuração");
-        btnAvancar.setFont(btnAvancar.getFont().deriveFont(Font.BOLD, 13f));
-        btnAvancar.setBackground(UITheme.tokens().getPrimaryAccent());
-        btnAvancar.setForeground(Color.WHITE);
+        UIComponents.estilizarBotaoPrimario(btnAvancar);
 
         btnVoltar.addActionListener(e -> voltarPasso());
         btnAvancar.addActionListener(e -> avancarPasso());
@@ -436,7 +437,7 @@ public class FechamentoCegoDialog extends JDialog {
             passoAtual = 2;
             cardLayout.show(pnlCardsPassos, "PASSO_2");
             btnAvancar.setText("Avançar para Conclusão");
-            btnAvancar.setBackground(UITheme.tokens().getPrimaryAccent());
+            UIComponents.estilizarBotaoPrimario(btnAvancar);
             btnImprimirCupom.setVisible(false);
             btnEnviarWhatsApp.setVisible(false);
         }
