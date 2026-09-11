@@ -1,6 +1,6 @@
 {
-  "versao": "1.2.0",
+  "versao": "1.2.1",
   "data": "11/09/2026",
-  "novidades": "• Interface Minimalista e Moderna:\n- Novo design Dark Grey / Grafite profissional.\n- Removidos emojis e elementos visuais de botões, painéis e tabelas.\n- Nova tela de login elegante e moderna.\n\n• Checklists de Entrada Mais Simplificados:\n- Triagem de bancada rápida e sem perguntas desnecessárias.\n- Vistorias enxutas para Desktop, Notebook e Impressora.\n- Inputs e seletores com altura compacta e padronizada.\n\n• Estabilidade:\n- Verificação de atualizações otimizada (notifica somente quando houver nova versão).",
+  "novidades": "• Modo Claro Otimizado:\n- Correção de fundo e remoção de blocos escuros sob tabelas e painéis no modo claro.\n- Total harmonia visual e legibilidade em todas as listagens.\n\n• Interface e Checklist:\n- Interface minimalista e moderna Dark Grey / Grafite.\n- Checklists de bancada rápidos e objetivos para Desktop, Notebook e Impressora.",
   "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }

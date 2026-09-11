@@ -151,6 +151,9 @@ public final class UIComponents {
      */
     public static void formatarTabelaModerna(JTable tabela, int colunaStatus) {
         ThemeTokens t = UITheme.tokens();
+        tabela.setBackground(t.getBgCard());
+        tabela.setForeground(t.getTextPrimary());
+        tabela.setFillsViewportHeight(true);
         tabela.setRowHeight(34);
         tabela.setShowHorizontalLines(true);
         tabela.setShowVerticalLines(false);
@@ -164,6 +167,37 @@ public final class UIComponents {
         tabela.getTableHeader().setForeground(t.getTextSecondary());
         tabela.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, t.getBorderSubtle()));
         tabela.getTableHeader().setPreferredSize(new Dimension(0, 36));
+
+        // Ajusta o fundo do viewport pai caso já esteja anexado
+        if (tabela.getParent() instanceof JViewport) {
+            JViewport vp = (JViewport) tabela.getParent();
+            vp.setBackground(t.getBgCard());
+            vp.setOpaque(true);
+            if (vp.getParent() instanceof JScrollPane) {
+                vp.getParent().setBackground(t.getBgCard());
+            }
+        }
+
+        // Garante que quando for adicionado ou o tema mudar, o viewport acompanhe o tema ativo
+        tabela.addAncestorListener(new javax.swing.event.AncestorListener() {
+            @Override
+            public void ancestorAdded(javax.swing.event.AncestorEvent event) {
+                ThemeTokens curT = UITheme.tokens();
+                tabela.setBackground(curT.getBgCard());
+                if (tabela.getParent() instanceof JViewport) {
+                    JViewport vp = (JViewport) tabela.getParent();
+                    vp.setBackground(curT.getBgCard());
+                    vp.setOpaque(true);
+                    if (vp.getParent() instanceof JScrollPane) {
+                        vp.getParent().setBackground(curT.getBgCard());
+                    }
+                }
+            }
+            @Override
+            public void ancestorRemoved(javax.swing.event.AncestorEvent event) {}
+            @Override
+            public void ancestorMoved(javax.swing.event.AncestorEvent event) {}
+        });
 
         // Renderizador padrão com zebra sutil
         tabela.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {

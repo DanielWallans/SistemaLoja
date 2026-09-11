@@ -479,12 +479,22 @@ public class MainFrame extends JFrame {
             UIManager.put("Component.focusedBorderColor", t.getPrimaryAccent());
             UIManager.put("Label.foreground", t.getTextPrimary());
             UIManager.put("Table.foreground", t.getTextPrimary());
-            UIManager.put("TableHeader.foreground", t.getTextPrimary());
+            UIManager.put("TableHeader.foreground", t.getTextSecondary());
             UIManager.put("TextField.foreground", t.getTextPrimary());
             UIManager.put("TextArea.foreground", t.getTextPrimary());
             UIManager.put("ComboBox.foreground", t.getTextPrimary());
             UIManager.put("CheckBox.foreground", t.getTextPrimary());
             UIManager.put("TitledBorder.titleColor", t.getTextPrimary());
+
+            UIManager.put("Table.background", t.getBgCard());
+            UIManager.put("Table.alternateRowColor", t.isDark() ? new Color(32, 33, 36) : new Color(248, 250, 252));
+            UIManager.put("Table.gridColor", t.getBorderSubtle());
+            UIManager.put("Table.selectionBackground", t.isDark() ? new Color(41, 42, 45) : new Color(226, 232, 240));
+            UIManager.put("Table.selectionForeground", t.getTextPrimary());
+            UIManager.put("TableHeader.background", t.getBgSidebar());
+            UIManager.put("Viewport.background", t.getBgCard());
+            UIManager.put("ScrollPane.background", t.getBgCard());
+            UIManager.put("Panel.background", t.getBgApp());
 
             atualizarEstilosTema();
             recriarPaineisPorTema();

@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.2.0";
+    public static final String VERSAO_ATUAL = "1.2.1";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/versao.json";
 
     public static String getUpdateUrl() {

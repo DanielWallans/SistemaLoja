@@ -256,6 +256,8 @@ public class DashboardPanel extends JPanel {
 
         JScrollPane scrollPane = new JScrollPane(tabelaOSRecentes);
         scrollPane.setBorder(BorderFactory.createLineBorder(t.getBorderSubtle(), 1));
+        scrollPane.getViewport().setBackground(t.getBgCard());
+        scrollPane.setBackground(t.getBgCard());
         pnlFluxoOSContainer.add(scrollPane, BorderLayout.CENTER);
 
         // Rodapé do Card
@@ -312,6 +314,10 @@ public class DashboardPanel extends JPanel {
         // Atualiza a tabela de OSs recentes em aberto
         if (tableModelOS != null) {
             UIComponents.formatarTabelaModerna(tabelaOSRecentes, 4);
+            tabelaOSRecentes.setBackground(UITheme.tokens().getBgCard());
+            if (tabelaOSRecentes.getParent() instanceof JViewport) {
+                tabelaOSRecentes.getParent().setBackground(UITheme.tokens().getBgCard());
+            }
             tableModelOS.setRowCount(0);
 
             int exibidas = 0;
