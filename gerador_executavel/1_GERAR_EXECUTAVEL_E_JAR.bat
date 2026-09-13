@@ -23,6 +23,8 @@ if defined JAVA_HOME (
 
 :: 1.2 Procura em diretorios padrao de instalacao de JDK no Windows
 for /d %%D in (
+    "C:\Java\jdk-21*"
+    "C:\Java\jdk*"
     "C:\Program Files\Eclipse Adoptium\jdk-21*"
     "C:\Program Files\Java\jdk-21*"
     "C:\Program Files\Java\jdk*"
@@ -132,9 +134,9 @@ if not exist "aplicacao_pronta" mkdir "aplicacao_pronta"
 if exist "staging" rd /s /q "staging"
 mkdir "staging"
 
-set "MYSQL_JAR=..\mysql-connector-j-8.3.0.jar"
-set "FLATLAF_JAR=..\flatlaf-3.5.4.jar"
-set "OPENPDF_JAR=..\openpdf-1.3.40.jar"
+set "MYSQL_JAR=%SCRIPT_DIR%..\mysql-connector-j-8.3.0.jar"
+set "FLATLAF_JAR=%SCRIPT_DIR%..\flatlaf-3.5.4.jar"
+set "OPENPDF_JAR=%SCRIPT_DIR%..\openpdf-1.3.40.jar"
 
 echo [1/5] Compilando codigo-fonte Java de src...
 dir /s /b ..\src\*.java > sources.txt
@@ -149,9 +151,9 @@ if %COMP_ERR% neq 0 (
 
 echo [2/5] Extraindo bibliotecas para criar o pacote unico (Fat-JAR)...
 cd staging
-tar -xf "..\%MYSQL_JAR%"
-tar -xf "..\%FLATLAF_JAR%"
-tar -xf "..\%OPENPDF_JAR%"
+tar -xf "%MYSQL_JAR%"
+tar -xf "%FLATLAF_JAR%"
+tar -xf "%OPENPDF_JAR%"
 del /q /f META-INF\*.SF 2>nul
 del /q /f META-INF\*.DSA 2>nul
 del /q /f META-INF\*.RSA 2>nul
@@ -196,11 +198,18 @@ echo.
 
 :: 4. Verificar se o Inno Setup esta instalado para compilar o Setup.exe automaticamente
 set "ISCC_EXE="
-if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
-    set "ISCC_EXE=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+if exist "C:\Program Files\Inno Setup 7\ISCC.exe" (
+    set "ISCC_EXE=C:\Program Files\Inno Setup 7\ISCC.exe"
 )
-if exist "C:\Program Files\Inno Setup 6\ISCC.exe" (
-    set "ISCC_EXE=C:\Program Files\Inno Setup 6\ISCC.exe"
+if not defined ISCC_EXE (
+    if exist "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" (
+        set "ISCC_EXE=C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+    )
+)
+if not defined ISCC_EXE (
+    if exist "C:\Program Files\Inno Setup 6\ISCC.exe" (
+        set "ISCC_EXE=C:\Program Files\Inno Setup 6\ISCC.exe"
+    )
 )
 
 if defined ISCC_EXE (
@@ -210,7 +219,7 @@ if defined ISCC_EXE (
     echo.
     echo ====================================================================
     echo  [INSTALADOR PRONTO] Instalador gerado com sucesso!
-    echo  Arquivo: gerador_executavel\instalador\Instalador_SystemPro_Setup_v1.0.exe
+    echo  Arquivo: gerador_executavel\instalador\SystemPro_Setup_v1.2.3.exe
     echo ====================================================================
 ) else (
     echo [AVISO - PASSO OPCIONAL]

@@ -6,7 +6,7 @@
 ; =====================================================================
 
 #define MyAppName "System Pro"
-#define MyAppVersion "1.2"
+#define MyAppVersion "1.2.3"
 #define MyAppPublisher "System Pro"
 #define MyAppExeName "SystemPro.exe"
 
@@ -18,7 +18,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\SystemPro
 DisableProgramGroupPage=yes
 OutputDir=instalador
-OutputBaseFilename=Instalador_SystemPro_Setup_v1.0
+OutputBaseFilename=SystemPro_Setup_v1.2.3
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

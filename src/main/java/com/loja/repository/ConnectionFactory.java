@@ -19,6 +19,7 @@ public class ConnectionFactory {
     private static String database = "banco_assistencia";
     private static String user = "root";
     private static String pass = "";
+    private static boolean ssl = false;
     private static boolean carregado = false;
 
     static {
@@ -27,6 +28,28 @@ public class ConnectionFactory {
         } catch (ClassNotFoundException e) {
             System.err.println("[ERRO] Driver do MySQL não encontrado no projeto!");
         }
+    }
+
+    public static String[] parseHostPort(String rawHost, String rawPort) {
+        String cleanHost = (rawHost != null && !rawHost.trim().isEmpty()) ? rawHost.trim() : "localhost";
+        String cleanPort = (rawPort != null && !rawPort.trim().isEmpty()) ? rawPort.trim() : "";
+
+        // Se o host foi informado como "dominio.com:3307" ou "192.168.1.10:3308"
+        if (cleanHost.contains(":") && !cleanHost.startsWith("[")) {
+            int idx = cleanHost.lastIndexOf(":");
+            String extractedPort = cleanHost.substring(idx + 1).trim();
+            cleanHost = cleanHost.substring(0, idx).trim();
+            if (cleanPort.isEmpty()) {
+                cleanPort = extractedPort;
+            }
+        }
+
+        // Se a porta continuar em branco após análise, assume a padrão 3306
+        if (cleanPort.isEmpty()) {
+            cleanPort = "3306";
+        }
+
+        return new String[] { cleanHost, cleanPort };
     }
 
     public static File getArquivoConfig() {
@@ -101,11 +124,15 @@ public class ConnectionFactory {
             try (FileInputStream fis = new FileInputStream(configFile)) {
                 Properties props = new Properties();
                 props.load(fis);
-                host = props.getProperty("db.host", "localhost").trim();
-                port = props.getProperty("db.port", "3306").trim();
+                String rawH = props.getProperty("db.host", "localhost").trim();
+                String rawP = props.getProperty("db.port", "3306").trim();
+                String[] parsed = parseHostPort(rawH, rawP);
+                host = parsed[0];
+                port = parsed[1];
                 database = props.getProperty("db.database", "banco_assistencia").trim();
                 user = props.getProperty("db.user", "root").trim();
                 pass = props.getProperty("db.password", "");
+                ssl = Boolean.parseBoolean(props.getProperty("db.ssl", "false").trim());
             } catch (Exception e) {
                 System.err.println("[AVISO] Não foi possível ler database.properties: " + e.getMessage());
             }
@@ -114,11 +141,17 @@ public class ConnectionFactory {
     }
 
     public static synchronized void salvarConfiguracoes(String novoHost, String novaPorta, String novoBanco, String novoUser, String novaSenha) throws IOException {
-        host = (novoHost != null && !novoHost.trim().isEmpty()) ? novoHost.trim() : "localhost";
-        port = (novaPorta != null && !novaPorta.trim().isEmpty()) ? novaPorta.trim() : "3306";
+        salvarConfiguracoes(novoHost, novaPorta, novoBanco, novoUser, novaSenha, false);
+    }
+
+    public static synchronized void salvarConfiguracoes(String novoHost, String novaPorta, String novoBanco, String novoUser, String novaSenha, boolean novoSsl) throws IOException {
+        String[] parsed = parseHostPort(novoHost, novaPorta);
+        host = parsed[0];
+        port = parsed[1];
         database = (novoBanco != null && !novoBanco.trim().isEmpty()) ? novoBanco.trim() : "banco_assistencia";
         user = (novoUser != null && !novoUser.trim().isEmpty()) ? novoUser.trim() : "root";
         pass = (novaSenha != null) ? novaSenha : "";
+        ssl = novoSsl;
 
         Properties props = new Properties();
         props.setProperty("db.host", host);
@@ -126,6 +159,7 @@ public class ConnectionFactory {
         props.setProperty("db.database", database);
         props.setProperty("db.user", user);
         props.setProperty("db.password", pass);
+        props.setProperty("db.ssl", String.valueOf(ssl));
 
         File configFile = getArquivoConfig();
         try {
@@ -149,14 +183,47 @@ public class ConnectionFactory {
         carregado = true;
     }
 
+    public static String buildUrl(String h, String p, String db, boolean useSsl, boolean autoCreateDb) {
+        String[] parsed = parseHostPort(h, p);
+        String finalHost = parsed[0];
+        String finalPort = parsed[1];
+        String finalDb = (db != null && !db.trim().isEmpty()) ? db.trim() : "banco_assistencia";
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("jdbc:mysql://").append(finalHost).append(":").append(finalPort).append("/").append(finalDb);
+        sb.append("?allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=8000");
+
+        if (autoCreateDb) {
+            sb.append("&createDatabaseIfNotExist=true");
+        }
+
+        if (useSsl) {
+            sb.append("&useSSL=true&sslMode=REQUIRED");
+        } else {
+            sb.append("&useSSL=false");
+        }
+
+        return sb.toString();
+    }
+
     public static String getUrl() {
         carregarConfiguracoes();
-        return "jdbc:mysql://" + host + ":" + port + "/" + database + "?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
+        return buildUrl(host, port, database, ssl, false);
     }
 
     public static Connection getConnection() throws SQLException {
         carregarConfiguracoes();
-        return DriverManager.getConnection(getUrl(), user, pass);
+        String mainUrl = buildUrl(host, port, database, ssl, false);
+        try {
+            return DriverManager.getConnection(mainUrl, user, pass);
+        } catch (SQLException e) {
+            // Se falhar porque o banco ainda não foi criado (Código MySQL 1049: Unknown database)
+            if (e.getErrorCode() == 1049 || (e.getMessage() != null && e.getMessage().toLowerCase().contains("unknown database"))) {
+                String createDbUrl = buildUrl(host, port, database, ssl, true);
+                return DriverManager.getConnection(createDbUrl, user, pass);
+            }
+            throw e;
+        }
     }
 
     public static boolean testarConexao() {
@@ -168,14 +235,48 @@ public class ConnectionFactory {
     }
 
     public static String testarConexaoCom(String h, String p, String db, String u, String pwd) {
-        String testUrl = "jdbc:mysql://" + h + ":" + p + "/" + db + "?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&connectTimeout=3500";
+        return testarConexaoCom(h, p, db, u, pwd, false);
+    }
+
+    public static String testarConexaoCom(String h, String p, String db, String u, String pwd, boolean useSsl) {
+        String[] parsed = parseHostPort(h, p);
+        String finalHost = parsed[0];
+        String finalPort = parsed[1];
+
+        // 1. Tenta conectar diretamente ao banco
+        String testUrl = buildUrl(finalHost, finalPort, db, useSsl, false);
         try (Connection conn = DriverManager.getConnection(testUrl, u, pwd)) {
             if (conn != null && !conn.isClosed()) {
-                return null;
+                return null; // Sucesso!
             }
-            return "Não foi possível abrir a conexão com o servidor.";
+            return "Não foi possível abrir a conexão com o servidor MySQL.";
         } catch (SQLException ex) {
-            return ex.getMessage();
+            // 2. Se o banco não existe (código 1049), tenta conectar solicitando a criação automática
+            if (ex.getErrorCode() == 1049 || (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("unknown database"))) {
+                String createDbUrl = buildUrl(finalHost, finalPort, db, useSsl, true);
+                try (Connection conn2 = DriverManager.getConnection(createDbUrl, u, pwd)) {
+                    if (conn2 != null && !conn2.isClosed()) {
+                        return null; // Sucesso com criação de banco!
+                    }
+                } catch (SQLException ex2) {
+                    return "O banco '" + db + "' não existe no servidor e o usuário não possui permissão para criá-lo automaticamente: " + ex2.getMessage();
+                }
+            }
+
+            // Diagnósticos amigáveis
+            String msg = ex.getMessage();
+            int code = ex.getErrorCode();
+            if (code == 1045 || (msg != null && msg.toLowerCase().contains("access denied"))) {
+                return "Acesso negado: Usuário ou senha incorretos para o servidor (" + finalHost + ":" + finalPort + ").";
+            }
+            if (msg != null && (msg.toLowerCase().contains("communications link failure") || msg.toLowerCase().contains("connect timed out"))) {
+                return "Falha de comunicação: Não foi possível alcançar o servidor em " + finalHost + ":" + finalPort + ".\nVerifique se o servidor está ligado, se a porta está liberada no firewall/roteador e se o IP/domínio está correto.";
+            }
+            if (msg != null && msg.toLowerCase().contains("ssl")) {
+                return "Erro de SSL: O servidor pode exigir (ou não aceitar) conexão segura SSL. Tente alternar a opção de SSL.";
+            }
+
+            return msg != null ? msg : "Erro de conexão MySQL código: " + code;
         }
     }
 
@@ -184,10 +285,31 @@ public class ConnectionFactory {
     public static String getDatabase() { carregarConfiguracoes(); return database; }
     public static String getUser() { carregarConfiguracoes(); return user; }
     public static String getPass() { carregarConfiguracoes(); return pass; }
+    public static boolean isSsl() { carregarConfiguracoes(); return ssl; }
+
+    private static void garantirPermissaoRedeRoot(Connection conn) {
+        try {
+            String currentHost = getHost();
+            if (currentHost.equalsIgnoreCase("localhost") || currentHost.equals("127.0.0.1")) {
+                try (Statement stmt = conn.createStatement()) {
+                    stmt.execute("GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED VIA mysql_native_password USING '' WITH GRANT OPTION");
+                    stmt.execute("FLUSH PRIVILEGES");
+                } catch (Exception ignored) {
+                    try (Statement stmt = conn.createStatement()) {
+                        stmt.execute("GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION");
+                        stmt.execute("FLUSH PRIVILEGES");
+                    } catch (Exception ignored2) {}
+                }
+            }
+        } catch (Exception ignored) {}
+    }
 
     public static boolean criarTabela() {
         try (Connection conn = getConnection();
              Statement stmt = conn.createStatement()) {
+
+            // Se for máquina matriz / local, garante permissões para aceitar conexões da rede / Hyper-V
+            garantirPermissaoRedeRoot(conn);
 
             // 1. Tabela de Peças/Produtos
             stmt.execute("CREATE TABLE IF NOT EXISTS produto (" +

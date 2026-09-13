@@ -1,11 +1,11 @@
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
 
-$jdk = "C:\Users\User\.antigravity-ide\extensions\redhat.java-1.56.0-win32-x64\jre\21.0.12.1-win32-x86_64"
+$jdk = if ($env:JAVA_HOME -and (Test-Path "$env:JAVA_HOME\bin\javac.exe")) { $env:JAVA_HOME } elseif (Test-Path "C:\Java\jdk-21\bin\javac.exe") { "C:\Java\jdk-21" } else { "C:\Program Files\Eclipse Adoptium\jdk-21" }
 $javac = "$jdk\bin\javac.exe"
 $jar = "$jdk\bin\jar.exe"
 $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-$iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+$iscc = if (Test-Path "C:\Program Files\Inno Setup 7\ISCC.exe") { "C:\Program Files\Inno Setup 7\ISCC.exe" } elseif (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") { "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" } else { "C:\Program Files\Inno Setup 6\ISCC.exe" }
 
 Write-Host "[1/5] Compilando codigo Java..." -ForegroundColor Cyan
 if (Test-Path "staging") {
@@ -37,7 +37,11 @@ Write-Host "[4/5] Compilando executavel nativo SystemPro.exe..." -ForegroundColo
 & $csc /nologo /target:winexe /out:"aplicacao_pronta\SystemPro.exe" Launcher.cs
 Copy-Item "aplicacao_pronta\SystemPro.exe" "aplicacao_pronta\SistemaLoja.exe" -Force
 
-Write-Host "[5/5] Compilando Setup.exe com Inno Setup..." -ForegroundColor Cyan
-& $iscc inno_setup.iss
+if (Test-Path $iscc) {
+    Write-Host "[5/5] Compilando Setup.exe com Inno Setup..." -ForegroundColor Cyan
+    & $iscc inno_setup.iss
+} else {
+    Write-Host "[5/5] Inno Setup nao instalado (opcional). Executavel gerado em aplicacao_pronta\!" -ForegroundColor Yellow
+}
 
 Write-Host "`nBUILD FINALIZADO COM SUCESSO!" -ForegroundColor Green

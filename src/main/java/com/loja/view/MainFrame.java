@@ -124,12 +124,15 @@ public class MainFrame extends JFrame {
         btnGerenciarUsuarios.putClientProperty("JButton.arc", 6);
         btnGerenciarUsuarios.addActionListener(e -> abrirGerenciadorUsuarios());
 
-        btnBackup = new JButton("Backup MySQL");
+        btnBackup = new JButton("Backup do Banco");
         btnBackup.setFont(UITheme.FONT_CAPTION);
         btnBackup.putClientProperty("JButton.arc", 6);
         btnBackup.addActionListener(e -> abrirBackupDialog());
 
-        JLabel lblDbStatus = new JLabel(dbConectado ? "MySQL 3306" : "MySQL Offline");
+        String textoStatusDb = dbConectado 
+                ? ("Servidor: " + com.loja.repository.ConnectionFactory.getHost() + ":" + com.loja.repository.ConnectionFactory.getPort() + (com.loja.repository.ConnectionFactory.isSsl() ? " (SSL)" : "")) 
+                : "Servidor Offline";
+        JLabel lblDbStatus = new JLabel(textoStatusDb);
         lblDbStatus.setFont(UITheme.FONT_CAPTION);
         lblDbStatus.setForeground(dbConectado ? t.getSuccess() : t.getDanger());
 

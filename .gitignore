@@ -12,6 +12,7 @@ node_modules/
 sources.txt
 gerador_executavel/aplicacao_pronta/jre/
 gerador_executavel/instalador/
+gerador_executavel/staging/
 
 ### IntelliJ IDEA ###
 .idea/

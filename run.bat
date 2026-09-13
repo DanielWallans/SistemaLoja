@@ -13,6 +13,8 @@ if defined JAVA_HOME (
 
 :: 2. Procura em diretorios padrao de instalacao de JDK no Windows
 for /d %%D in (
+    "C:\Java\jdk-21*"
+    "C:\Java\jdk*"
     "C:\Program Files\Eclipse Adoptium\jdk-21*"
     "C:\Program Files\Java\jdk-21*"
     "C:\Program Files\Java\jdk*"
@@ -84,6 +86,34 @@ pause
 exit /b 1
 
 :javac_ok
+
+:: 4. Se o banco for local (localhost) e nao estiver rodando, inicia o XAMPP automaticamente
+set "IS_REMOTE="
+if exist "database.properties" (
+    findstr /I /C:"db.host" "database.properties" | findstr /I /V /C:"localhost" | findstr /I /V /C:"127.0.0.1" >nul 2>&1
+    if not errorlevel 1 set "IS_REMOTE=1"
+)
+if exist "%APPDATA%\SystemPro\database.properties" (
+    findstr /I /C:"db.host" "%APPDATA%\SystemPro\database.properties" | findstr /I /V /C:"localhost" | findstr /I /V /C:"127.0.0.1" >nul 2>&1
+    if not errorlevel 1 set "IS_REMOTE=1"
+)
+
+if not defined IS_REMOTE (
+    netstat -ano | findstr /R /C:":3306 " >nul 2>&1
+    if errorlevel 1 (
+        if exist "C:\xampp\mysql\bin\mysqld.exe" (
+            echo [SISTEMA] Iniciando MySQL local XAMPP...
+            start "" /b "C:\xampp\mysql\bin\mysqld.exe" --defaults-file="C:\xampp\mysql\bin\my.ini" --standalone
+            timeout /t 2 >nul
+        ) else (
+            if exist "G:\xampp\mysql\bin\mysqld.exe" (
+                echo [SISTEMA] Iniciando MySQL local via G:\xampp...
+                start "" /b "G:\xampp\mysql\bin\mysqld.exe" --defaults-file="G:\xampp\mysql\bin\my.ini" --standalone
+                timeout /t 2 >nul
+            )
+        )
+    )
+)
 
 set "MYSQL_JAR=mysql-connector-j-8.3.0.jar"
 set "FLATLAF_JAR=flatlaf-3.5.4.jar"

@@ -2,6 +2,7 @@ package com.loja.view.dialogs;
 
 import com.loja.model.SessaoUsuario;
 import com.loja.model.Usuario;
+import com.loja.repository.ConnectionFactory;
 import com.loja.repository.UsuarioDAO;
 import com.loja.view.theme.ThemeTokens;
 import com.loja.view.theme.UIComponents;
@@ -13,7 +14,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
 public class LoginDialog extends JDialog {
-    private final UsuarioDAO usuarioDAO;
+    private UsuarioDAO usuarioDAO;
     private JTextField txtLogin;
     private JPasswordField txtSenha;
     private JLabel lblMensagemErro;
@@ -23,7 +24,7 @@ public class LoginDialog extends JDialog {
         super(owner, "System Pro • Autenticação de Usuário", true);
         this.usuarioDAO = usuarioDAO;
 
-        setSize(440, 520);
+        setSize(440, 545);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
@@ -133,14 +134,22 @@ public class LoginDialog extends JDialog {
 
         // Dica de Acesso Padrão
         gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 8, 0);
+        gbc.insets = new Insets(0, 0, 4, 0);
         JLabel lblDica = new JLabel("Acesso inicial padrão: admin / admin", SwingConstants.CENTER);
         lblDica.setFont(UITheme.FONT_SMALL);
         lblDica.setForeground(t.getTextSecondary());
         pnlForm.add(lblDica, gbc);
 
-        // Botão Configurar Servidor
+        // Indicador de Servidor Atual
         gbc.gridy = 7;
+        gbc.insets = new Insets(0, 0, 4, 0);
+        JLabel lblServidorAtual = new JLabel(obterTextoServidorAtual(), SwingConstants.CENTER);
+        lblServidorAtual.setFont(UITheme.FONT_CAPTION);
+        lblServidorAtual.setForeground(new Color(130, 140, 160));
+        pnlForm.add(lblServidorAtual, gbc);
+
+        // Botão Configurar Servidor
+        gbc.gridy = 8;
         gbc.insets = new Insets(0, 0, 0, 0);
         JButton btnConfigDb = new JButton("Configurar Servidor / Banco de Dados");
         btnConfigDb.setFont(UITheme.FONT_SMALL);
@@ -151,6 +160,12 @@ public class LoginDialog extends JDialog {
         btnConfigDb.addActionListener(e -> {
             ConfigBancoDialog dlg = new ConfigBancoDialog(this);
             dlg.setVisible(true);
+            if (dlg.isConfiguradoComSucesso()) {
+                lblServidorAtual.setText(obterTextoServidorAtual());
+                this.usuarioDAO = new UsuarioDAO();
+                lblMensagemErro.setText("Conectado ao novo servidor!");
+                lblMensagemErro.setForeground(t.getSuccess());
+            }
         });
         pnlForm.add(btnConfigDb, gbc);
 
@@ -202,5 +217,10 @@ public class LoginDialog extends JDialog {
 
     public boolean isAutenticado() {
         return autenticado;
+    }
+
+    private String obterTextoServidorAtual() {
+        return "🌐 Servidor: " + ConnectionFactory.getHost() + ":" + ConnectionFactory.getPort() +
+                (ConnectionFactory.isSsl() ? " (SSL)" : "");
     }
 }
