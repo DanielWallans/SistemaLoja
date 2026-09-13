@@ -14,8 +14,8 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.2.2";
-    public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/versao.json";
+    public static final String VERSAO_ATUAL = "1.2.3";
+    public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/versao.json";
 
     public static String getUpdateUrl() {
         File configFile = ConnectionFactory.getArquivoConfig();
@@ -38,8 +38,11 @@ public class UpdateService {
             UpdateInfo info = checarUrl(urlStr);
             if (info != null) return info;
 
-            // Fallback caso a branch 'main' nao responda, tenta 'master'
-            if (urlStr.contains("/main/")) {
+            // Fallback caso master/main alternem
+            if (urlStr.contains("/master/")) {
+                String fallbackUrl = urlStr.replace("/master/", "/main/");
+                return checarUrl(fallbackUrl);
+            } else if (urlStr.contains("/main/")) {
                 String fallbackUrl = urlStr.replace("/main/", "/master/");
                 return checarUrl(fallbackUrl);
             }

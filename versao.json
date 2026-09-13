@@ -1,6 +1,6 @@
 {
-  "versao": "1.2.2",
-  "data": "11/09/2026",
-  "novidades": "• Correção Crítica no Auto-Updater:\n- Solução definitiva para persistência da atualização após reiniciar ou reabrir o sistema.\n- Espera inteligente de liberação de processos Java com suporte a elevação de permissão UAC.\n- Validação estrita da integridade dos arquivos atualizados.\n\n• Correção Visual no Modo Escuro:\n- Correção de botões que ficavam com fundo branco e texto branco em diálogos.\n- Alto contraste e legibilidade perfeita em Abertura/Fechamento de Caixa, Orçamentos e Formulários.",
-  "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/main/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
+  "versao": "1.2.3",
+  "data": "13/09/2026",
+  "novidades": "• Novo painel universal de conexão com banco de dados\n• Detecção dinâmica do IP e sub-rede de cada máquina\n• Varredura inteligente de servidores ativos na rede local (LAN / Wi-Fi)\n• Botão profissional de restauração do padrão local\n• Compatibilidade total com nuvem (HostGator, Hostinger, AWS) com SSL\n• Utilitário de liberação rápida da porta no Firewall do Windows",
+  "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }
