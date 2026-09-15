@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.2.3";
+    public static final String VERSAO_ATUAL = "1.2.4";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/versao.json";
 
     public static String getUpdateUrl() {
@@ -47,7 +47,7 @@ public class UpdateService {
                 return checarUrl(fallbackUrl);
             }
         } catch (Exception e) {
-            System.err.println("[INFO] Checagem de atualização ignorada ou sem internet: " + e.getMessage());
+            System.err.println("[INFO] Checagem de atualizaÃ§Ã£o ignorada ou sem internet: " + e.getMessage());
         }
         return null;
     }
@@ -171,7 +171,7 @@ public class UpdateService {
 
         long pid = ProcessHandle.current().pid();
 
-        // Criar o script de substituição e reinício do sistema no Windows com tentativas
+        // Criar o script de substituiÃ§Ã£o e reinÃ­cio do sistema no Windows com tentativas
         File batScript = new File(baseDir, "atualizar_sistema.bat");
         String batContent = "@echo off\r\n" +
                 "chcp 65001 > nul\r\n" +
@@ -251,3 +251,4 @@ public class UpdateService {
         return new File(".");
     }
 }
+

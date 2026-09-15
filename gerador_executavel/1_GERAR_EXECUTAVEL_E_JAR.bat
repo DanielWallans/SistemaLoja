@@ -91,7 +91,7 @@ if not defined CSC_EXE (
     exit /b 1
 )
 
-:: 3. Gerenciamento Inteligente de VersÃ£o do Sistema
+:: 3. Gerenciamento Inteligente de VersÃƒÂ£o do Sistema
 set "CURR_VER=1.2.3"
 if exist "..\versao.json" (
     for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "try { (Get-Content '..\versao.json' -Raw | ConvertFrom-Json).versao } catch { '' }"`) do (
@@ -107,7 +107,7 @@ echo.
 echo   Pressione [ENTER] para manter a versao %CURR_VER%
 echo   ou digite a NOVA versao que deseja gerar (ex: 1.2.4):
 set "INPUT_VER="
-set /p "INPUT_VER=-> Digite a versao desejada: "
+set /p "INPUT_VER=* Digite a versao desejada: "
 
 if not defined INPUT_VER set "INPUT_VER=%CURR_VER%"
 set "INPUT_VER=%INPUT_VER: =%"
@@ -115,13 +115,15 @@ set "INPUT_VER=%INPUT_VER: =%"
 if "%INPUT_VER%"=="" set "INPUT_VER=%CURR_VER%"
 set "APP_VERSION=%INPUT_VER%"
 
-if not "%APP_VERSION%"=="%CURR_VER%" (
-    echo.
-    echo [INFO] Atualizando arquivos do projeto para a versao %APP_VERSION%...
-    powershell -NoProfile -Command "try { $p = '..\versao.json'; $j = Get-Content $p -Raw | ConvertFrom-Json; $j.versao = '%APP_VERSION%'; $j.data = (Get-Date -Format 'dd/MM/yyyy'); $j | ConvertTo-Json -Depth 5 | Set-Content $p -Encoding UTF8 } catch {}"
-    powershell -NoProfile -Command "try { $u = '..\src\main\java\com\loja\service\update\UpdateService.java'; (Get-Content $u -Raw) -replace 'public static final String VERSAO_ATUAL = \"[^\"]+\";', 'public static final String VERSAO_ATUAL = \"%APP_VERSION%\";' | Set-Content $u -Encoding UTF8 } catch {}"
-    echo [SUCESSO] versao.json e UpdateService.java atualizados para v%APP_VERSION%!
-)
+if "%APP_VERSION%"=="%CURR_VER%" goto :version_ready
+
+echo.
+echo [INFO] Atualizando arquivos do projeto para a versao %APP_VERSION%...
+powershell -NoProfile -Command "try { $p = '..\versao.json'; $j = Get-Content $p -Raw | ConvertFrom-Json; $j.versao = '%APP_VERSION%'; $j.data = (Get-Date -Format 'dd/MM/yyyy'); $t = $j | ConvertTo-Json -Depth 5; [System.IO.File]::WriteAllText($p, $t, (New-Object System.Text.UTF8Encoding($false))) } catch {}"
+powershell -NoProfile -Command "try { $u = '..\src\main\java\com\loja\service\update\UpdateService.java'; $t = (Get-Content $u -Raw) -replace 'public static final String VERSAO_ATUAL = \"[^\"]+\";', 'public static final String VERSAO_ATUAL = \"%APP_VERSION%\";'; [System.IO.File]::WriteAllText($u, $t, (New-Object System.Text.UTF8Encoding($false))) } catch {}"
+echo [SUCESSO] versao.json e UpdateService.java atualizados para v%APP_VERSION%!
+
+:version_ready
 
 echo.
 echo ====================================================================

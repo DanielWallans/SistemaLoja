@@ -20,14 +20,16 @@ if ($Version -and $Version.Trim() -ne "") {
         $j = Get-Content $versaoJsonPath -Raw | ConvertFrom-Json
         $j.versao = $appVersion
         $j.data = (Get-Date -Format 'dd/MM/yyyy')
-        $j | ConvertTo-Json -Depth 5 | Set-Content $versaoJsonPath -Encoding UTF8
+        $t = $j | ConvertTo-Json -Depth 5
+        [System.IO.File]::WriteAllText((Resolve-Path $versaoJsonPath), $t, (New-Object System.Text.UTF8Encoding($false)))
         Write-Host "[INFO] versao.json atualizado para v$appVersion" -ForegroundColor Green
     } catch {}
 
     $updateServicePath = "..\src\main\java\com\loja\service\update\UpdateService.java"
     if (Test-Path $updateServicePath) {
         try {
-            (Get-Content $updateServicePath -Raw) -replace 'public static final String VERSAO_ATUAL = "[^"]+";', "public static final String VERSAO_ATUAL = `"$appVersion`";" | Set-Content $updateServicePath -Encoding UTF8
+            $t = (Get-Content $updateServicePath -Raw) -replace 'public static final String VERSAO_ATUAL = "[^"]+";', "public static final String VERSAO_ATUAL = `"$appVersion`";"
+            [System.IO.File]::WriteAllText((Resolve-Path $updateServicePath), $t, (New-Object System.Text.UTF8Encoding($false)))
             Write-Host "[INFO] UpdateService.java atualizado para v$appVersion" -ForegroundColor Green
         } catch {}
     }
