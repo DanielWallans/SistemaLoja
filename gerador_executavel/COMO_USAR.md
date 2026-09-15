@@ -7,16 +7,20 @@ Todos os arquivos e modificações foram criados **exclusivamente dentro desta p
 ## 📁 O que há nesta pasta?
 
 1. **`1_GERAR_EXECUTAVEL_E_JAR.bat`**
-   - Script de 1 clique.
+   - Script de 1 clique com suporte a **novas versões**.
    - Sempre que você fizer alterações no código Java em `src/`, basta dar 2 cliques neste arquivo.
-   - Ele detecta o Java, compila o código, junta todas as bibliotecas (`MySQL`, `FlatLaf`, `OpenPDF`) em um único pacote e compila o executável `SistemaLoja.exe`.
+   - Ele detecta a versão atual (ex: `1.2.3`), pergunta se deseja manter (ENTER) ou digitar uma nova versão (ex: `1.2.4`).
+   - Se digitar uma nova versão, ele atualiza automaticamente o `versao.json` e o `UpdateService.java`.
+   - Compila o código Java, junta todas as bibliotecas (`MySQL`, `FlatLaf`, `OpenPDF`) no Fat-JAR e compila os executáveis nativos `SystemPro.exe` e `SistemaLoja.exe`.
+   - Detecta o **Inno Setup** e compila o instalador oficial nomeado com a versão exata: `SystemPro_Setup_v[VERSAO].exe`.
 
 2. **`aplicacao_pronta/`**
-   - **`SistemaLoja.exe`**: Executável nativo do Windows. Dá 2 cliques e o sistema abre silenciosamente (sem aquela janela preta de prompt do DOS). Se a máquina de destino não tiver Java 21, ele mostra um aviso na tela com opção de baixar.
-   - **`SistemaLoja.jar`**: O pacote completo (Fat-JAR) com tudo embutido.
+   - **`SystemPro.exe` / `SistemaLoja.exe`**: Executáveis nativos do Windows. Dá 2 cliques e o sistema abre silenciosamente (sem prompt de comando preto).
+   - **`SystemPro.jar` / `SistemaLoja.jar`**: Os pacotes autocontidos (Fat-JAR) com todas as dependências embutidas.
+   - **`jre/`**: Java 21 embutido para funcionamento 100% offline em qualquer computador.
 
 3. **`inno_setup.iss`**
-   - Script do **Inno Setup** para gerar o instalador oficial (`Setup.exe`).
+   - Script do **Inno Setup** para gerar o instalador oficial (`SystemPro_Setup_v[VERSAO].exe`).
 
 4. **`Launcher.cs`**
    - Código-fonte em C# do inicializador Windows nativo.
@@ -25,20 +29,16 @@ Todos os arquivos e modificações foram criados **exclusivamente dentro desta p
 
 ## 📦 Como gerar o Instalador Oficial (`Setup.exe`)
 
-Para transformar a pasta `aplicacao_pronta` em um arquivo de instalação único (`Instalador_SistemaLoja_Setup_v1.0.exe`) com assistente de instalação, atalho na Área de Trabalho e Desinstalador:
+Para gerar o arquivo de instalação único (`SystemPro_Setup_v[VERSAO].exe`) com assistente de instalação, atalho na Área de Trabalho e Desinstalador:
 
-### Passo 1: Baixar e Instalar o Inno Setup
-* O Inno Setup é a ferramenta gratuita padrão da indústria para criar instaladores no Windows.
-* Baixe em: **https://jrsoftware.org/isdl.php** (clique em *Inno Setup - Self-contained installer*).
-* Instale normalmente (Avançar, Avançar, Concluir).
+### Passo 1: Inno Setup
+* O Inno Setup já está instalado em sua máquina (`C:\Program Files\Inno Setup 7`). Caso precise reinstalar futuramente, o download gratuito é em: **https://jrsoftware.org/isdl.php**.
 
-### Passo 2: Gerar o Instalador
-Após instalar o Inno Setup, você tem duas opções:
-* **Opção A:** Execute novamente o arquivo `1_GERAR_EXECUTAVEL_E_JAR.bat` (ele detectará o Inno Setup e compilará o instalador automaticamente!).
-* **Opção B:** Clique com o botão direito no arquivo `inno_setup.iss` e selecione **"Compile"**.
-
-O instalador pronto será salvo na pasta:
-👉 `gerador_executavel\instalador\Instalador_SistemaLoja_Setup_v1.0.exe`
+### Passo 2: Gerar o Instalador e Executável
+* Dê 2 cliques no arquivo `1_GERAR_EXECUTAVEL_E_JAR.bat`.
+* Pressione ENTER para manter a versão atual ou digite a nova versão (ex: `1.2.4`).
+* O instalador pronto será salvo automaticamente na pasta:
+👉 `gerador_executavel\instalador\SystemPro_Setup_v[VERSAO].exe`
 
 ---
 
