@@ -73,44 +73,6 @@ if %ERRORLEVEL% neq 0 goto :jdk_missing
 
 "%JAR_EXE%" --version >nul 2>&1
 if %ERRORLEVEL% neq 0 goto :jar_missing
-goto :tools_detected
-
-:jdk_missing
-echo.
-echo ====================================================================
-echo  [ERRO CRITICO] JDK 21 NAO ENCONTRADO NESTE COMPUTADOR!
-echo ====================================================================
-echo  O utilitario de compilacao 'javac' nao foi localizado.
-echo.
-echo  MOTIVO:
-echo  Ter apenas o Java comum - JRE nao permite compilar ou gerar executavel.
-echo  E necessario ter o JDK 21 instalado na maquina.
-echo.
-echo  COMO RESOLVER:
-echo  1. Baixe o instalador do JDK 21 gratuitamente:
-echo     https://adoptium.net/temurin/releases/?version=21
-echo  2. Durante a instalacao, marque as opcoes:
-echo     - "Set JAVA_HOME variable"
-echo     - "Add to PATH"
-echo  3. Feche esta janela e execute novamente este script.
-echo ====================================================================
-echo.
-pause
-exit /b 1
-
-:jar_missing
-echo.
-echo ====================================================================
-echo  [ERRO CRITICO] FERRAMENTA 'JAR' NAO ENCONTRADA!
-echo ====================================================================
-echo  O utilitario 'jar' do Java nao foi localizado.
-echo  Certifique-se de instalar o JDK 21 completo com PATH configurado.
-echo ====================================================================
-echo.
-pause
-exit /b 1
-
-:tools_detected
 
 :: 2. Detectar o Compilador C# do Windows (csc.exe) para criar o .exe nativo
 set "CSC_EXE="
@@ -129,7 +91,45 @@ if not defined CSC_EXE (
     exit /b 1
 )
 
-:: 3. Criar pastas de trabalho
+:: 3. Gerenciamento Inteligente de VersÃ£o do Sistema
+set "CURR_VER=1.2.3"
+if exist "..\versao.json" (
+    for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "try { (Get-Content '..\versao.json' -Raw | ConvertFrom-Json).versao } catch { '' }"`) do (
+        if not "%%V"=="" set "CURR_VER=%%V"
+    )
+)
+
+echo ====================================================================
+echo   CONFIGURACAO DE VERSAO DO SISTEMA
+echo ====================================================================
+echo   Versao atual detectada: [ %CURR_VER% ]
+echo.
+echo   Pressione [ENTER] para manter a versao %CURR_VER%
+echo   ou digite a NOVA versao que deseja gerar (ex: 1.2.4):
+set "INPUT_VER="
+set /p "INPUT_VER=-> Digite a versao desejada: "
+
+if not defined INPUT_VER set "INPUT_VER=%CURR_VER%"
+set "INPUT_VER=%INPUT_VER: =%"
+
+if "%INPUT_VER%"=="" set "INPUT_VER=%CURR_VER%"
+set "APP_VERSION=%INPUT_VER%"
+
+if not "%APP_VERSION%"=="%CURR_VER%" (
+    echo.
+    echo [INFO] Atualizando arquivos do projeto para a versao %APP_VERSION%...
+    powershell -NoProfile -Command "try { $p = '..\versao.json'; $j = Get-Content $p -Raw | ConvertFrom-Json; $j.versao = '%APP_VERSION%'; $j.data = (Get-Date -Format 'dd/MM/yyyy'); $j | ConvertTo-Json -Depth 5 | Set-Content $p -Encoding UTF8 } catch {}"
+    powershell -NoProfile -Command "try { $u = '..\src\main\java\com\loja\service\update\UpdateService.java'; (Get-Content $u -Raw) -replace 'public static final String VERSAO_ATUAL = \"[^\"]+\";', 'public static final String VERSAO_ATUAL = \"%APP_VERSION%\";' | Set-Content $u -Encoding UTF8 } catch {}"
+    echo [SUCESSO] versao.json e UpdateService.java atualizados para v%APP_VERSION%!
+)
+
+echo.
+echo ====================================================================
+echo   INICIANDO COMPILACAO DA VERSAO: v%APP_VERSION%
+echo ====================================================================
+echo.
+
+:: 4. Criar pastas de trabalho
 if not exist "aplicacao_pronta" mkdir "aplicacao_pronta"
 if exist "staging" rd /s /q "staging"
 mkdir "staging"
@@ -143,11 +143,7 @@ dir /s /b ..\src\*.java > sources.txt
 "%JAVAC_EXE%" --release 21 -d staging -cp "%MYSQL_JAR%;%FLATLAF_JAR%;%OPENPDF_JAR%" @sources.txt
 set "COMP_ERR=%ERRORLEVEL%"
 if exist sources.txt del sources.txt
-if %COMP_ERR% neq 0 (
-    echo [ERRO] Falha ao compilar o codigo Java! (Codigo: %COMP_ERR%)
-    pause
-    exit /b %COMP_ERR%
-)
+if %COMP_ERR% neq 0 goto :compilation_failed
 
 echo [2/5] Extraindo bibliotecas para criar o pacote unico (Fat-JAR)...
 cd staging
@@ -159,26 +155,18 @@ del /q /f META-INF\*.DSA 2>nul
 del /q /f META-INF\*.RSA 2>nul
 cd ..
 
-echo [3/5] Gerando SystemPro.jar autocontido...
+echo [3/5] Gerando SystemPro.jar e SistemaLoja.jar (v%APP_VERSION%)...
 "%JAR_EXE%" --create --file "aplicacao_pronta\SystemPro.jar" --main-class com.loja.app.Main -C staging .
+if %ERRORLEVEL% neq 0 goto :jar_failed
 copy /Y "aplicacao_pronta\SystemPro.jar" "aplicacao_pronta\SistemaLoja.jar" > nul
-if %ERRORLEVEL% neq 0 (
-    echo [ERRO] Falha ao empacotar o JAR!
-    pause
-    exit /b %ERRORLEVEL%
-)
 
 :: Limpar pasta temporaria staging
 rd /s /q staging
 
-echo [4/5] Compilando executavel nativo Windows (SystemPro.exe)...
+echo [4/5] Compilando executavel nativo Windows (SystemPro.exe e SistemaLoja.exe)...
 "%CSC_EXE%" /nologo /target:winexe /out:"aplicacao_pronta\SystemPro.exe" Launcher.cs
+if %ERRORLEVEL% neq 0 goto :csc_failed
 copy /Y "aplicacao_pronta\SystemPro.exe" "aplicacao_pronta\SistemaLoja.exe" > nul
-if %ERRORLEVEL% neq 0 (
-    echo [ERRO] Falha ao compilar o executavel .exe!
-    pause
-    exit /b %ERRORLEVEL%
-)
 
 if not exist "aplicacao_pronta\jre\bin\javaw.exe" (
     if defined JAVA_HOME (
@@ -189,14 +177,14 @@ if not exist "aplicacao_pronta\jre\bin\javaw.exe" (
 
 echo.
 echo ====================================================================
-echo  [SUCESSO] EXECUTAVEL E PACOTE GERADOS COM SUCESSO!
+echo  [SUCESSO] EXECUTAVEL E PACOTE GERADOS COM SUCESSO! (v%APP_VERSION%)
 echo  Pasta de saida: gerador_executavel\aplicacao_pronta\
-echo    - SystemPro.exe     (Executavel nativo do Windows - 2 cliques)
-echo    - SystemPro.jar     (Todas as bibliotecas embutidas)
+echo    - SystemPro.exe / SistemaLoja.exe (Executavel nativo)
+echo    - SystemPro.jar / SistemaLoja.jar (Fat-JAR autocontido)
 echo ====================================================================
 echo.
 
-:: 4. Verificar se o Inno Setup esta instalado para compilar o Setup.exe automaticamente
+:: 5. Compilar o Instalador Oficial com Inno Setup
 set "ISCC_EXE="
 if exist "C:\Program Files\Inno Setup 7\ISCC.exe" (
     set "ISCC_EXE=C:\Program Files\Inno Setup 7\ISCC.exe"
@@ -213,22 +201,69 @@ if not defined ISCC_EXE (
 )
 
 if defined ISCC_EXE (
-    echo [5/5] Inno Setup detectado! Compilando instalador Setup.exe...
+    echo [5/5] Inno Setup detectado! Compilando Instalador Setup da versao %APP_VERSION%...
     if not exist "instalador" mkdir "instalador"
-    "%ISCC_EXE%" inno_setup.iss
-    echo.
-    echo ====================================================================
-    echo  [INSTALADOR PRONTO] Instalador gerado com sucesso!
-    echo  Arquivo: gerador_executavel\instalador\SystemPro_Setup_v1.2.3.exe
-    echo ====================================================================
+    "%ISCC_EXE%" "-dMyAppVersion=%APP_VERSION%" "-fSystemPro_Setup_v%APP_VERSION%" inno_setup.iss
+    if %ERRORLEVEL% equ 0 (
+        echo.
+        echo ====================================================================
+        echo  [INSTALADOR PRONTO] Instalador gerado com sucesso!
+        echo  Arquivo: gerador_executavel\instalador\SystemPro_Setup_v%APP_VERSION%.exe
+        echo ====================================================================
+    ) else (
+        echo [AVISO] Falha ao compilar com Inno Setup. Codigo de erro: %ERRORLEVEL%
+    )
 ) else (
     echo [AVISO - PASSO OPCIONAL]
     echo O Inno Setup ainda nao esta instalado neste computador.
     echo Para gerar o instalador Setup.exe:
     echo   1. Baixe o Inno Setup em: https://jrsoftware.org/isdl.php
-    echo   2. Apos instalar, clique com o botao direito em inno_setup.iss
-    echo      e selecione 'Compile' ou execute este script novamente.
+    echo   2. Apos instalar, execute este script novamente.
 )
 
 echo.
 pause
+exit /b 0
+
+:compilation_failed
+echo.
+echo ====================================================================
+echo  [ERRO] Falha ao compilar o codigo Java! Codigo de erro: %COMP_ERR%
+echo ====================================================================
+pause
+exit /b %COMP_ERR%
+
+:jar_failed
+echo.
+echo ====================================================================
+echo  [ERRO] Falha ao empacotar o JAR!
+echo ====================================================================
+pause
+exit /b 1
+
+:csc_failed
+echo.
+echo ====================================================================
+echo  [ERRO] Falha ao compilar o executavel .exe nativo!
+echo ====================================================================
+pause
+exit /b 1
+
+:jdk_missing
+echo.
+echo ====================================================================
+echo  [ERRO CRITICO] JDK 21 NAO ENCONTRADO NESTE COMPUTADOR!
+echo ====================================================================
+echo  O utilitario de compilacao 'javac' nao foi localizado.
+echo  Instale o JDK 21: https://adoptium.net/temurin/releases/?version=21
+echo ====================================================================
+pause
+exit /b 1
+
+:jar_missing
+echo.
+echo ====================================================================
+echo  [ERRO CRITICO] FERRAMENTA 'JAR' NAO ENCONTRADA!
+echo ====================================================================
+pause
+exit /b 1

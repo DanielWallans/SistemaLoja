@@ -5,8 +5,10 @@
 ; que o seu cliente usará para instalar o sistema com 2 cliques.
 ; =====================================================================
 
+#ifndef MyAppVersion
+  #define MyAppVersion "1.2.3"
+#endif
 #define MyAppName "System Pro"
-#define MyAppVersion "1.2.3"
 #define MyAppPublisher "System Pro"
 #define MyAppExeName "SystemPro.exe"
 
@@ -18,7 +20,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\SystemPro
 DisableProgramGroupPage=yes
 OutputDir=instalador
-OutputBaseFilename=SystemPro_Setup_v1.2.3
+OutputBaseFilename=SystemPro_Setup_v{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

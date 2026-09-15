@@ -1,5 +1,41 @@
+param (
+    [string]$Version = ""
+)
+
 $ErrorActionPreference = "Stop"
 Set-Location -Path $PSScriptRoot
+
+$versaoJsonPath = "..\versao.json"
+$appVersion = "1.2.3"
+if (Test-Path $versaoJsonPath) {
+    try {
+        $j = Get-Content $versaoJsonPath -Raw | ConvertFrom-Json
+        if ($j.versao) { $appVersion = $j.versao }
+    } catch {}
+}
+
+if ($Version -and $Version.Trim() -ne "") {
+    $appVersion = $Version.Trim()
+    try {
+        $j = Get-Content $versaoJsonPath -Raw | ConvertFrom-Json
+        $j.versao = $appVersion
+        $j.data = (Get-Date -Format 'dd/MM/yyyy')
+        $j | ConvertTo-Json -Depth 5 | Set-Content $versaoJsonPath -Encoding UTF8
+        Write-Host "[INFO] versao.json atualizado para v$appVersion" -ForegroundColor Green
+    } catch {}
+
+    $updateServicePath = "..\src\main\java\com\loja\service\update\UpdateService.java"
+    if (Test-Path $updateServicePath) {
+        try {
+            (Get-Content $updateServicePath -Raw) -replace 'public static final String VERSAO_ATUAL = "[^"]+";', "public static final String VERSAO_ATUAL = `"$appVersion`";" | Set-Content $updateServicePath -Encoding UTF8
+            Write-Host "[INFO] UpdateService.java atualizado para v$appVersion" -ForegroundColor Green
+        } catch {}
+    }
+}
+
+Write-Host "====================================================================" -ForegroundColor Cyan
+Write-Host " GERANDO EXECUTAVEL E INSTALADOR - VERSAO: v$appVersion" -ForegroundColor Cyan
+Write-Host "====================================================================" -ForegroundColor Cyan
 
 $jdk = if ($env:JAVA_HOME -and (Test-Path "$env:JAVA_HOME\bin\javac.exe")) { $env:JAVA_HOME } elseif (Test-Path "C:\Java\jdk-21\bin\javac.exe") { "C:\Java\jdk-21" } else { "C:\Program Files\Eclipse Adoptium\jdk-21" }
 $javac = "$jdk\bin\javac.exe"
@@ -25,7 +61,7 @@ tar -xf "..\..\openpdf-1.3.40.jar"
 Remove-Item -Path "META-INF\*.SF", "META-INF\*.DSA", "META-INF\*.RSA" -Force -ErrorAction SilentlyContinue
 Set-Location -Path $PSScriptRoot
 
-Write-Host "[3/5] Gerando aplicacao_pronta\SystemPro.jar..." -ForegroundColor Cyan
+Write-Host "[3/5] Gerando aplicacao_pronta\SystemPro.jar (v$appVersion)..." -ForegroundColor Cyan
 if (-not (Test-Path "aplicacao_pronta")) {
     New-Item -ItemType Directory -Path "aplicacao_pronta" -Force | Out-Null
 }
@@ -38,8 +74,10 @@ Write-Host "[4/5] Compilando executavel nativo SystemPro.exe..." -ForegroundColo
 Copy-Item "aplicacao_pronta\SystemPro.exe" "aplicacao_pronta\SistemaLoja.exe" -Force
 
 if (Test-Path $iscc) {
-    Write-Host "[5/5] Compilando Setup.exe com Inno Setup..." -ForegroundColor Cyan
-    & $iscc inno_setup.iss
+    Write-Host "[5/5] Compilando Setup.exe com Inno Setup (v$appVersion)..." -ForegroundColor Cyan
+    if (-not (Test-Path "instalador")) { New-Item -ItemType Directory -Path "instalador" -Force | Out-Null }
+    & $iscc "-dMyAppVersion=$appVersion" "-fSystemPro_Setup_v$appVersion" inno_setup.iss
+    Write-Host "`n[SUCESSO] Instalador gerado em: gerador_executavel\instalador\SystemPro_Setup_v$appVersion.exe" -ForegroundColor Green
 } else {
     Write-Host "[5/5] Inno Setup nao instalado (opcional). Executavel gerado em aplicacao_pronta\!" -ForegroundColor Yellow
 }
