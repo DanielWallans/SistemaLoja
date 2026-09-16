@@ -1,6 +1,6 @@
 {
   "versao": "1.2.4",
   "data": "15/09/2026",
-  "novidades": "â€¢ AtualizaÃ§Ãµes e melhorias na tela de conexÃ£o MySQL\nâ€¢ OtimizaÃ§Ã£o no teste e inicializaÃ§Ã£o automÃ¡tica do banco de dados\nâ€¢ Melhorias internas de desempenho e estabilidade\nâ€¢ AtualizaÃ§Ã£o automÃ¡tica e silenciosa sem necessidade de reinstalar",
+  "novidades": "- AtualizaÃ§Ãµes e melhorias na conexÃ£o com o banco MySQL\n- OtimizaÃ§Ã£o no teste e inicializaÃ§Ã£o automÃ¡tica do banco de dados\n- CorreÃ§Ãµes gerais de estabilidade e desempenho do sistema\n- AtualizaÃ§Ã£o automÃ¡tica integrada",
   "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }
