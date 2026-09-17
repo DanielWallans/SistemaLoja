@@ -1,6 +1,8 @@
 package com.loja.view.dialogs;
 
 import com.loja.model.CaixaSessao;
+import com.loja.model.SessaoUsuario;
+import com.loja.model.Usuario;
 import com.loja.repository.CaixaDAO;
 import com.loja.service.CaixaService;
 
@@ -88,7 +90,11 @@ public class AberturaCaixaDialog extends JDialog {
         pnlCorpo.add(lblOpTit, gbc);
 
         gbc.gridx = 1; gbc.weightx = 0.7;
-        txtOperador = new JTextField("Operador 1");
+        Usuario userLogado = SessaoUsuario.getInstancia().getUsuarioLogado();
+        String nomeOperador = (userLogado != null && userLogado.getNome() != null && !userLogado.getNome().trim().isEmpty())
+                ? userLogado.getNome().trim()
+                : "Operador 1";
+        txtOperador = new JTextField(nomeOperador);
         txtOperador.setFont(txtOperador.getFont().deriveFont(13f));
         pnlCorpo.add(txtOperador, gbc);
 

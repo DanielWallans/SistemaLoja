@@ -3,6 +3,8 @@ package com.loja.view;
 import com.loja.model.CaixaMovimento;
 import com.loja.model.CaixaSessao;
 import com.loja.model.ResumoFechamentoCaixa;
+import com.loja.model.SessaoUsuario;
+import com.loja.model.Usuario;
 import com.loja.repository.CaixaDAO;
 import com.loja.service.CaixaService;
 import com.loja.service.CupomTermicoService;
@@ -34,6 +36,7 @@ public class CaixaPanel extends JPanel {
     private JButton btnAbrirCaixa;
     private JButton btnFecharCaixa;
     private JButton btnConfigLoja;
+    private JButton btnTaxas;
 
     // Cards de Métricas
     private JLabel lblSaldoGaveta;
@@ -148,7 +151,7 @@ public class CaixaPanel extends JPanel {
         pnlAcoes.setOpaque(false);
         JButton btnSangria = UIComponents.criarBotaoSecundario("+ Sangria (Retirada)");
         JButton btnSuprimento = UIComponents.criarBotaoSecundario("+ Suprimento (Troco)");
-        JButton btnTaxas = UIComponents.criarBotaoSecundario("Taxas Maquininha");
+        btnTaxas = UIComponents.criarBotaoSecundario("Taxas Maquininha");
         JButton btnAtualizar = UIComponents.criarBotaoSecundario("Atualizar");
 
         btnSangria.addActionListener(e -> abrirSangria());
@@ -284,8 +287,21 @@ public class CaixaPanel extends JPanel {
         lblStatusContador.setText("Total de movimentações registradas neste turno: " + movs.size());
 
         recarregarHistorico();
+        aplicarPermissoesPerfil();
         revalidate();
         repaint();
+    }
+
+    public void aplicarPermissoesPerfil() {
+        Usuario user = SessaoUsuario.getInstancia().getUsuarioLogado();
+        boolean isAdmin = user == null || user.isAdmin();
+
+        if (btnConfigLoja != null) {
+            btnConfigLoja.setVisible(isAdmin);
+        }
+        if (btnTaxas != null) {
+            btnTaxas.setVisible(isAdmin);
+        }
     }
 
     private void recarregarHistorico() {

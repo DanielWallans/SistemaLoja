@@ -8,8 +8,10 @@ import com.loja.repository.OrdemServicoDAO;
 import com.loja.repository.ProdutoDAO;
 import com.loja.service.CaixaService;
 import com.loja.service.ComprovanteEntregaPDFService;
+import com.loja.repository.OSFotoDAO;
 import com.loja.view.dialogs.AberturaCaixaDialog;
 import com.loja.view.dialogs.DetalhesOSDialog;
+import com.loja.view.dialogs.GerenciadorFotosOSDialog;
 import com.loja.view.dialogs.MontarOrcamentoDialog;
 import com.loja.view.dialogs.NovaOSDialog;
 import com.loja.view.dialogs.PagamentoPDVDialog;
@@ -124,6 +126,8 @@ public class OrdemServicoPanel extends JPanel {
         pnlAcoes.add(btnNovaOS);
         pnlAcoes.add(this.btnMontarOrcamento);
         pnlAcoes.add(this.btnFinalizarOS);
+        JButton btnFotos = UIComponents.criarBotaoSecundario("Fotos da OS", this::abrirFotosOSSelecionada);
+        pnlAcoes.add(btnFotos);
         pnlAcoes.add(btnDetalhes);
         pnlAcoes.add(btnAtualizar);
 
@@ -270,6 +274,18 @@ public class OrdemServicoPanel extends JPanel {
                 recarregarTabela();
             }
         }
+    }
+
+    private void abrirFotosOSSelecionada() {
+        int row = tabela.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(this, "Selecione uma Ordem de Serviço na tabela para visualizar ou anexar fotos!",
+                    "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        int osId = (int) tableModel.getValueAt(row, 0);
+        GerenciadorFotosOSDialog dialog = new GerenciadorFotosOSDialog(owner, osId, new OSFotoDAO());
+        dialog.setVisible(true);
     }
 
     public void abrirFinalizarOSSelecionada() {

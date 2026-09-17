@@ -4,8 +4,10 @@ import com.loja.model.*;
 import com.loja.repository.CatalogoDAO;
 import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
+import com.loja.repository.OSFotoDAO;
 import com.loja.repository.OrdemServicoDAO;
 import com.loja.repository.ProdutoDAO;
+import com.loja.view.components.OSFotosPanel;
 import com.loja.service.ComprovanteEntregaPDFService;
 import com.loja.service.OrcamentoPDFService;
 import com.loja.service.WhatsAppService;
@@ -125,6 +127,11 @@ public class MontarOrcamentoDialog extends JDialog {
         pnlDiagStatus.add(new JScrollPane(txtDiagnostico), BorderLayout.CENTER);
 
         mainPanel.add(pnlDiagStatus);
+        mainPanel.add(Box.createVerticalStrut(8));
+
+        // 2.1 Fotos e Evidências Técnicas da Máquina (Avarias, Dobradiças, etc)
+        OSFotosPanel pnlFotos = new OSFotosPanel(this, os.getId(), new OSFotoDAO());
+        mainPanel.add(pnlFotos);
         mainPanel.add(Box.createVerticalStrut(8));
 
         // 3. Tabela de Serviços / Mão de Obra

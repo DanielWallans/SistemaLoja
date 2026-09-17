@@ -41,3 +41,4 @@ gerador_executavel/staging/
 ### Mac OS / Windows ###
 .DS_Store
 Thumbs.db
+.teste_perm

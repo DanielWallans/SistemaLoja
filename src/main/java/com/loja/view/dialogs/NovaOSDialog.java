@@ -5,6 +5,7 @@ import com.loja.model.Equipamento;
 import com.loja.model.OrdemServico;
 import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
+import com.loja.repository.OSFotoDAO;
 import com.loja.repository.OrdemServicoDAO;
 import com.loja.service.ComprovanteEntradaPDFService;
 
@@ -835,6 +836,14 @@ public class NovaOSDialog extends JDialog {
             JOptionPane.showMessageDialog(this, 
                     "Ordem de Serviço #" + os.getId() + " aberta com sucesso!\nCliente: " + clienteItem.nome, 
                     "OS Gerada com Sucesso", JOptionPane.INFORMATION_MESSAGE);
+
+            int optFoto = JOptionPane.showConfirmDialog(this,
+                    "Deseja anexar fotos da máquina / avarias agora?\n(Ex: dobradiça quebrada, carcaça riscada, tela trincada)",
+                    "Anexar Fotos da OS #" + os.getId(), JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (optFoto == JOptionPane.YES_OPTION) {
+                GerenciadorFotosOSDialog fotoDialog = new GerenciadorFotosOSDialog(this, os.getId(), new OSFotoDAO());
+                fotoDialog.setVisible(true);
+            }
 
             int opt = JOptionPane.showConfirmDialog(this,
                     "Deseja gerar o Comprovante de Entrada do Equipamento em PDF agora?\n(Termo de Deixada para o cliente assinar na loja)",

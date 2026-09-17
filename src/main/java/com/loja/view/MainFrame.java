@@ -270,6 +270,8 @@ public class MainFrame extends JFrame {
         } else if (isAtendente) {
             adicionarBotaoNavegacao(sidebar, "PDV Balcão [F4]", "PDV");
             sidebar.add(Box.createVerticalStrut(4));
+            adicionarBotaoNavegacao(sidebar, "Caixa & Turno", "CAIXA");
+            sidebar.add(Box.createVerticalStrut(4));
             adicionarBotaoNavegacao(sidebar, "Clientes [F3]", "CLIENTES");
             sidebar.add(Box.createVerticalStrut(4));
             adicionarBotaoNavegacao(sidebar, "Equipamentos", "EQUIPAMENTOS");
@@ -284,6 +286,9 @@ public class MainFrame extends JFrame {
 
         if (osPanel != null) {
             osPanel.aplicarPermissoesPerfil();
+        }
+        if (caixaPanel != null) {
+            caixaPanel.aplicarPermissoesPerfil();
         }
     }
 
@@ -407,6 +412,13 @@ public class MainFrame extends JFrame {
         cardsPanel.add(osPanel, "OS");
         cardsPanel.add(estoquePanel, "ESTOQUE");
         cardsPanel.add(caixaPanel, "CAIXA");
+
+        if (osPanel != null) {
+            osPanel.aplicarPermissoesPerfil();
+        }
+        if (caixaPanel != null) {
+            caixaPanel.aplicarPermissoesPerfil();
+        }
 
         selecionarAba(abaAtual != null ? abaAtual : "DASHBOARD");
         cardsPanel.revalidate();

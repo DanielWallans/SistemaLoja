@@ -507,6 +507,19 @@ public class ConnectionFactory {
                     "ativo BOOLEAN DEFAULT TRUE, " +
                     "data_cadastro TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
 
+            // 20. Tabela de Fotos e Evidências da Ordem de Serviço
+            stmt.execute("CREATE TABLE IF NOT EXISTS os_fotos (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY, " +
+                    "os_id INT NOT NULL, " +
+                    "nome_arquivo VARCHAR(255) NOT NULL, " +
+                    "descricao VARCHAR(255), " +
+                    "dados MEDIUMBLOB NOT NULL, " +
+                    "miniatura MEDIUMBLOB, " +
+                    "tamanho_bytes BIGINT, " +
+                    "operador VARCHAR(100), " +
+                    "data_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
+                    "FOREIGN KEY (os_id) REFERENCES ordem_servico(id) ON DELETE CASCADE)");
+
             // Migrações automáticas de colunas e tamanhos
             try {
                 stmt.execute("ALTER TABLE ordem_servico MODIFY COLUMN status VARCHAR(100)");

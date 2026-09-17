@@ -3,7 +3,7 @@ package com.loja.model;
 public enum PerfilUsuario {
     ADMIN("Administrador", "Acesso total ao sistema, faturamento e configurações"),
     TECNICO("Técnico", "Acesso a Ordens de Serviço e Estoque de Peças"),
-    ATENDENTE("Atendente / Balcão", "Acesso a Frente de Caixa, PDV, Clientes e Abertura de OS");
+    ATENDENTE("Atendente / Caixa", "Acesso a Frente de Caixa, Abertura/Fechamento de Caixa, PDV, Clientes e OS");
 
     private final String nomeExibicao;
     private final String descricao;
@@ -23,8 +23,12 @@ public enum PerfilUsuario {
 
     public static PerfilUsuario fromString(String valor) {
         if (valor == null) return ATENDENTE;
+        String v = valor.toUpperCase().trim();
+        if (v.equals("CAIXA") || v.equals("OPERADOR") || v.equals("OPERADOR_CAIXA") || v.equals("BALCAO")) {
+            return ATENDENTE;
+        }
         try {
-            return PerfilUsuario.valueOf(valor.toUpperCase().trim());
+            return PerfilUsuario.valueOf(v);
         } catch (IllegalArgumentException e) {
             return ATENDENTE;
         }

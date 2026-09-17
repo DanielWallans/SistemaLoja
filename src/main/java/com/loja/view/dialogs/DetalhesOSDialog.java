@@ -3,8 +3,10 @@ package com.loja.view.dialogs;
 import com.loja.model.*;
 import com.loja.repository.ClienteDAO;
 import com.loja.repository.EquipamentoDAO;
+import com.loja.repository.OSFotoDAO;
 import com.loja.repository.OrdemServicoDAO;
 import com.loja.repository.ProdutoDAO;
+import com.loja.view.components.OSFotosPanel;
 import com.loja.service.CaixaService;
 import com.loja.service.ComprovanteEntradaPDFService;
 import com.loja.service.ComprovanteEntregaPDFService;
@@ -59,120 +61,180 @@ public class DetalhesOSDialog extends JDialog {
         this.caixaService = caixaService;
 
         initComponents();
-        setSize(880, 840);
+        setSize(920, 620);
         setLocationRelativeTo(owner);
     }
 
     private void initComponents() {
-        setLayout(new BorderLayout(10, 10));
+        setLayout(new BorderLayout(0, 0));
 
         this.cliente = clienteDAO.buscarPorId(osOriginal.getClienteId());
         this.equip = equipDAO.buscarPorId(osOriginal.getEquipamentoId());
 
-        JPanel mainPanel = new JPanel();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        // 1. Cabeçalho Compacto e Executivo
+        JPanel pnlHeader = new JPanel(new BorderLayout(12, 6));
+        pnlHeader.setBackground(UITheme.tokens().getBgCard());
+        pnlHeader.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UITheme.tokens().getBorderSubtle()),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        ));
 
-        // 1. Cabeçalho OS & Cliente
-        JPanel pnlHeader = new JPanel(new GridLayout(2, 2, 10, 5));
-        pnlHeader.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Informações Gerais ",
-                TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        JPanel pnlHeaderLeft = new JPanel(new GridLayout(2, 1, 0, 3));
+        pnlHeaderLeft.setOpaque(false);
 
-        pnlHeader.add(new JLabel("OS Nº: #" + osOriginal.getId() + "  |  Data Entrada: "
-                + osOriginal.getDataEntrada().format(formatter)));
-        lblDataSaida = new JLabel("Data Saída: "
-                + (osOriginal.getDataSaida() != null ? osOriginal.getDataSaida().format(formatter) : "Em aberto"));
-        pnlHeader.add(lblDataSaida);
-        pnlHeader.add(new JLabel("Cliente: "
-                + (cliente != null ? cliente.getNome() + " (Tel: " + cliente.getTelefone() + ")" : "Não encontrado")));
-        pnlHeader.add(new JLabel(
-                "Endereço: " + (cliente != null && cliente.getEndereco() != null ? cliente.getEndereco() : "N/A")));
-        mainPanel.add(pnlHeader);
-        mainPanel.add(Box.createVerticalStrut(8));
+        String nomeAparelho = (equip != null ? equip.getTipo() + " " + equip.getMarca() + " " + equip.getModelo() : "Equipamento N/A");
+        JLabel lblTituloOS = new JLabel("Ordem de Serviço #" + osOriginal.getId() + " • " + nomeAparelho);
+        lblTituloOS.setFont(UITheme.FONT_TITLE);
+        lblTituloOS.setForeground(UITheme.tokens().getTextPrimary());
 
-        // 2. Dados do Equipamento
-        JPanel pnlEquip = new JPanel(new GridLayout(3, 2, 10, 4));
-        pnlEquip.setBorder(
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Equipamento em Manutenção ",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        String nomeCliente = (cliente != null ? cliente.getNome() + " (Tel: " + cliente.getTelefone() + ")" : "Cliente não informado");
+        JLabel lblSubCliente = new JLabel("Cliente: " + nomeCliente + "  |  Entrada: " + osOriginal.getDataEntrada().format(formatter));
+        lblSubCliente.setFont(UITheme.FONT_CAPTION);
+        lblSubCliente.setForeground(UITheme.tokens().getTextSecondary());
+
+        pnlHeaderLeft.add(lblTituloOS);
+        pnlHeaderLeft.add(lblSubCliente);
+
+        JPanel pnlHeaderRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 4));
+        pnlHeaderRight.setOpaque(false);
+
+        lblDataSaida = new JLabel("Saída: " + (osOriginal.getDataSaida() != null ? osOriginal.getDataSaida().format(formatter) : "Em aberto"));
+        lblDataSaida.setFont(UITheme.FONT_CAPTION);
+        lblDataSaida.setForeground(UITheme.tokens().getTextSecondary());
+        pnlHeaderRight.add(lblDataSaida);
+
+        pnlHeader.add(pnlHeaderLeft, BorderLayout.CENTER);
+        pnlHeader.add(pnlHeaderRight, BorderLayout.EAST);
+        add(pnlHeader, BorderLayout.NORTH);
+
+        // 2. Abas Organizadas (JTabbedPane)
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(UITheme.FONT_BODY);
+        tabbedPane.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
+
+        tabbedPane.addTab("📋 Vistoria & Defeito", criarAbaVistoria());
+        tabbedPane.addTab("📸 Fotos & Evidências", criarAbaFotos());
+        tabbedPane.addTab("🔧 Orçamento & Serviços", criarAbaOrcamento());
+        tabbedPane.addTab("⏱️ Linha do Tempo", criarAbaTimeline());
+
+        add(tabbedPane, BorderLayout.CENTER);
+
+        // 3. Barra Inferior: Total e Ações Rápidas
+        JPanel bottomPanel = new JPanel(new BorderLayout(15, 0));
+        bottomPanel.setBackground(UITheme.tokens().getBgCard());
+        bottomPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, UITheme.tokens().getBorderSubtle()),
+                BorderFactory.createEmptyBorder(10, 16, 10, 16)
+        ));
+
+        lblTotal = new JLabel("VALOR TOTAL DA OS: R$ " + String.format("%.2f", osOriginal.getValorTotal()));
+        lblTotal.setFont(lblTotal.getFont().deriveFont(Font.BOLD, 15f));
+        lblTotal.setForeground(new Color(39, 174, 96));
+        bottomPanel.add(lblTotal, BorderLayout.WEST);
+
+        JPanel btnActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        btnActions.setOpaque(false);
+        JButton btnWhatsApp = UIComponents.criarBotaoSecundario("WhatsApp", () -> enviarWhatsApp(cliente, equip));
+        this.btnPDF = UIComponents.criarBotaoSecundario("Gerar PDF", this::acaoGerarPDF);
+        this.btnComprovante = UIComponents.criarBotaoSecundario("Comprovante", this::acaoComprovante);
+
+        this.btnFinalizarOS = new JButton("Finalizar OS e Pagar no PDV");
+        this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD));
+        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
+        this.btnFinalizarOS.setForeground(Color.WHITE);
+        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        this.btnFinalizarOS.putClientProperty("JButton.arc", 6);
+        this.btnFinalizarOS.addActionListener(e -> acaoFinalizarOSComPDV());
+
+        JButton btnSalvarAlteracoes = UIComponents.criarBotaoPrimario("Salvar", this::salvarAndamento);
+        JButton btnFechar = UIComponents.criarBotaoSecundario("Fechar", this::dispose);
+
+        btnActions.add(btnWhatsApp);
+        btnActions.add(this.btnPDF);
+        btnActions.add(this.btnComprovante);
+        btnActions.add(this.btnFinalizarOS);
+        btnActions.add(btnSalvarAlteracoes);
+        btnActions.add(btnFechar);
+        bottomPanel.add(btnActions, BorderLayout.EAST);
+
+        add(bottomPanel, BorderLayout.SOUTH);
+
+        recarregarItens();
+    }
+
+    private JPanel criarAbaVistoria() {
+        JPanel pnl = new JPanel(new GridLayout(1, 2, 12, 0));
+        pnl.setOpaque(false);
+        pnl.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+
+        // Coluna 1: Dados do Equipamento
+        JPanel pnlEquip = new JPanel(new GridLayout(equip != null ? 7 : 2, 1, 4, 4));
+        pnlEquip.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Dados do Equipamento & Vistoria ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
         if (equip != null) {
-            pnlEquip.add(new JLabel(
-                    "Tipo / Aparelho: " + equip.getTipo() + " " + equip.getMarca() + " " + equip.getModelo()));
-            pnlEquip.add(new JLabel("Nº de Série: " + equip.getNumeroSerie() + "  |  Cor: " + equip.getCor()));
+            pnlEquip.add(new JLabel("Aparelho: " + equip.getTipo() + " " + equip.getMarca() + " " + equip.getModelo()));
+            pnlEquip.add(new JLabel("Nº de Série: " + equip.getNumeroSerie()));
+            pnlEquip.add(new JLabel("Cor: " + equip.getCor()));
             pnlEquip.add(new JLabel("Avarias Visíveis: " + equip.getAvarias()));
             pnlEquip.add(new JLabel("Senha de Teste: " + equip.getSenhaAcesso()));
             pnlEquip.add(new JLabel("Acessórios Deixados: " + equip.getAcessorios()));
             pnlEquip.add(new JLabel("Patrimônio: " + equip.getPatrimonio()));
         } else {
-            pnlEquip.add(new JLabel("Equipamento não localizado."));
+            pnlEquip.add(new JLabel("Equipamento não localizado no banco."));
         }
-        mainPanel.add(pnlEquip);
-        mainPanel.add(Box.createVerticalStrut(8));
 
-        // 3. Checklist e Defeito
-        JPanel pnlCheckDefeito = new JPanel(new GridLayout(2, 1, 6, 6));
-        pnlCheckDefeito.setBorder(
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Checklist & Defeito Relatado ",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        // Coluna 2: Defeito e Checklist
+        JPanel pnlDefeito = new JPanel(new BorderLayout(0, 8));
+        pnlDefeito.setOpaque(false);
 
-        JTextArea txtCheck = new JTextArea(osOriginal.getChecklistEntrada() != null ? osOriginal.getChecklistEntrada()
-                : "Nenhum checklist registrado.", 5, 40);
-        txtCheck.setEditable(false);
-        txtCheck.setFont(new Font("Monospaced", Font.PLAIN, 12));
-        pnlCheckDefeito.add(new JScrollPane(txtCheck));
-
-        JTextArea txtDefeito = new JTextArea("Defeito Relatado: " + osOriginal.getProblemaRelatado(), 3, 40);
+        JPanel pnlDefeitoBox = new JPanel(new BorderLayout());
+        pnlDefeitoBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Defeito Relatado pelo Cliente ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        JTextArea txtDefeito = new JTextArea(osOriginal.getProblemaRelatado(), 3, 30);
         txtDefeito.setEditable(false);
         txtDefeito.setLineWrap(true);
         txtDefeito.setWrapStyleWord(true);
-        pnlCheckDefeito.add(new JScrollPane(txtDefeito));
-        pnlCheckDefeito.setPreferredSize(new Dimension(800, 160));
-        mainPanel.add(pnlCheckDefeito);
-        mainPanel.add(Box.createVerticalStrut(8));
+        txtDefeito.setBackground(UIManager.getColor("Panel.background"));
+        pnlDefeitoBox.add(new JScrollPane(txtDefeito), BorderLayout.CENTER);
 
-        // 4. Serviços & Peças
-        JPanel pnlItens = new JPanel(new GridLayout(1, 2, 10, 0));
+        JPanel pnlChecklistBox = new JPanel(new BorderLayout());
+        pnlChecklistBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Checklist de Entrada ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        JTextArea txtCheck = new JTextArea(osOriginal.getChecklistEntrada() != null ? osOriginal.getChecklistEntrada() : "Nenhum checklist registrado.", 8, 30);
+        txtCheck.setEditable(false);
+        txtCheck.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        txtCheck.setBackground(UIManager.getColor("Panel.background"));
+        pnlChecklistBox.add(new JScrollPane(txtCheck), BorderLayout.CENTER);
 
-        // Serviços
-        JPanel pnlServicos = new JPanel(new BorderLayout(5, 5));
-        pnlServicos.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-                " Serviços / Mão de Obra ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 11)));
-        servicosListModel = new DefaultListModel<>();
-        JList<String> listServicos = new JList<>(servicosListModel);
-        pnlServicos.add(new JScrollPane(listServicos), BorderLayout.CENTER);
+        pnlDefeito.add(pnlDefeitoBox, BorderLayout.NORTH);
+        pnlDefeito.add(pnlChecklistBox, BorderLayout.CENTER);
 
-        // Peças
-        JPanel pnlPecas = new JPanel(new BorderLayout(5, 5));
-        pnlPecas.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Peças / Componentes ",
-                TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 11)));
-        pecasListModel = new DefaultListModel<>();
-        JList<String> listPecas = new JList<>(pecasListModel);
-        pnlPecas.add(new JScrollPane(listPecas), BorderLayout.CENTER);
+        pnl.add(pnlEquip);
+        pnl.add(pnlDefeito);
+        return pnl;
+    }
 
-        pnlItens.add(pnlServicos);
-        pnlItens.add(pnlPecas);
-        pnlItens.setPreferredSize(new Dimension(800, 110));
-        mainPanel.add(pnlItens);
-        mainPanel.add(Box.createVerticalStrut(8));
+    private JPanel criarAbaFotos() {
+        JPanel pnl = new JPanel(new BorderLayout());
+        pnl.setOpaque(false);
+        pnl.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
+        OSFotosPanel pnlFotos = new OSFotosPanel(this, osOriginal.getId(), new OSFotoDAO());
+        pnl.add(pnlFotos, BorderLayout.CENTER);
+        return pnl;
+    }
 
-        // 5. Botão de Destaque: Abrir Ambiente do Técnico
-        JPanel pnlBtnOrcamento = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 2));
-        pnlBtnOrcamento.setOpaque(false);
-        JButton btnAbrirAmbienteOrcamento = UIComponents.criarBotaoSecundario("ABRIR AMBIENTE TÉCNICO DE MONTAGEM DE ORÇAMENTO", this::abrirMontagemOrcamento);
-        btnAbrirAmbienteOrcamento.setFont(btnAbrirAmbienteOrcamento.getFont().deriveFont(Font.BOLD, 12f));
-        btnAbrirAmbienteOrcamento.setPreferredSize(new Dimension(550, 36));
-        pnlBtnOrcamento.add(btnAbrirAmbienteOrcamento);
-        mainPanel.add(pnlBtnOrcamento);
-        mainPanel.add(Box.createVerticalStrut(8));
+    private JPanel criarAbaOrcamento() {
+        JPanel pnl = new JPanel(new BorderLayout(8, 6));
+        pnl.setOpaque(false);
+        pnl.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
-        // 6. Diagnóstico Técnico, Status e Mão de Obra
-        JPanel pnlAndamento = new JPanel(new GridBagLayout());
-        pnlAndamento.setBorder(
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(), " Status Rápido & Diagnóstico ",
-                        TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
+        // Topo: Status Rápido, Mão de Obra e Diagnóstico Técnico
+        JPanel pnlTop = new JPanel(new GridBagLayout());
+        pnlTop.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Status Rápido & Diagnóstico Técnico ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 12)));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.insets = new Insets(3, 4, 3, 4);
 
         cbStatus = new JComboBox<>(new String[] {
                 "Aguardando Orçamento",
@@ -195,101 +257,80 @@ public class DetalhesOSDialog extends JDialog {
         });
 
         txtMaoDeObra = new JTextField(String.format("%.2f", osOriginal.getValorServico()).replace(",", "."), 10);
-        txtDiagnostico = new JTextArea(
-                osOriginal.getDiagnosticoTecnico() != null ? osOriginal.getDiagnosticoTecnico() : "", 2, 30);
+        txtDiagnostico = new JTextArea(osOriginal.getDiagnosticoTecnico() != null ? osOriginal.getDiagnosticoTecnico() : "", 2, 30);
+        txtDiagnostico.setLineWrap(true);
+        txtDiagnostico.setWrapStyleWord(true);
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 0.2;
-        pnlAndamento.add(new JLabel("Status Atual:"), gbc);
-        gbc.gridx = 1;
-        gbc.weightx = 0.3;
-        pnlAndamento.add(cbStatus, gbc);
-        gbc.gridx = 2;
-        gbc.weightx = 0.2;
-        pnlAndamento.add(new JLabel("Mão de Obra (R$):"), gbc);
-        gbc.gridx = 3;
-        gbc.weightx = 0.3;
-        pnlAndamento.add(txtMaoDeObra, gbc);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.15;
+        pnlTop.add(new JLabel("Status Atual:"), gbc);
+        gbc.gridx = 1; gbc.weightx = 0.35;
+        pnlTop.add(cbStatus, gbc);
+        gbc.gridx = 2; gbc.weightx = 0.15;
+        pnlTop.add(new JLabel("Mão de Obra (R$):"), gbc);
+        gbc.gridx = 3; gbc.weightx = 0.35;
+        pnlTop.add(txtMaoDeObra, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        gbc.weightx = 0.2;
-        pnlAndamento.add(new JLabel("Diagnóstico Técnico:"), gbc);
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        gbc.gridwidth = 3;
-        gbc.weightx = 0.8;
-        pnlAndamento.add(new JScrollPane(txtDiagnostico), gbc);
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.15;
+        pnlTop.add(new JLabel("Diagnóstico:"), gbc);
+        gbc.gridx = 1; gbc.gridwidth = 3; gbc.weightx = 0.85;
+        pnlTop.add(new JScrollPane(txtDiagnostico), gbc);
 
-        mainPanel.add(pnlAndamento);
-        mainPanel.add(Box.createVerticalStrut(8));
+        pnl.add(pnlTop, BorderLayout.NORTH);
 
-        // 7. Linha do Tempo / Histórico de Mudanças de Status
-        JPanel pnlHistoricoBox = new JPanel(new BorderLayout(5, 5));
-        pnlHistoricoBox.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-                " ⏱️ Linha do Tempo / Histórico de Status da OS ", TitledBorder.LEFT, TitledBorder.TOP,
-                new Font("SansSerif", Font.BOLD, 12)));
+        // Centro: Listas de Serviços e Peças lado a lado
+        JPanel pnlListas = new JPanel(new GridLayout(1, 2, 8, 0));
+        pnlListas.setOpaque(false);
+
+        JPanel pnlServicos = new JPanel(new BorderLayout(4, 4));
+        pnlServicos.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Serviços / Mão de Obra ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 11)));
+        servicosListModel = new DefaultListModel<>();
+        JList<String> listServicos = new JList<>(servicosListModel);
+        pnlServicos.add(new JScrollPane(listServicos), BorderLayout.CENTER);
+
+        JPanel pnlPecas = new JPanel(new BorderLayout(4, 4));
+        pnlPecas.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                " Peças / Componentes ", TitledBorder.LEFT, TitledBorder.TOP, new Font("SansSerif", Font.BOLD, 11)));
+        pecasListModel = new DefaultListModel<>();
+        JList<String> listPecas = new JList<>(pecasListModel);
+        pnlPecas.add(new JScrollPane(listPecas), BorderLayout.CENTER);
+
+        pnlListas.add(pnlServicos);
+        pnlListas.add(pnlPecas);
+        pnl.add(pnlListas, BorderLayout.CENTER);
+
+        // Sul: Botão para abrir o Ambiente Técnico Completo
+        JPanel pnlBtnAmbiente = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 4));
+        pnlBtnAmbiente.setOpaque(false);
+        JButton btnAbrirAmbienteOrcamento = UIComponents.criarBotaoPrimario("Abrir Ambiente Técnico de Montagem de Orçamento", this::abrirMontagemOrcamento);
+        btnAbrirAmbienteOrcamento.setPreferredSize(new Dimension(460, 34));
+        pnlBtnAmbiente.add(btnAbrirAmbienteOrcamento);
+        pnl.add(pnlBtnAmbiente, BorderLayout.SOUTH);
+
+        return pnl;
+    }
+
+    private JPanel criarAbaTimeline() {
+        JPanel pnl = new JPanel(new BorderLayout(6, 6));
+        pnl.setOpaque(false);
+        pnl.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 
         pnlTimelineContainer = new JPanel();
         pnlTimelineContainer.setLayout(new BoxLayout(pnlTimelineContainer, BoxLayout.Y_AXIS));
         pnlTimelineContainer.setBackground(UIManager.getColor("Panel.background"));
 
         JScrollPane scrollTimeline = new JScrollPane(pnlTimelineContainer);
-        scrollTimeline.setPreferredSize(new Dimension(800, 140));
         scrollTimeline.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 228)));
-        pnlHistoricoBox.add(scrollTimeline, BorderLayout.CENTER);
+        scrollTimeline.getVerticalScrollBar().setUnitIncrement(14);
+        pnl.add(scrollTimeline, BorderLayout.CENTER);
 
-        JPanel pnlTimelineHeader = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
-        JButton btnAddNotaHistorico = new JButton("+ Anotar no Histórico");
-        btnAddNotaHistorico.setFont(btnAddNotaHistorico.getFont().deriveFont(Font.PLAIN, 11f));
-        btnAddNotaHistorico.addActionListener(e -> adicionarNotaAoHistorico());
-        pnlTimelineHeader.add(btnAddNotaHistorico);
-        pnlHistoricoBox.add(pnlTimelineHeader, BorderLayout.SOUTH);
+        JPanel pnlTimelineFooter = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 4));
+        pnlTimelineFooter.setOpaque(false);
+        JButton btnAddNotaHistorico = UIComponents.criarBotaoSecundario("+ Anotar no Histórico", this::adicionarNotaAoHistorico);
+        pnlTimelineFooter.add(btnAddNotaHistorico);
+        pnl.add(pnlTimelineFooter, BorderLayout.SOUTH);
 
-        mainPanel.add(pnlHistoricoBox);
-
-        JScrollPane scrollPrincipal = new JScrollPane(mainPanel);
-        scrollPrincipal.setBorder(null);
-        add(scrollPrincipal, BorderLayout.CENTER);
-
-        // Barra inferior: Total e Ações
-        JPanel bottomPanel = new JPanel(new BorderLayout(15, 10));
-        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 16, 12, 16));
-
-        lblTotal = new JLabel("VALOR TOTAL DA OS: R$ " + String.format("%.2f", osOriginal.getValorTotal()));
-        lblTotal.setFont(lblTotal.getFont().deriveFont(Font.BOLD, 15f));
-        lblTotal.setForeground(new Color(39, 174, 96));
-        bottomPanel.add(lblTotal, BorderLayout.WEST);
-
-        JPanel btnActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        JButton btnWhatsApp = new JButton("WhatsApp");
-        this.btnPDF = new JButton("Gerar PDF");
-        this.btnComprovante = new JButton("Comprovante");
-        this.btnFinalizarOS = new JButton("Finalizar OS e Pagar no PDV");
-        this.btnFinalizarOS.setFont(btnFinalizarOS.getFont().deriveFont(Font.BOLD));
-        this.btnFinalizarOS.setBackground(new Color(39, 174, 96));
-        this.btnFinalizarOS.setForeground(Color.WHITE);
-        this.btnFinalizarOS.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        JButton btnSalvarAlteracoes = new JButton("Salvar");
-        btnSalvarAlteracoes.setFont(btnSalvarAlteracoes.getFont().deriveFont(Font.BOLD));
-
-        btnWhatsApp.addActionListener(e -> enviarWhatsApp(cliente, equip));
-        this.btnPDF.addActionListener(e -> acaoGerarPDF());
-        this.btnComprovante.addActionListener(e -> acaoComprovante());
-        this.btnFinalizarOS.addActionListener(e -> acaoFinalizarOSComPDV());
-        btnSalvarAlteracoes.addActionListener(e -> salvarAndamento());
-
-        btnActions.add(btnWhatsApp);
-        btnActions.add(this.btnPDF);
-        btnActions.add(this.btnComprovante);
-        btnActions.add(this.btnFinalizarOS);
-        btnActions.add(btnSalvarAlteracoes);
-        bottomPanel.add(btnActions, BorderLayout.EAST);
-
-        add(bottomPanel, BorderLayout.SOUTH);
-
-        recarregarItens();
+        return pnl;
     }
 
     private void recarregarItens() {

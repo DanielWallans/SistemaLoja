@@ -7,6 +7,9 @@ import com.loja.model.VendaPDV;
 import com.loja.repository.CaixaDAO;
 import com.loja.repository.ProdutoDAO;
 import com.loja.repository.VendaPDVDAO;
+import com.loja.service.CaixaService;
+import com.loja.view.dialogs.AberturaCaixaDialog;
+import com.loja.view.dialogs.FechamentoCegoDialog;
 import com.loja.view.dialogs.PagamentoPDVDialog;
 
 import com.loja.view.theme.UIComponents;
@@ -44,6 +47,7 @@ public class PDVPanel extends JPanel {
 
     // Totais e Fechamento
     private JLabel lblStatusCaixa;
+    private JButton btnAcaoCaixa;
     private JLabel lblTotalItensQtd;
     private JLabel lblSubtotalValor;
     private JTextField txtDescontoValor;
@@ -87,12 +91,16 @@ public class PDVPanel extends JPanel {
         lblStatusCaixa.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                if (caixaDAO.obterSessaoAberta() == null) {
-                    verificarEAbrirCaixaSeNecessario();
-                }
+                alternarAcaoCaixa();
             }
         });
+
+        btnAcaoCaixa = UIComponents.criarBotaoPrimario("Abrir Caixa");
+        btnAcaoCaixa.putClientProperty("JButton.arc", 6);
+        btnAcaoCaixa.addActionListener(e -> alternarAcaoCaixa());
+
         pnlStatusCaixa.add(lblStatusCaixa);
+        pnlStatusCaixa.add(btnAcaoCaixa);
         atualizarStatusCaixa();
 
         pnlHeader.add(pnlTitulo, BorderLayout.WEST);
@@ -547,10 +555,47 @@ public class PDVPanel extends JPanel {
             lblStatusCaixa.setText("● Caixa Aberto (Turno #" + s.getId() + " • " + s.getOperadorAbertura() + ")");
             lblStatusCaixa.setForeground(UITheme.tokens().getSuccess());
             lblStatusCaixa.setToolTipText("Turno aberto às " + s.getHoraAberturaFormatada());
+            if (btnAcaoCaixa != null) {
+                btnAcaoCaixa.setText("Fechar Caixa");
+                UIComponents.estilizarBotaoSecundario(btnAcaoCaixa);
+            }
         } else {
-            lblStatusCaixa.setText("○ CAIXA FECHADO (Clique para Abrir)");
+            lblStatusCaixa.setText("○ CAIXA FECHADO");
             lblStatusCaixa.setForeground(UITheme.tokens().getDanger());
-            lblStatusCaixa.setToolTipText("O caixa está fechado. Clique para iniciar o turno.");
+            lblStatusCaixa.setToolTipText("O caixa está fechado. Clique para abrir o turno.");
+            if (btnAcaoCaixa != null) {
+                btnAcaoCaixa.setText("Abrir Caixa");
+                UIComponents.estilizarBotaoPrimario(btnAcaoCaixa);
+            }
+        }
+    }
+
+    public void abrirAberturaCaixaDireto() {
+        CaixaService service = new CaixaService();
+        AberturaCaixaDialog dialog = new AberturaCaixaDialog(owner, service, caixaDAO);
+        dialog.setVisible(true);
+        if (dialog.isAbertaComSucesso()) {
+            atualizarStatusCaixa();
+        }
+    }
+
+    private void alternarAcaoCaixa() {
+        com.loja.model.CaixaSessao s = caixaDAO.obterSessaoAberta();
+        if (s == null) {
+            abrirAberturaCaixaDireto();
+        } else {
+            int opt = JOptionPane.showConfirmDialog(this,
+                    "O Caixa já está aberto (Turno #" + s.getId() + " • Operador: " + s.getOperadorAbertura() + ").\n\n"
+                            + "Deseja realizar o Fechamento de Caixa (Conferência Cega) agora?",
+                    "Fechar Caixa", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+            if (opt == JOptionPane.YES_OPTION) {
+                CaixaService service = new CaixaService();
+                FechamentoCegoDialog dialog = new FechamentoCegoDialog(owner, service, caixaDAO, s);
+                dialog.setVisible(true);
+                if (dialog.isFechadoComSucesso()) {
+                    atualizarStatusCaixa();
+                }
+            }
         }
     }
 
@@ -568,14 +613,8 @@ public class PDVPanel extends JPanel {
                 "Caixa Fechado", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
         if (opt == JOptionPane.YES_OPTION) {
-            com.loja.service.CaixaService service = new com.loja.service.CaixaService();
-            com.loja.view.dialogs.AberturaCaixaDialog dialog = new com.loja.view.dialogs.AberturaCaixaDialog(owner,
-                    service, caixaDAO);
-            dialog.setVisible(true);
-            if (dialog.isAbertaComSucesso()) {
-                atualizarStatusCaixa();
-                return true;
-            }
+            abrirAberturaCaixaDireto();
+            return caixaDAO.obterSessaoAberta() != null;
         }
         return false;
     }

@@ -67,6 +67,10 @@ public class Usuario {
         return perfil == PerfilUsuario.ATENDENTE;
     }
 
+    public boolean isCaixa() {
+        return perfil == PerfilUsuario.ATENDENTE;
+    }
+
     public String getStatusFormatado() {
         return ativo ? "Ativo" : "Inativo";
     }
