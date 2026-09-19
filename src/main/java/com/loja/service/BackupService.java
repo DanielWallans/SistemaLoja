@@ -30,6 +30,7 @@ public class BackupService {
             "os_pecas",
             "os_servicos",
             "os_historico",
+            "os_fotos",
             "caixa_sessao",
             "venda_pdv",
             "venda_pdv_itens",
@@ -96,6 +97,8 @@ public class BackupService {
                                             sbInsert.append("NULL");
                                         } else if (obj instanceof Number || obj instanceof Boolean) {
                                             sbInsert.append(obj.toString());
+                                        } else if (obj instanceof byte[]) {
+                                            sbInsert.append("0x").append(bytesToHex((byte[]) obj));
                                         } else {
                                             String str = obj.toString().replace("'", "''").replace("\\", "\\\\");
                                             sbInsert.append("'").append(str).append("'");
@@ -257,5 +260,74 @@ public class BackupService {
 
         public boolean isSucesso() { return sucesso; }
         public String getMensagem() { return mensagem; }
+    }
+
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    public static String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "";
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
+
+    public static File getArquivoSnapshotTempoReal(File diretorioDestino) {
+        if (diretorioDestino == null || !diretorioDestino.exists()) {
+            diretorioDestino = new File(System.getProperty("user.home"), "Documents");
+            if (!diretorioDestino.exists()) {
+                diretorioDestino = new File(".");
+            }
+        }
+        return new File(diretorioDestino, "backup_tempo_real.zip");
+    }
+
+    public static boolean replicarParaPastaSecundaria(File arquivoOrigem, File pastaSecundaria) {
+        if (arquivoOrigem == null || !arquivoOrigem.exists() || pastaSecundaria == null) {
+            return false;
+        }
+        try {
+            if (!pastaSecundaria.exists()) {
+                pastaSecundaria.mkdirs();
+            }
+            if (!pastaSecundaria.canWrite()) {
+                return false;
+            }
+            File arquivoDestino = new File(pastaSecundaria, arquivoOrigem.getName());
+            java.nio.file.Files.copy(arquivoOrigem.toPath(), arquivoDestino.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            return true;
+        } catch (Exception e) {
+            System.err.println("[AVISO BACKUP] Falha ao replicar para pasta secundária: " + e.getMessage());
+            return false;
+        }
+    }
+
+    public static int limparBackupsAntigos(File pasta, int limiteMax) {
+        if (pasta == null || !pasta.exists() || !pasta.isDirectory() || limiteMax <= 0) {
+            return 0;
+        }
+        File[] arquivos = pasta.listFiles((dir, name) -> {
+            String lower = name.toLowerCase();
+            return lower.startsWith("backup_systempro_") && lower.endsWith(".zip");
+        });
+
+        if (arquivos == null || arquivos.length <= limiteMax) {
+            return 0;
+        }
+
+        // Ordena do mais recente para o mais antigo
+        java.util.Arrays.sort(arquivos, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+
+        int deletados = 0;
+        for (int i = limiteMax; i < arquivos.length; i++) {
+            try {
+                if (arquivos[i].delete()) {
+                    deletados++;
+                }
+            } catch (Exception ignored) {}
+        }
+        return deletados;
     }
 }

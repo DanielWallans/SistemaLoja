@@ -1,0 +1,7 @@
+{
+	"folders": [],
+	"settings": {
+		"java.debug.settings.onBuildFailureProceed": true,
+		"java.debug.settings.console": "integratedTerminal"
+	}
+}

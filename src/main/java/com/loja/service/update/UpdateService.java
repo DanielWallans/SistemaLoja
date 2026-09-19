@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 public class UpdateService {
 
-    public static final String VERSAO_ATUAL = "1.2.5";
+    public static final String VERSAO_ATUAL = "1.2.6";
     public static final String DEFAULT_UPDATE_URL = "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/versao.json";
 
     public static String getUpdateUrl() {
@@ -27,7 +27,8 @@ public class UpdateService {
                 if (customUrl != null && !customUrl.trim().isEmpty()) {
                     return customUrl.trim();
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         return DEFAULT_UPDATE_URL;
     }
@@ -36,7 +37,8 @@ public class UpdateService {
         try {
             String urlStr = getUpdateUrl();
             UpdateInfo info = checarUrl(urlStr);
-            if (info != null) return info;
+            if (info != null)
+                return info;
 
             // Fallback caso master/main alternem
             if (urlStr.contains("/master/")) {
@@ -47,7 +49,8 @@ public class UpdateService {
                 return checarUrl(fallbackUrl);
             }
         } catch (Exception e) {
-            System.err.println("[INFO] Checagem de atualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ignorada ou sem internet: " + e.getMessage());
+            System.err.println(
+                    "[INFO] Checagem de atualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ignorada ou sem internet: " + e.getMessage());
         }
         return null;
     }
@@ -66,7 +69,8 @@ public class UpdateService {
             }
 
             StringBuilder sb = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line).append("\n");
@@ -87,12 +91,14 @@ public class UpdateService {
                     return new UpdateInfo(versaoRemota, data, novidades, downloadUrl);
                 }
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
     public static boolean isNovaVersao(String remota, String local) {
-        if (remota == null || local == null) return false;
+        if (remota == null || local == null)
+            return false;
         String rClean = remota.replaceAll("[^0-9.]", "").trim();
         String lClean = local.replaceAll("[^0-9.]", "").trim();
         if (rClean.isEmpty() || lClean.isEmpty() || rClean.equalsIgnoreCase(lClean)) {
@@ -107,10 +113,13 @@ public class UpdateService {
             for (int i = 0; i < maxLen; i++) {
                 int r = i < vRemota.length ? Integer.parseInt(vRemota[i]) : 0;
                 int l = i < vLocal.length ? Integer.parseInt(vLocal[i]) : 0;
-                if (r > l) return true;
-                if (r < l) return false;
+                if (r > l)
+                    return true;
+                if (r < l)
+                    return false;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return false;
     }
 
@@ -123,7 +132,8 @@ public class UpdateService {
         return null;
     }
 
-    public static void baixarEAplicarAtualizacao(String downloadUrl, Consumer<Integer> progressoCallback) throws Exception {
+    public static void baixarEAplicarAtualizacao(String downloadUrl, Consumer<Integer> progressoCallback)
+            throws Exception {
         File baseDir = getAppDirectory();
         File novoJar = new File(baseDir, "SistemaLoja.jar.update");
 
@@ -155,7 +165,7 @@ public class UpdateService {
         int baixados = 0;
 
         try (InputStream in = new BufferedInputStream(conn.getInputStream());
-             FileOutputStream out = new FileOutputStream(novoJar)) {
+                FileOutputStream out = new FileOutputStream(novoJar)) {
 
             byte[] buffer = new byte[8192];
             int lidos;
@@ -171,10 +181,10 @@ public class UpdateService {
 
         long pid = ProcessHandle.current().pid();
 
-        // 1. Script PowerShell em segundo plano (invisÃƒÂ­vel, sem janela preta do prompt)
+        // 1. Script PowerShell em segundo plano (invisÃƒÂ­vel, sem janela preta do
+        // prompt)
         File psScript = new File(baseDir, "atualizar_sistema.ps1");
-        String psContent =
-                "$ErrorActionPreference = 'SilentlyContinue'\r\n" +
+        String psContent = "$ErrorActionPreference = 'SilentlyContinue'\r\n" +
                 "Start-Sleep -Milliseconds 800\r\n" +
                 "try {\r\n" +
                 "    $p = Get-Process -Id " + pid + " -ErrorAction SilentlyContinue\r\n" +
@@ -250,8 +260,7 @@ public class UpdateService {
                     "-NoProfile",
                     "-ExecutionPolicy", "Bypass",
                     "-WindowStyle", "Hidden",
-                    "-File", psScript.getAbsolutePath()
-            ).directory(baseDir).start();
+                    "-File", psScript.getAbsolutePath()).directory(baseDir).start();
         } catch (Exception e) {
             new ProcessBuilder("cmd.exe", "/c", "start", "/min", "\"System Pro Updater\"", batScript.getAbsolutePath())
                     .directory(baseDir)
@@ -263,12 +272,13 @@ public class UpdateService {
 
     public static File getAppDirectory() {
         try {
-            File jarDir = new File(UpdateService.class.getProtectionDomain().getCodeSource().getLocation().toURI()).getParentFile();
+            File jarDir = new File(UpdateService.class.getProtectionDomain().getCodeSource().getLocation().toURI())
+                    .getParentFile();
             if (jarDir != null && jarDir.isDirectory()) {
                 return jarDir;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return new File(".");
     }
 }
-

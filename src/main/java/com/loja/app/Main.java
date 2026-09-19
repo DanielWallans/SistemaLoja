@@ -68,6 +68,7 @@ public class Main {
 
         if (dbOk) {
             ConnectionFactory.criarTabela();
+            com.loja.service.AutoBackupService.getInstance().iniciar();
         } else {
             System.err.println("[AVISO] Sistema iniciado sem conexão ativa com o banco MySQL.");
         }

@@ -38,6 +38,9 @@ public class OrdemServicoDAO {
                 // Registra evento de abertura no histórico da OS
                 registrarHistorico(conn, os.getId(), os.getStatus(), "Abertura da Ordem de Serviço", os.getDataEntrada());
                 System.out.println("[DB] Ordem de Serviço #" + os.getId() + " aberta com sucesso.");
+                try {
+                    com.loja.service.AutoBackupService.getInstance().notificarAcaoCritica("Abertura OS #" + os.getId());
+                } catch (Exception ignored) {}
                 return true;
             }
             return false;
@@ -175,6 +178,9 @@ public class OrdemServicoDAO {
 
                 conn.commit();
                 System.out.println("[DB] Orçamento completo da OS #" + osId + " salvo com sucesso!");
+                try {
+                    com.loja.service.AutoBackupService.getInstance().notificarAcaoCritica("Edição OS #" + osId);
+                } catch (Exception ignored) {}
                 return true;
             } catch (SQLException e) {
                 conn.rollback();

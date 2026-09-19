@@ -8,6 +8,9 @@ import com.loja.model.Usuario;
 import com.loja.repository.*;
 import com.loja.service.CaixaService;
 import com.loja.view.dialogs.BackupDialog;
+import com.loja.view.dialogs.LembreteBackupDialog;
+import com.loja.model.AutoBackupConfig;
+import com.loja.service.AutoBackupService;
 import com.loja.view.dialogs.GerenciadorUsuariosDialog;
 import com.loja.view.dialogs.LoginDialog;
 import com.loja.view.theme.ThemeTokens;
@@ -51,6 +54,7 @@ public class MainFrame extends JFrame {
     private JLabel lblUsuarioLogado;
     private JButton btnGerenciarUsuarios;
     private JButton btnBackup;
+    private JLabel lblBackupStatus;
     private JLabel lblStatusFeedback;
     private JPanel header;
     private JPanel footer;
@@ -73,7 +77,13 @@ public class MainFrame extends JFrame {
         this.usuarioDAO = usuarioDAO != null ? usuarioDAO : new UsuarioDAO();
         this.dbConectado = dbConectado;
 
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                com.loja.service.AutoBackupService.getInstance().executarBackupAoEncerrar(MainFrame.this);
+            }
+        });
         setSize(1240, 790);
         setMinimumSize(new Dimension(1000, 660));
         setLocationRelativeTo(null);
@@ -82,6 +92,7 @@ public class MainFrame extends JFrame {
         aplicarPermissoesPerfil();
         configurarAtalhosGlobais();
         iniciarVerificacaoAtualizacaoSilenciosa();
+        verificarLembreteBackupInicial();
     }
 
     private void initComponents() {
@@ -151,9 +162,34 @@ public class MainFrame extends JFrame {
         btnAtualizacoes.putClientProperty("JButton.arc", 6);
         btnAtualizacoes.addActionListener(e -> checarAtualizacoesManual());
 
+        lblBackupStatus = new JLabel("🟢 Backup Ativo");
+        lblBackupStatus.setFont(UITheme.FONT_CAPTION);
+        lblBackupStatus.setForeground(t.getSuccess());
+        lblBackupStatus.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        lblBackupStatus.setToolTipText("Proteção contra queda de luz e backup automático ativos. Clique para configurar.");
+        lblBackupStatus.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                abrirBackupDialog();
+            }
+        });
+
+        com.loja.service.AutoBackupService.getInstance().adicionarListener((res, motivo) -> {
+            if (res.isSucesso()) {
+                lblBackupStatus.setText("🟢 Backup: " + (res.getTamanhoKb() > 0 ? res.getTamanhoKb() + "KB" : "Salvo"));
+                lblBackupStatus.setForeground(t.getSuccess());
+                lblBackupStatus.setToolTipText("Último backup: " + motivo);
+            } else {
+                lblBackupStatus.setText("🔴 Alerta Backup");
+                lblBackupStatus.setForeground(t.getDanger());
+                lblBackupStatus.setToolTipText("Erro: " + res.getMensagem());
+            }
+        });
+
         pnlHeaderRight.add(lblUsuarioLogado);
         pnlHeaderRight.add(btnGerenciarUsuarios);
         pnlHeaderRight.add(btnBackup);
+        pnlHeaderRight.add(lblBackupStatus);
         pnlHeaderRight.add(btnAtualizacoes);
         pnlHeaderRight.add(lblDbStatus);
         pnlHeaderRight.add(btnTema);
@@ -684,5 +720,22 @@ public class MainFrame extends JFrame {
             }
         };
         worker.execute();
+    }
+
+    private void verificarLembreteBackupInicial() {
+        Timer timer = new Timer(1500, e -> {
+            AutoBackupConfig config = AutoBackupService.getInstance().getConfig();
+            if (config != null && config.isAtivo() && config.isLembreteInicial()) {
+                String ultimo = config.getUltimoBackupTimestamp();
+                String dataHoje = java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                boolean precisaLembrete = (ultimo == null || ultimo.trim().isEmpty() || !ultimo.startsWith(dataHoje));
+                if (precisaLembrete) {
+                    LembreteBackupDialog dlg = new LembreteBackupDialog(MainFrame.this);
+                    dlg.setVisible(true);
+                }
+            }
+        });
+        timer.setRepeats(false);
+        timer.start();
     }
 }

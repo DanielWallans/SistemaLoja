@@ -193,6 +193,9 @@ public class CaixaDAO {
 
                 conn.commit();
                 System.out.println("[DB] Sessão de caixa #" + sessao.getId() + " encerrada com sucesso!");
+                try {
+                    com.loja.service.AutoBackupService.getInstance().notificarAcaoCritica("Fechamento de Caixa #" + sessao.getId());
+                } catch (Exception ignored) {}
                 return true;
 
             } catch (SQLException e) {
