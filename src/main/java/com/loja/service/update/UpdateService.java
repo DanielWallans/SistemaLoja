@@ -50,7 +50,7 @@ public class UpdateService {
             }
         } catch (Exception e) {
             System.err.println(
-                    "[INFO] Checagem de atualizaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o ignorada ou sem internet: " + e.getMessage());
+                    "[INFO] Checagem de atualizaÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â£o ignorada ou sem internet: " + e.getMessage());
         }
         return null;
     }
@@ -181,7 +181,7 @@ public class UpdateService {
 
         long pid = ProcessHandle.current().pid();
 
-        // 1. Script PowerShell em segundo plano (invisÃƒÂ­vel, sem janela preta do
+        // 1. Script PowerShell em segundo plano (invisÃƒÆ’Ã‚Â­vel, sem janela preta do
         // prompt)
         File psScript = new File(baseDir, "atualizar_sistema.ps1");
         String psContent = "$ErrorActionPreference = 'SilentlyContinue'\r\n" +
@@ -218,7 +218,7 @@ public class UpdateService {
             fw.write(psContent);
         }
 
-        // 2. Script BAT de contingÃƒÂªncia 100% seguro (sem blocos com parÃƒÂªnteses)
+        // 2. Script BAT de contingÃƒÆ’Ã‚Âªncia 100% seguro (sem blocos com parÃƒÆ’Ã‚Âªnteses)
         File batScript = new File(baseDir, "atualizar_sistema.bat");
         String batContent = "@echo off\r\n" +
                 "chcp 65001 > nul\r\n" +
@@ -253,7 +253,7 @@ public class UpdateService {
             fw.write(batContent);
         }
 
-        // 3. Executar o PowerShell de forma 100% invisÃƒÂ­vel (sem janela preta)
+        // 3. Executar o PowerShell de forma 100% invisÃƒÆ’Ã‚Â­vel (sem janela preta)
         try {
             new ProcessBuilder(
                     "powershell.exe",
