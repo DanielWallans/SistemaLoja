@@ -1,6 +1,6 @@
 {
-    "versao":  "1.2.6",
-    "data":  "18/09/2026",
-    "novidades":  "- Novo layout moderno e compacto em abas para a Ordem de Servico (duplo clique na OS)\n- Modulo de fotos e evidencias tecnicas na OS (anexar avarias, colar via Ctrl+V, zoom e laudos)\n- Liberado acesso a Abertura e Controle de Caixa para usuarios com perfil de Caixa\n- Melhorias visuais, correcoes de proporcao e navegabilidade otimizada",
-    "download_url":  "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
+    "versao": "1.2.6",
+    "data": "18/09/2026",
+    "novidades": "- Novo Sistema de Backup Automatico com Protecao Anti-Apagao em tempo real\n- Gravacao instantanea em segundo plano apos Vendas PDV e Ordens de Servico (sem travar a tela)\n- Lembrete inteligente de backup ao iniciar o sistema caso nao haja copia recente no dia\n- Rotina de fechamento seguro com backup automatico ao encerrar o sistema\n- Limpeza automatica de arquivos antigos e suporte a copia secundaria (Pendrive / Google Drive / OneDrive)\n- Correcao de integridade para fotos e evidencias tecnicas no backup",
+    "download_url": "https://raw.githubusercontent.com/DanielWallans/SistemaLoja/master/gerador_executavel/aplicacao_pronta/SistemaLoja.jar"
 }
